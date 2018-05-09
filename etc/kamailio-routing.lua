@@ -86,6 +86,8 @@ function ksr_request_route()
 			KSR.sl.send_reply(404, "Local route");
 			KSR.x.exit();
 		end
+		ksr_route_dlguri();
+		ksr_route_relay();
 	else
 		ksr_dispatch();
 	end
