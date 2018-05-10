@@ -44,7 +44,7 @@ function ksr_request_route()
 	end
 
 	-- handle retransmissions
-	if not KSR.is_ACK then
+	if not KSR.is_ACK() then
 		if KSR.tmx.t_precheck_trans()>0 then
 			KSR.tm.t_check_trans();
 			return 1;
@@ -89,6 +89,8 @@ function ksr_request_route()
 		ksr_route_dlguri();
 		ksr_route_relay();
 	else
+		KSR.hdr.remove("P-SRC-IP");
+		KSR.hdr.append("P-SRC-IP: " .. KSR.pv.get("$si") .. "\r\n");
 		ksr_dispatch();
 	end
 
