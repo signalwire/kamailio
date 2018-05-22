@@ -1,0 +1,9 @@
+# This file extends docker-compose.yml
+version: "3.4"
+
+services:
+
+  kamailio:
+    build:
+      context: ../
+      dockerfile: provisioning/production.Dockerfile

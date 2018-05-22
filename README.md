@@ -25,8 +25,8 @@ Edit `docker/Dockerfile` and set the private (local) and public IP addresses to 
 Build and run docker container.
 
 ```
-docker build -t signalwire-kamailio-edgeproxy -f docker/Dockerfile .
-docker run -p 5060:5060/udp signalwire-kamailio-edgeproxy
+./docker-dev build
+docker run -ti -p 60605:60605/udp signalwire/kamailio
 ```
 
 ## Notes ##
