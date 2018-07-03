@@ -32,6 +32,7 @@
 #include <fcntl.h>
 
 #include <signalwire-client-c/client.h>
+#include <signalwire-client-c/config.h>
 
 #include "../../core/sr_module.h"
 #include "../../core/dprint.h"
@@ -105,9 +106,13 @@ typedef struct _bladec_io {
 
 extern str _bladec_config_path;
 
-static struct {
+typedef struct baldec_globals {
 	swclt_cfg_t lconfig;
-} _bladec_globals;
+	swclt_ident_t target_identity;
+	char *target_identity_str;
+} bladec_globals_t;
+
+static bladec_globals_t _bladec_globals;
 
 /**
  *
@@ -116,6 +121,8 @@ int bladec_client_init(void)
 {
 	ks_status_t status;
 
+	memset(&_bladec_globals, 0, sizeof(bladec_globals_t));
+
 	swclt_init(KS_LOG_LEVEL_INFO);
 
 	status = swclt_cfg_open_ex(&_bladec_globals.lconfig, _bladec_config_path.s, "local");
@@ -123,8 +130,30 @@ int bladec_client_init(void)
 		LM_ERR("failed to open config: %s (%d)\n", _bladec_config_path.s, (int)status);
 		return -1;
 	}
+	status = swclt_cfg_lookup_identval(&_bladec_globals.lconfig, "target_identity", &_bladec_globals.target_identity);
+	if(status != KS_STATUS_SUCCESS) {
+		LM_ERR("failed to load target_identity key in config: %s\n", _bladec_config_path.s);
+		goto error;
+	}
+
+	status = swclt_cfg_lookup_strval(&_bladec_globals.lconfig, "target_identity", &_bladec_globals.target_identity_str);
+	if(status != KS_STATUS_SUCCESS) {
+		LM_ERR("failed to load target_identity key in config: %s\n", _bladec_config_path.s);
+		goto error;
+	}
+
+	LM_DBG("target identity string: %s\n", _bladec_globals.target_identity_str);
 
 	return 0;
+
+error:
+	swclt_ident_destroy(&_bladec_globals.target_identity);
+	ks_handle_destroy(&_bladec_globals.lconfig);
+
+	if (swclt_shutdown()) {
+		LM_ERR("shutdown was ungraceful\n");
+	}
+	return -1;
 }
 
 /**

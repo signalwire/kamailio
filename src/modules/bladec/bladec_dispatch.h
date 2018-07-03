@@ -53,4 +53,6 @@ int pv_set_bladec(sip_msg_t *msg, pv_param_t *param, int op,
 int bladec_cfg_close(sip_msg_t *msg);
 int bladec_set_tag(sip_msg_t* msg, str* stag);
 
+int bladec_client_init(void);
+
 #endif

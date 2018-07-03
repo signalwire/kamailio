@@ -140,6 +140,11 @@ static int mod_init(void)
 		return -1;
 	}
 
+	if(bladec_client_init()<0) {
+		LM_ERR("failed to init the blade connector client\n");
+		return -1;
+	}
+
 	/* init faked sip msg */
 	if(faked_msg_init()<0) {
 		LM_ERR("failed to init faked sip message\n");
