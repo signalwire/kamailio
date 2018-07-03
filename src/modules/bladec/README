@@ -29,6 +29,7 @@ Daniel-Constantin Mierla
               3.2. bind_addr (str)
               3.3. event_callback (str)
               3.4. max_clients (int)
+              3.5. config (str)
 
         4. Functions
 
@@ -55,15 +56,16 @@ Daniel-Constantin Mierla
    1.2. Set bind_addr parameter
    1.3. Set event_callback parameter
    1.4. Set max_clients parameter
-   1.5. bladec_relay usage
-   1.6. TCP message
-   1.7. bladec_async_relay usage
-   1.8. bladec_multicast usage
-   1.9. bladec_async_multicast usage
-   1.10. bladec_unicast usage
-   1.11. bladec_async_unicast usage
-   1.12. bladec_close usage
-   1.13. bladec_set_tag usage
+   1.5. Set config parameter
+   1.6. bladec_relay usage
+   1.7. TCP message
+   1.8. bladec_async_relay usage
+   1.9. bladec_multicast usage
+   1.10. bladec_async_multicast usage
+   1.11. bladec_unicast usage
+   1.12. bladec_async_unicast usage
+   1.13. bladec_close usage
+   1.14. bladec_set_tag usage
 
 Chapter 1. Admin Guide
 
@@ -81,6 +83,7 @@ Chapter 1. Admin Guide
         3.2. bind_addr (str)
         3.3. event_callback (str)
         3.4. max_clients (int)
+        3.5. config (str)
 
    4. Functions
 
@@ -128,6 +131,7 @@ Chapter 1. Admin Guide
    3.2. bind_addr (str)
    3.3. event_callback (str)
    3.4. max_clients (int)
+   3.5. config (str)
 
 3.1. workers (int)
 
@@ -186,6 +190,17 @@ end
 modparam("bladec", "max_clients", 4)
 ...
 
+3.5. config (str)
+
+   Path to blade connector config file.
+
+   Default value is "" (not set).
+
+   Example 1.5. Set config parameter
+...
+modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
+...
+
 4. Functions
 
    4.1. bladec_relay(evdata)
@@ -208,14 +223,14 @@ modparam("bladec", "max_clients", 4)
 
    This function can be used from ANY_ROUTE.
 
-   Example 1.5. bladec_relay usage
+   Example 1.6. bladec_relay usage
 ...
 bladec_relay("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 ...
 
    The above exaple will send the following message over tcp:
 
-   Example 1.6. TCP message
+   Example 1.7. TCP message
 ...
 {
  "event": "test",
@@ -235,7 +250,7 @@ bladec_relay("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 
    This function can be used from REQUEST_ROUTE.
 
-   Example 1.7. bladec_async_relay usage
+   Example 1.8. bladec_async_relay usage
 ...
 bladec_async_relay("{ \"event\": \"suspend\",\n \"data\":"
         " { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}");
@@ -247,7 +262,7 @@ bladec_async_relay("{ \"event\": \"suspend\",\n \"data\":"
    provided by etag value. The etag can be a variable. For more see
    bladec_relay() and bladec_set_tag().
 
-   Example 1.8. bladec_multicast usage
+   Example 1.9. bladec_multicast usage
 ...
 bladec_multicast("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}", "t
 agx");
@@ -259,7 +274,7 @@ agx");
    tag provided by etag value. The etag can be a variable. For more see
    bladec_async_relay() and bladec_set_tag().
 
-   Example 1.9. bladec_async_multicast usage
+   Example 1.10. bladec_async_multicast usage
 ...
 bladec_async_multicast("{ \"event\": \"suspend\",\n \"data\":"
     " { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}", "tagx");
@@ -271,7 +286,7 @@ bladec_async_multicast("{ \"event\": \"suspend\",\n \"data\":"
    match the tag provided by etag value. The etag can be a variable. For
    more see bladec_relay() and bladec_set_tag().
 
-   Example 1.10. bladec_unicast usage
+   Example 1.11. bladec_unicast usage
 ...
 bladec_unicast("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}", "tag
 x");
@@ -283,7 +298,7 @@ x");
    match the tag provided by etag value. The etag can be a variable. For
    more see bladec_async_relay() and bladec_set_tag().
 
-   Example 1.11. bladec_async_unicast usage
+   Example 1.12. bladec_async_unicast usage
 ...
 bladec_async_unicast("{ \"event\": \"suspend\",\n \"data\":"
     " { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}", "tagx");
@@ -295,7 +310,7 @@ bladec_async_unicast("{ \"event\": \"suspend\",\n \"data\":"
 
    This function can be used from ANY_ROUTE.
 
-   Example 1.12. bladec_close usage
+   Example 1.13. bladec_close usage
 ...
 event_route[bladec:connection-new] {
   if($bladec(srcaddr)!="127.0.0.1") {
@@ -313,7 +328,7 @@ event_route[bladec:connection-new] {
 
    This function can be used from ANY_ROUTE.
 
-   Example 1.13. bladec_set_tag usage
+   Example 1.14. bladec_set_tag usage
 ...
 event_route[bladec:connection-new] {
   if($bladec(srcaddr)=="127.0.0.1") {

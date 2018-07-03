@@ -52,6 +52,7 @@ static int   _bladec_netstring_format_param = 1;
 str _bladec_event_callback = STR_NULL;
 int _bladec_dispatcher_pid = -1;
 int _bladec_max_clients = 8;
+str _bladec_config_path = STR_NULL;
 
 static tm_api_t tmb;
 
@@ -98,6 +99,7 @@ static param_export_t params[]={
 	{"netstring_format",  INT_PARAM,   &_bladec_netstring_format_param},
 	{"event_callback",    PARAM_STR,   &_bladec_event_callback},
 	{"max_clients",       PARAM_INT,   &_bladec_max_clients},
+	{"config",            PARAM_STR,   &_bladec_config_path},
 	{0, 0, 0}
 };
 
@@ -132,6 +134,11 @@ struct module_exports exports = {
 static int mod_init(void)
 {
 	char *p;
+
+	if(_bladec_config_path.s==NULL || _bladec_config_path.len<=0) {
+		LM_ERR("path to config file not provided\n");
+		return -1;
+	}
 
 	/* init faked sip msg */
 	if(faked_msg_init()<0) {

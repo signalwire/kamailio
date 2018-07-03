@@ -144,6 +144,25 @@ modparam("bladec", "max_clients", 4)
 </programlisting>
 		</example>
 	</section>
+	<section id="bladec.p.config">
+		<title><varname>config</varname> (str)</title>
+		<para>
+		Path to blade connector config file.
+		</para>
+		<para>
+		<emphasis>
+			Default value is "" (not set).
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>config</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
+...
+</programlisting>
+		</example>
+	</section>
 	</section>
 
 	<section>

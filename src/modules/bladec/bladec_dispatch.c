@@ -31,6 +31,8 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 
+#include <signalwire-client-c/client.h>
+
 #include "../../core/sr_module.h"
 #include "../../core/dprint.h"
 #include "../../core/ut.h"
@@ -100,6 +102,30 @@ typedef struct _bladec_io {
 
 #define BLADEC_ERROR (-1)
 #define BLADEC_READ (2)
+
+extern str _bladec_config_path;
+
+static struct {
+	swclt_cfg_t lconfig;
+} _bladec_globals;
+
+/**
+ *
+ */
+int bladec_client_init(void)
+{
+	ks_status_t status;
+
+	swclt_init(KS_LOG_LEVEL_INFO);
+
+	status = swclt_cfg_open_ex(&_bladec_globals.lconfig, _bladec_config_path.s, "local");
+	if(status != KS_STATUS_SUCCESS) {
+		LM_ERR("failed to open config: %s (%d)\n", _bladec_config_path.s, (int)status);
+		return -1;
+	}
+
+	return 0;
+}
 
 /**
  *
