@@ -109,7 +109,7 @@ extern str _bladec_config_path;
 typedef struct baldec_globals {
 	swclt_cfg_t lconfig;
 	swclt_ident_t target_identity;
-	char *target_identity_str;
+	const char *target_identity_str;
 } bladec_globals_t;
 
 static bladec_globals_t _bladec_globals;
@@ -130,13 +130,13 @@ int bladec_client_init(void)
 		LM_ERR("failed to open config: %s (%d)\n", _bladec_config_path.s, (int)status);
 		return -1;
 	}
-	status = swclt_cfg_lookup_identval(&_bladec_globals.lconfig, "target_identity", &_bladec_globals.target_identity);
+	status = swclt_cfg_lookup_identval(_bladec_globals.lconfig, "target_identity", &_bladec_globals.target_identity);
 	if(status != KS_STATUS_SUCCESS) {
 		LM_ERR("failed to load target_identity key in config: %s\n", _bladec_config_path.s);
 		goto error;
 	}
 
-	status = swclt_cfg_lookup_strval(&_bladec_globals.lconfig, "target_identity", &_bladec_globals.target_identity_str);
+	status = swclt_cfg_lookup_strval(_bladec_globals.lconfig, "target_identity", &_bladec_globals.target_identity_str);
 	if(status != KS_STATUS_SUCCESS) {
 		LM_ERR("failed to load target_identity key in config: %s\n", _bladec_config_path.s);
 		goto error;
