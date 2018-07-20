@@ -145,7 +145,8 @@ function ksr_route_reqinit()
 			end
 		end
 	end
-	if KSR.corex.has_user_agent() then
+
+	if KSR.corex.has_user_agent() and KSR.corex.has_user_agent() ~= -1 then
 		local uastr = KSR.pv.get("$ua");
 		if (string.find(uastr, "friendly-scanner")
 				or string.find(uastr, "sipcli")) then
@@ -166,7 +167,7 @@ function ksr_route_reqinit()
 		KSR.x.exit();
 	end
 
-	if KSR.sanity.sanity_check(1511, 7)<0 then
+	if KSR.sanity.sanity_check(1511, 7) < 0 then
 		KSR.err("Malformed SIP message from "
 				.. KSR.pv.get("$si") .. ":" .. KSR.pv.get("$sp") .."\n");
 		KSR.x.exit();
