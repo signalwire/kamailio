@@ -106,13 +106,16 @@ typedef struct _bladec_io {
 
 extern str _bladec_config_path;
 
+swclt_sess_t _bladec_session = {0};
+
 typedef struct baldec_globals {
 	swclt_cfg_t lconfig;
 	swclt_ident_t target_identity;
 	const char *target_identity_str;
+	int istatus;
 } bladec_globals_t;
 
-static bladec_globals_t _bladec_globals;
+static bladec_globals_t _bladec_globals = {0};
 
 /**
  *
@@ -141,6 +144,7 @@ int bladec_client_init(void)
 		LM_ERR("failed to load target_identity key in config: %s\n", _bladec_config_path.s);
 		goto error;
 	}
+	_bladec_globals.istatus = 1;
 
 	LM_DBG("target identity string: %s\n", _bladec_globals.target_identity_str);
 
@@ -154,6 +158,29 @@ error:
 		LM_ERR("shutdown was ungraceful\n");
 	}
 	return -1;
+}
+
+/**
+ *
+ */
+int bladec_client_session_start(void)
+{
+	if(_bladec_globals.istatus != 1) {
+		LM_ERR("config struct was not initialized\n");
+		return -1;
+	}
+	LM_DBG("creating session to: %s\n", _bladec_globals.target_identity_str);
+	swclt_sess_create(&_bladec_session, _bladec_globals.target_identity_str,
+			_bladec_globals.lconfig);
+	if(!_bladec_session) {
+		LM_ERR("failed connecting to: %s\n", _bladec_globals.target_identity_str);
+		return -1;
+	}
+	LM_DBG("connecting to: %s\n", _bladec_globals.target_identity_str);
+	swclt_sess_connect(_bladec_session);
+	LM_DBG("connected to: %s\n", _bladec_globals.target_identity_str);
+
+	return 0;
 }
 
 /**

@@ -55,4 +55,6 @@ int bladec_set_tag(sip_msg_t* msg, str* stag);
 
 int bladec_client_init(void);
 
+int bladec_client_session_start(void);
+
 #endif

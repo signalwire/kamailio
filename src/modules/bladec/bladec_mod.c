@@ -200,6 +200,10 @@ static int child_init(int rank)
 		if(_bladec_dispatcher_pid!=getpid()) {
 			bladec_close_notify_sockets_parent();
 		}
+		if(bladec_client_session_start()<0) {
+			LM_ERR("failed to create blade session for process %d\n", rank);
+			return -1;
+		}
 		return 0;
 	}
 
@@ -220,6 +224,10 @@ static int child_init(int rank)
 			return -1;
 		/* main function for dispatcher */
 		bladec_close_notify_sockets_child();
+		if(bladec_client_session_start()<0) {
+			LM_ERR("failed to create blade session for dispatcher process\n");
+			return -1;
+		}
 		if(bladec_run_dispatcher(_bladec_bind_addr, _bladec_bind_port)<0) {
 			LM_ERR("failed to initialize bladec dispatcher process\n");
 			return -1;
