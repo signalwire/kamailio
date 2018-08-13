@@ -44,14 +44,9 @@
 MODULE_VERSION
 
 static int   _bladec_workers = 1;
-static char *_bladec_bind_addr = "127.0.0.1";
-static int   _bladec_bind_port = 8448;
-static char *_bladec_bind_param = NULL;
-static int   _bladec_netstring_format_param = 1;
 
 str _bladec_event_callback = STR_NULL;
 int _bladec_dispatcher_pid = -1;
-int _bladec_max_clients = 8;
 str _bladec_config_path = STR_NULL;
 
 static tm_api_t tmb;
@@ -62,43 +57,19 @@ static void mod_destroy(void);
 
 static int w_bladec_relay(sip_msg_t* msg, char* evdata, char* p2);
 static int w_bladec_async_relay(sip_msg_t* msg, char* evdata, char* p2);
-static int w_bladec_multicast(sip_msg_t* msg, char* evdata, char* ptag);
-static int w_bladec_async_multicast(sip_msg_t* msg, char* evdata, char* ptag);
-static int w_bladec_unicast(sip_msg_t *msg, char *evdata, char *ptag);
-static int w_bladec_async_unicast(sip_msg_t *msg, char *evdata, char *ptag);
-static int w_bladec_close(sip_msg_t* msg, char* p1, char* p2);
-static int w_bladec_set_tag(sip_msg_t* msg, char* ptag, char* p2);
 static int fixup_bladec_relay(void** param, int param_no);
-static int fixup_bladec_multicast(void** param, int param_no);
 
 static cmd_export_t cmds[]={
 	{"bladec_relay",			(cmd_function)w_bladec_relay,		1, fixup_bladec_relay,
 		0, ANY_ROUTE},
 	{"bladec_async_relay",	(cmd_function)w_bladec_async_relay, 	1, fixup_bladec_relay,
 		0, REQUEST_ROUTE},
-	{"bladec_multicast",		(cmd_function)w_bladec_multicast,	2, fixup_bladec_multicast,
-		0, ANY_ROUTE},
-	{"bladec_async_multicast", (cmd_function)w_bladec_async_multicast,	2, fixup_bladec_multicast,
-		0, REQUEST_ROUTE},
-	{"bladec_unicast", 		(cmd_function)w_bladec_unicast,		2, fixup_bladec_multicast,
-		0, ANY_ROUTE},
-	{"bladec_async_unicast", (cmd_function)w_bladec_async_unicast,2, fixup_bladec_multicast,
-		0, REQUEST_ROUTE},
-	{"bladec_close",       	(cmd_function)w_bladec_close,		0, NULL,
-		0, ANY_ROUTE},
-	{"bladec_close",       	(cmd_function)w_bladec_close,		1, NULL,
-		0, ANY_ROUTE},
-	{"bladec_set_tag",       (cmd_function)w_bladec_set_tag,		1, fixup_spve_null,
-		0, ANY_ROUTE},
 	{0, 0, 0, 0, 0, 0}
 };
 
 static param_export_t params[]={
 	{"workers",           INT_PARAM,   &_bladec_workers},
-	{"bind_addr",         PARAM_STRING,   &_bladec_bind_param},
-	{"netstring_format",  INT_PARAM,   &_bladec_netstring_format_param},
 	{"event_callback",    PARAM_STR,   &_bladec_event_callback},
-	{"max_clients",       PARAM_INT,   &_bladec_max_clients},
 	{"config",            PARAM_STR,   &_bladec_config_path},
 	{0, 0, 0}
 };
@@ -133,8 +104,6 @@ struct module_exports exports = {
  */
 static int mod_init(void)
 {
-	char *p;
-
 	if(_bladec_config_path.s==NULL || _bladec_config_path.len<=0) {
 		LM_ERR("path to config file not provided\n");
 		return -1;
@@ -156,26 +125,13 @@ static int mod_init(void)
 		memset(&tmb, 0, sizeof(tm_api_t));
 	}
 
-	if(_bladec_bind_param!=NULL) {
-		p = strchr(_bladec_bind_param, ':');
-		if(p!=NULL) {
-			*p++ = '\0';
-			_bladec_bind_port = (short)atoi(p);
-			if (_bladec_bind_port <= 0) {
-				LM_ERR("invalid port: %d\n", _bladec_bind_port);
-				return -1;
-			}
-		}
-		_bladec_bind_addr = _bladec_bind_param;
-	}
-
 	/* add space for one extra process */
 	register_procs(1 + _bladec_workers);
 
 	/* add child to update local config framework structures */
 	cfg_register_child(1 + _bladec_workers);
 
-	bladec_init_environment(_bladec_netstring_format_param);
+	bladec_init_environment();
 
 	return 0;
 }
@@ -228,7 +184,7 @@ static int child_init(int rank)
 			LM_ERR("failed to create blade session for dispatcher process\n");
 			return -1;
 		}
-		if(bladec_run_dispatcher(_bladec_bind_addr, _bladec_bind_port)<0) {
+		if(bladec_run_dispatcher()<0) {
 			LM_ERR("failed to initialize bladec dispatcher process\n");
 			return -1;
 		}
@@ -350,255 +306,9 @@ static int w_bladec_async_relay(sip_msg_t *msg, char *evdata, char *p2)
 /**
  *
  */
-static int w_bladec_multicast(sip_msg_t *msg, char *evdata, char *ptag)
-{
-	str sdata;
-	str stag;
-
-	if(evdata==0) {
-		LM_ERR("invalid parameters\n");
-		return -1;
-	}
-
-	if(fixup_get_svalue(msg, (gparam_t*)evdata, &sdata)!=0) {
-		LM_ERR("unable to get data\n");
-		return -1;
-	}
-	if(sdata.s==NULL || sdata.len == 0) {
-		LM_ERR("invalid data parameter\n");
-		return -1;
-	}
-	if(fixup_get_svalue(msg, (gparam_t*)ptag, &stag)!=0) {
-		LM_ERR("unable to get tag\n");
-		return -1;
-	}
-	if(stag.s==NULL || stag.len == 0) {
-		LM_ERR("invalid tag parameter\n");
-		return -1;
-	}
-	if(bladec_relay_multicast(&sdata, &stag)<0) {
-		LM_ERR("failed to relay event: [[%.*s]] to [%.*s] \n",
-				sdata.len, sdata.s, stag.len, stag.s);
-		return -1;
-	}
-	return 1;
-}
-
-/**
- *
- */
-static int w_bladec_async_multicast(sip_msg_t *msg, char *evdata, char *ptag)
-{
-	str sdata;
-	str stag;
-	unsigned int tindex;
-	unsigned int tlabel;
-	tm_cell_t *t = 0;
-
-	if(evdata==0) {
-		LM_ERR("invalid parameters\n");
-		return -1;
-	}
-
-	if(tmb.t_suspend==NULL) {
-		LM_ERR("bladec async relay is disabled - tm module not loaded\n");
-		return -1;
-	}
-
-	t = tmb.t_gett();
-	if (t==NULL || t==T_UNDEFINED)
-	{
-		if(tmb.t_newtran(msg)<0)
-		{
-			LM_ERR("cannot create the transaction\n");
-			return -1;
-		}
-		t = tmb.t_gett();
-		if (t==NULL || t==T_UNDEFINED)
-		{
-			LM_ERR("cannot lookup the transaction\n");
-			return -1;
-		}
-	}
-	if(tmb.t_suspend(msg, &tindex, &tlabel)<0)
-	{
-		LM_ERR("failed to suspend request processing\n");
-		return -1;
-	}
-
-	LM_DBG("transaction suspended [%u:%u]\n", tindex, tlabel);
-
-	if(fixup_get_svalue(msg, (gparam_t*)evdata, &sdata)!=0) {
-		LM_ERR("unable to get data\n");
-		return -1;
-	}
-	if(sdata.s==NULL || sdata.len == 0) {
-		LM_ERR("invalid data parameter\n");
-		return -1;
-	}
-	if(fixup_get_svalue(msg, (gparam_t*)ptag, &stag)!=0) {
-		LM_ERR("unable to get tag\n");
-		return -1;
-	}
-	if(stag.s==NULL || stag.len == 0) {
-		LM_ERR("invalid tag parameter\n");
-		return -1;
-	}
-
-	if(bladec_relay_multicast(&sdata, &stag)<0) {
-		LM_ERR("failed to relay event: [[%.*s]] to [%.*s] \n",
-				sdata.len, sdata.s, stag.len, stag.s);
-		return -2;
-	}
-	return 1;
-}
-
-
-/**
- *
- */
-static int w_bladec_unicast(sip_msg_t *msg, char *evdata, char *ptag)
-{
-	str sdata;
-	str stag;
-
-	if(evdata==0) {
-		LM_ERR("invalid parameters\n");
-		return -1;
-	}
-
-	if(fixup_get_svalue(msg, (gparam_t*)evdata, &sdata)!=0) {
-		LM_ERR("unable to get data\n");
-		return -1;
-	}
-	if(sdata.s==NULL || sdata.len == 0) {
-		LM_ERR("invalid data parameter\n");
-		return -1;
-	}
-	if(fixup_get_svalue(msg, (gparam_t*)ptag, &stag)!=0) {
-		LM_ERR("unable to get tag\n");
-		return -1;
-	}
-	if(stag.s==NULL || stag.len == 0) {
-		LM_ERR("invalid tag parameter\n");
-		return -1;
-	}
-	if(bladec_relay_unicast(&sdata, &stag)<0) {
-		LM_ERR("failed to relay event: [[%.*s]] to [%.*s] \n",
-				sdata.len, sdata.s, stag.len, stag.s);
-		return -1;
-	}
-	return 1;
-}
-
-
-static int w_bladec_async_unicast(sip_msg_t *msg, char *evdata, char *ptag)
-{
-	str sdata;
-	str stag;
-	unsigned int tindex;
-	unsigned int tlabel;
-	tm_cell_t *t = 0;
-
-	if(evdata==0) {
-		LM_ERR("invalid parameters\n");
-		return -1;
-	}
-
-	if(tmb.t_suspend==NULL) {
-		LM_ERR("bladec async relay is disabled - tm module not loaded\n");
-		return -1;
-	}
-
-	t = tmb.t_gett();
-	if (t==NULL || t==T_UNDEFINED)
-	{
-		if(tmb.t_newtran(msg)<0)
-		{
-			LM_ERR("cannot create the transaction\n");
-			return -1;
-		}
-		t = tmb.t_gett();
-		if (t==NULL || t==T_UNDEFINED)
-		{
-			LM_ERR("cannot lookup the transaction\n");
-			return -1;
-		}
-	}
-	if(tmb.t_suspend(msg, &tindex, &tlabel)<0)
-	{
-		LM_ERR("failed to suspend request processing\n");
-		return -1;
-	}
-
-	LM_DBG("transaction suspended [%u:%u]\n", tindex, tlabel);
-
-	if(fixup_get_svalue(msg, (gparam_t*)evdata, &sdata)!=0) {
-		LM_ERR("unable to get data\n");
-		return -1;
-	}
-	if(sdata.s==NULL || sdata.len == 0) {
-		LM_ERR("invalid data parameter\n");
-		return -1;
-	}
-	if(fixup_get_svalue(msg, (gparam_t*)ptag, &stag)!=0) {
-		LM_ERR("unable to get tag\n");
-		return -1;
-	}
-	if(stag.s==NULL || stag.len == 0) {
-		LM_ERR("invalid tag parameter\n");
-		return -1;
-	}
-
-	if(bladec_relay_unicast(&sdata, &stag)<0) {
-		LM_ERR("failed to relay event: [[%.*s]] to [%.*s] \n",
-				sdata.len, sdata.s, stag.len, stag.s);
-		return -2;
-	}
-	return 1;
-}
-
-/**
- *
- */
 static int fixup_bladec_relay(void** param, int param_no)
 {
 	return fixup_spve_null(param, param_no);
-}
-
-/**
- *
- */
-static int fixup_bladec_multicast(void** param, int param_no)
-{
-	return fixup_spve_spve(param, param_no);
-}
-
-/**
- *
- */
-static int w_bladec_close(sip_msg_t* msg, char* p1, char* p2)
-{
-	int ret;
-	ret = bladec_cfg_close(msg);
-	if(ret>=0)
-		return ret+1;
-	return ret;
-}
-
-/**
- *
- */
-static int w_bladec_set_tag(sip_msg_t* msg, char* ptag, char* p2)
-{
-	str stag;
-	if(fixup_get_svalue(msg, (gparam_t*)ptag, &stag)!=0) {
-		LM_ERR("no tag name\n");
-		return -1;
-	}
-	if(bladec_set_tag(msg, &stag)<0)
-		return -1;
-	return 1;
 }
 
 /**
@@ -612,46 +322,10 @@ static int ki_bladec_relay(sip_msg_t *msg, str *sdata)
 /**
  *
  */
-static int ki_bladec_relay_unicast(sip_msg_t *msg, str *sdata, str *stag)
-{
-	return bladec_relay_unicast(sdata, stag);
-}
-
-/**
- *
- */
-static int ki_bladec_relay_multicast(sip_msg_t *msg, str *sdata, str *stag)
-{
-	return bladec_relay_multicast(sdata, stag);
-}
-
-/**
- *
- */
 /* clang-format off */
 static sr_kemi_t sr_kemi_bladec_exports[] = {
 	{ str_init("bladec"), str_init("relay"),
 		SR_KEMIP_INT, ki_bladec_relay,
-		{ SR_KEMIP_STR, SR_KEMIP_NONE, SR_KEMIP_NONE,
-			SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE }
-	},
-	{ str_init("bladec"), str_init("relay_unicast"),
-		SR_KEMIP_INT, ki_bladec_relay_unicast,
-		{ SR_KEMIP_STR, SR_KEMIP_STR, SR_KEMIP_NONE,
-			SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE }
-	},
-	{ str_init("bladec"), str_init("relay_multicast"),
-		SR_KEMIP_INT, ki_bladec_relay_multicast,
-		{ SR_KEMIP_STR, SR_KEMIP_STR, SR_KEMIP_NONE,
-			SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE }
-	},
-	{ str_init("bladec"), str_init("close"),
-		SR_KEMIP_INT, bladec_cfg_close,
-		{ SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE,
-			SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE }
-	},
-	{ str_init("bladec"), str_init("set_tag"),
-		SR_KEMIP_INT, bladec_set_tag,
 		{ SR_KEMIP_STR, SR_KEMIP_NONE, SR_KEMIP_NONE,
 			SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE }
 	},

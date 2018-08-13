@@ -31,15 +31,13 @@ void bladec_close_notify_sockets_child(void);
 
 void bladec_close_notify_sockets_parent(void);
 
-int bladec_run_dispatcher(char *laddr, int lport);
+int bladec_run_dispatcher();
 
 int bladec_run_worker(int prank);
 
 int bladec_relay(str *evdata);
-int bladec_relay_multicast(str *evdata, str *ctag);
-int bladec_relay_unicast(str *evdata, str *ctag);
 
-void bladec_init_environment(int dformat);
+void bladec_init_environment(void);
 
 int pv_parse_bladec_name(pv_spec_t *sp, str *in);
 int pv_get_bladec(sip_msg_t *msg,  pv_param_t *param, pv_value_t *res);
