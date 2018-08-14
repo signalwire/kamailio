@@ -290,12 +290,47 @@ int bladec_run_worker(int prank)
 /**
  *
  */
-int bladec_relay(str *evdata)
+int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
+		str *evcmd, str *evdata)
 {
-	LM_DBG("relaying event data [%.*s] (%d)\n",
+	ks_status_t rcode;
+	swclt_cmd_t rcmd;
+	ks_json_t *result = NULL;
+	ks_json_t *params = NULL;
+
+	LM_DBG("relaying cmd - reqnodeid [%s] resnodeid [%s] evproto [%s]"
+			" evcmd [%.*s] evdata [%.*s] (%d)\n",
+			(reqnodeid->len>0)?reqnodeid->s:"none",
+			(resnodeid->len>0)?resnodeid->s:"none",
+			(evproto->len>0)?evproto->s:"none",
+			evcmd->len, evcmd->s,
 			evdata->len, evdata->s, evdata->len);
 
-	return 0;
+	params = ks_json_parse((const char *)evdata->s);
+
+	rcode = swclt_sess_execute(_bladec_session,
+				(reqnodeid->len>0)?reqnodeid->s:NULL,
+				(resnodeid->len>0)?resnodeid->s:NULL,
+				(evproto->len>0)?evproto->s:NULL,
+				evcmd->s,
+				&params,
+				&rcmd);
+
+	LM_DBG("res code: %ld\n", (long)rcode);
+
+	swclt_cmd_result(rcmd, (const ks_json_t **)&result);
+
+	if (!result) {
+		LM_ERR("no result to command\n");
+		goto error;
+	}
+
+	ks_handle_destroy(&rcmd);
+	return 1;
+
+error:
+	ks_handle_destroy(&rcmd);
+	return -1;
 }
 
 /**

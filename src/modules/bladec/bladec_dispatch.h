@@ -35,7 +35,8 @@ int bladec_run_dispatcher();
 
 int bladec_run_worker(int prank);
 
-int bladec_relay(str *evdata);
+int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
+		str *evcmd, str *evdata);
 
 void bladec_init_environment(void);
 

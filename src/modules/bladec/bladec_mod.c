@@ -55,14 +55,15 @@ static int  mod_init(void);
 static int  child_init(int);
 static void mod_destroy(void);
 
-static int w_bladec_relay(sip_msg_t* msg, char* evdata, char* p2);
-static int w_bladec_async_relay(sip_msg_t* msg, char* evdata, char* p2);
-static int fixup_bladec_relay(void** param, int param_no);
+static int w_bladec_relay(sip_msg_t* msg, char* reqnid, char* resnid,
+		char* evproto, char* evcmd, char* evdata);
+static int w_bladec_async_relay(sip_msg_t* msg, char* reqnid, char* resnid,
+		char* evproto, char* evcmd, char* evdata);
 
 static cmd_export_t cmds[]={
-	{"bladec_relay",			(cmd_function)w_bladec_relay,		1, fixup_bladec_relay,
+	{"bladec_relay",		(cmd_function)w_bladec_relay,		5, fixup_spve_all,
 		0, ANY_ROUTE},
-	{"bladec_async_relay",	(cmd_function)w_bladec_async_relay, 	1, fixup_bladec_relay,
+	{"bladec_async_relay",	(cmd_function)w_bladec_async_relay, 5, fixup_spve_all,
 		0, REQUEST_ROUTE},
 	{0, 0, 0, 0, 0, 0}
 };
@@ -220,15 +221,43 @@ static void mod_destroy(void)
 /**
  *
  */
-static int w_bladec_relay(sip_msg_t *msg, char *evdata, char *p2)
+static int w_bladec_relay(sip_msg_t* msg, char* reqnid, char* resnid,
+		char* evproto, char* evcmd, char* evdata)
 {
-	str sdata;
+	str sreqnid = STR_NULL;
+	str sresnid = STR_NULL;
+	str sproto = STR_NULL;
+	str scmd = STR_NULL;
+	str sdata = STR_NULL;
 
-	if(evdata==0) {
+	if(evcmd==NULL || evdata==0) {
 		LM_ERR("invalid parameters\n");
 		return -1;
 	}
 
+	if(fixup_get_svalue(msg, (gparam_t*)reqnid, &sreqnid)!=0) {
+		LM_ERR("unable to get reqnodeid\n");
+		return -1;
+	}
+
+	if(fixup_get_svalue(msg, (gparam_t*)resnid, &sresnid)!=0) {
+		LM_ERR("unable to get resnodeid\n");
+		return -1;
+	}
+
+	if(fixup_get_svalue(msg, (gparam_t*)evproto, &sproto)!=0) {
+		LM_ERR("unable to get proto\n");
+		return -1;
+	}
+
+	if(fixup_get_svalue(msg, (gparam_t*)evcmd, &scmd)!=0) {
+		LM_ERR("unable to get cmd\n");
+		return -1;
+	}
+	if(scmd.s==NULL || scmd.len == 0) {
+		LM_ERR("invalid cmd parameter\n");
+		return -1;
+	}
 	if(fixup_get_svalue(msg, (gparam_t*)evdata, &sdata)!=0) {
 		LM_ERR("unable to get data\n");
 		return -1;
@@ -237,24 +266,32 @@ static int w_bladec_relay(sip_msg_t *msg, char *evdata, char *p2)
 		LM_ERR("invalid data parameter\n");
 		return -1;
 	}
-	if(bladec_relay(&sdata)<0) {
-		LM_ERR("failed to relay event: %.*s\n", sdata.len, sdata.s);
+
+	if(bladec_relay(&sreqnid, &sresnid, &sproto, &scmd, &sdata)<0) {
+		LM_ERR("failed to relay event - cmd [%.*s] data [%.*s]\n",
+				scmd.len, scmd.s, sdata.len, sdata.s);
 		return -1;
 	}
+
 	return 1;
 }
 
 /**
  *
  */
-static int w_bladec_async_relay(sip_msg_t *msg, char *evdata, char *p2)
+static int w_bladec_async_relay(sip_msg_t* msg, char* reqnid, char* resnid,
+		char* evproto, char* evcmd, char* evdata)
 {
-	str sdata;
+	str sreqnid = STR_NULL;
+	str sresnid = STR_NULL;
+	str sproto = STR_NULL;
+	str scmd = STR_NULL;
+	str sdata = STR_NULL;
 	unsigned int tindex;
 	unsigned int tlabel;
 	tm_cell_t *t = 0;
 
-	if(evdata==0) {
+	if(evcmd==NULL || evdata==0) {
 		LM_ERR("invalid parameters\n");
 		return -1;
 	}
@@ -287,6 +324,29 @@ static int w_bladec_async_relay(sip_msg_t *msg, char *evdata, char *p2)
 
 	LM_DBG("transaction suspended [%u:%u]\n", tindex, tlabel);
 
+	if(fixup_get_svalue(msg, (gparam_t*)reqnid, &sreqnid)!=0) {
+		LM_ERR("unable to get reqnodeid\n");
+		return -1;
+	}
+
+	if(fixup_get_svalue(msg, (gparam_t*)resnid, &sresnid)!=0) {
+		LM_ERR("unable to get resnodeid\n");
+		return -1;
+	}
+
+	if(fixup_get_svalue(msg, (gparam_t*)evproto, &sproto)!=0) {
+		LM_ERR("unable to get proto\n");
+		return -1;
+	}
+
+	if(fixup_get_svalue(msg, (gparam_t*)evcmd, &scmd)!=0) {
+		LM_ERR("unable to get cmd\n");
+		return -1;
+	}
+	if(scmd.s==NULL || scmd.len == 0) {
+		LM_ERR("invalid cmd parameter\n");
+		return -1;
+	}
 	if(fixup_get_svalue(msg, (gparam_t*)evdata, &sdata)!=0) {
 		LM_ERR("unable to get data\n");
 		return -1;
@@ -296,27 +356,22 @@ static int w_bladec_async_relay(sip_msg_t *msg, char *evdata, char *p2)
 		return -1;
 	}
 
-	if(bladec_relay(&sdata)<0) {
-		LM_ERR("failed to relay event: %.*s\n", sdata.len, sdata.s);
-		return -2;
+	if(bladec_relay(&sreqnid, &sresnid, &sproto, &scmd, &sdata)<0) {
+		LM_ERR("failed to relay event - cmd [%.*s] data [%.*s]\n",
+				scmd.len, scmd.s, sdata.len, sdata.s);
+		return -1;
 	}
+
 	return 1;
 }
 
 /**
  *
  */
-static int fixup_bladec_relay(void** param, int param_no)
+static int ki_bladec_relay(sip_msg_t *msg, str *reqnodeid, str *resnodeid,
+		str *evproto, str *evcmd, str *evdata)
 {
-	return fixup_spve_null(param, param_no);
-}
-
-/**
- *
- */
-static int ki_bladec_relay(sip_msg_t *msg, str *sdata)
-{
-	return bladec_relay(sdata);
+	return bladec_relay(reqnodeid, resnodeid, evproto, evcmd, evdata);
 }
 
 /**
@@ -326,8 +381,8 @@ static int ki_bladec_relay(sip_msg_t *msg, str *sdata)
 static sr_kemi_t sr_kemi_bladec_exports[] = {
 	{ str_init("bladec"), str_init("relay"),
 		SR_KEMIP_INT, ki_bladec_relay,
-		{ SR_KEMIP_STR, SR_KEMIP_NONE, SR_KEMIP_NONE,
-			SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE }
+		{ SR_KEMIP_STR, SR_KEMIP_STR, SR_KEMIP_STR,
+			SR_KEMIP_STR, SR_KEMIP_STR, SR_KEMIP_NONE }
 	},
 
 	{ {0, 0}, {0, 0}, 0, NULL, { 0, 0, 0, 0, 0, 0 } }
