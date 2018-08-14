@@ -48,6 +48,11 @@
 				<emphasis>libblade</emphasis>
 			</para>
 			</listitem>
+			<listitem>
+			<para>
+				<emphasis>signalwire-client-c</emphasis>
+			</para>
+			</listitem>
 			</itemizedlist>
 		</para>
 	</section>
@@ -70,25 +75,6 @@
 		<programlisting format="linespecific">
 ...
 modparam("bladec", "workers", 2)
-...
-</programlisting>
-		</example>
-	</section>
-	<section id="bladec.p.bind_addr">
-		<title><varname>bind_addr</varname> (str)</title>
-		<para>
-		Local IP and port to listen on for incoming TCP connections.
-		</para>
-		<para>
-		<emphasis>
-			Default value is "127.0.0.1:8448".
-		</emphasis>
-		</para>
-		<example>
-		<title>Set <varname>bind_addr</varname> parameter</title>
-		<programlisting format="linespecific">
-...
-modparam("bladec", "bind_addr", "1.2.3.4:8228")
 ...
 </programlisting>
 		</example>
@@ -125,25 +111,6 @@ end
 </programlisting>
 		</example>
 	</section>
-	<section id="bladec.p.max_clients">
-		<title><varname>max_clients</varname> (int)</title>
-		<para>
-			Maximum number of clients that can connect to bladec socket.
-		</para>
-		<para>
-		<emphasis>
-			Default value is 8.
-		</emphasis>
-		</para>
-		<example>
-		<title>Set <varname>max_clients</varname> parameter</title>
-		<programlisting format="linespecific">
-...
-modparam("bladec", "max_clients", 4)
-...
-</programlisting>
-		</example>
-	</section>
 	<section id="bladec.p.config">
 		<title><varname>config</varname> (str)</title>
 		<para>
@@ -169,16 +136,15 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 	<title>Functions</title>
 	<section id="bladec.f.bladec_relay">
 		<title>
-		<function moreinfo="none">bladec_relay(evdata)</function>
+		<function moreinfo="none">bladec_relay(reqnid, resnid, evproto, evcmd, evdata)</function>
 		</title>
 		<para>
-		Relay the data given as parameter to connected applications.
+		Relay the command given as parameter to connected session.
 		</para>
 		<para>
-		The function is passing the task to bladec dispatcher process, therefore
-		the SIP worker process is not blocked. Also, it doesn't wait for any
-		response, therefore the processing of the configuration continues
-		very fast when executing bladec_relay().
+		The function is passing the task to blade network immediately and waits
+		for response, therefore the processing of the configuration waits for
+		bladec_relay().
 		</para>
 		<para>
 		This function can be used from ANY_ROUTE.
@@ -187,7 +153,8 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 		<title><function>bladec_relay</function> usage</title>
 		<programlisting format="linespecific">
 ...
-bladec_relay("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
+bladec_relay("here", "there", "siprouting", "route",
+        "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 ...
 </programlisting>
 		</example>
@@ -212,7 +179,10 @@ bladec_relay("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 		<function moreinfo="none">bladec_async_relay(evdata)</function>
 		</title>
 		<para>
-		Relay the data given as parameter to connected applications. Before
+		Note: not implemented yet.
+		</para>
+		<para>
+		Relay the command given as parameter to connected applications. Before
 		evaluating the parameter, the request processing is suspended using
 		tm module (using the t_suspend()/t_continue() framework). The routing
 		of the SIP request can be continued once event_route[bladec:message-received]
@@ -226,141 +196,12 @@ bladec_relay("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 		<title><function>bladec_async_relay</function> usage</title>
 		<programlisting format="linespecific">
 ...
-bladec_async_relay("{ \"event\": \"suspend\",\n \"data\":"
-        " { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}");
+bladec_async_relay("here", "there", "siprouting", "route",
+		"{ \"event\": \"suspend\",\n \"data\":"
+			" { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}");
 ...
 </programlisting>
 		</example>
-	</section>
-
-	<section id="bladec.f.bladec_multicast">
-		<title>
-		<function moreinfo="none">bladec_multicast(evdata, etag)</function>
-		</title>
-		<para>
-		Relay the data given as parameter to connections that match
-		the tag provided by etag value. The etag can be a variable. For more
-		see bladec_relay() and bladec_set_tag().
-		</para>
-		<example>
-		<title><function>bladec_multicast</function> usage</title>
-		<programlisting format="linespecific">
-...
-bladec_multicast("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}", "tagx");
-...
-</programlisting>
-		</example>
-	</section>
-
-	<section id="bladec.f.bladec_async_multicast">
-		<title>
-		<function moreinfo="none">bladec_async_multicast(evdata, etag)</function>
-		</title>
-		<para>
-		Async relay the data given as parameter to connections that match
-		the tag provided by etag value. The etag can be a variable. For more
-		see bladec_async_relay() and bladec_set_tag().
-		</para>
-		<example>
-		<title><function>bladec_async_multicast</function> usage</title>
-		<programlisting format="linespecific">
-...
-bladec_async_multicast("{ \"event\": \"suspend\",\n \"data\":"
-    " { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}", "tagx");
-...
-</programlisting>
-		</example>
-	</section>
-
-	<section id="bladec.f.bladec_unicast">
-		<title>
-		<function moreinfo="none">bladec_unicast(evdata, etag)</function>
-		</title>
-		<para>
-		Relay the event data given as parameter to the first connection that
-		match the tag provided by etag value. The etag can be a variable. For
-		more see bladec_relay() and bladec_set_tag().
-		</para>
-		<example>
-		<title><function>bladec_unicast</function> usage</title>
-		<programlisting format="linespecific">
-...
-bladec_unicast("{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}", "tagx");
-...
-</programlisting>
-		</example>
-	</section>
-
-	<section id="bladec.f.bladec_async_unicast">
-		<title>
-		<function moreinfo="none">bladec_async_unicast(evdata, etag)</function>
-		</title>
-		<para>
-		Async relay the data given as parameter to the first connection
-		that match the tag provided by etag value. The etag can be a variable.
-		For more see bladec_async_relay() and bladec_set_tag().
-		</para>
-		<example>
-		<title><function>bladec_async_unicast</function> usage</title>
-		<programlisting format="linespecific">
-...
-bladec_async_unicast("{ \"event\": \"suspend\",\n \"data\":"
-    " { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}", "tagx");
-...
-</programlisting>
-		</example>
-	</section>
-
-	<section id="blade.f.bladec_close">
-		<title>
-		<function moreinfo="none">bladec_close()</function>
-		</title>
-		<para>
-		Close bladec current client connection.
-		</para>
-		<para>
-		This function can be used from ANY_ROUTE.
-		</para>
-		<example>
-		<title><function>bladec_close</function> usage</title>
-		<programlisting format="linespecific">
-...
-event_route[bladec:connection-new] {
-  if($bladec(srcaddr)!="127.0.0.1") {
-    bladec_close();
-    exit;
-  }
-}
-...
-</programlisting>
-	    </example>
-	</section>
-
-	<section id="bladec.f.bladec_set_tag">
-	    <title>
-		<function moreinfo="none">bladec_set_tag(tname)</function>
-	    </title>
-	    <para>
-			Set tag name for current client connection. The parameters
-			has to be a string up to 64 characters. It can also be
-			a variable holding such string.
-		</para>
-		<para>
-		This function can be used from ANY_ROUTE.
-		</para>
-		<example>
-		<title><function>bladec_set_tag</function> usage</title>
-		<programlisting format="linespecific">
-...
-event_route[bladec:connection-new] {
-  if($bladec(srcaddr)=="127.0.0.1") {
-    bladec_set_tag("local");
-    exit;
-  }
-}
-...
-</programlisting>
-	    </example>
 	</section>
 
 	</section>
@@ -369,48 +210,17 @@ event_route[bladec:connection-new] {
     <title>Event Routes</title>
     <section>
         <title>
-        <function moreinfo="none">bladec:connection-new</function>
-        </title>
-        <para>
-			If defined, the module calls event_route[bladec:connection-new]
-			when a new client is connected.
-        </para>
-        <programlisting  format="linespecific">
-...
-event_route[bladec:connection-new] {
-    xlog("new connection from $bladec(srcaddr):$bladec(srcport)\n");
-}
-...
-        </programlisting>
-	</section>
-    <section>
-        <title>
-        <function moreinfo="none">bladec:connection-closed</function>
-        </title>
-        <para>
-			If defined, the module calls event_route[bladec:connection-closed]
-			when a client connection is closed.
-        </para>
-        <programlisting  format="linespecific">
-...
-event_route[bladec:connection-closed] {
-    xlog("connection closed by $bladec(srcaddr):$bladec(srcport)\n");
-}
-...
-        </programlisting>
-    </section>
-    <section>
-        <title>
         <function moreinfo="none">bladec:message-received</function>
         </title>
         <para>
 			If defined, the module calls event_route[bladec:message-received]
-			when a message is received from a client.
+			when a message is received from blade network for an asynchronous
+			command.
         </para>
         <programlisting  format="linespecific">
 ...
 event_route[bladec:message-received] {
-    xlog("received [$bladec(msg)] from $bladec(srcaddr):$bladec(srcport)\n");
+    xlog("received: [$bladec(msg)]\n");
 }
 ...
         </programlisting>
@@ -418,24 +228,15 @@ event_route[bladec:message-received] {
     </section>
 
     <section>
-		<title>Exported pseudo-variables</title>
+		<title>Exported Pseudo-Variables</title>
+		<para>
+		Exported pseudo-variables:
+		</para>
 		<itemizedlist>
-			<listitem><para>
-				<emphasis>$bladec(srcaddr)</emphasis> - source ip
-			</para></listitem>
-			<listitem><para>
-				<emphasis>$bladec(srcport)</emphasis> - source port
-			</para></listitem>
 			<listitem><para>
 				<emphasis>$bladec(msg)</emphasis> - received event message
 			</para></listitem>
-			<listitem><para>
-				<emphasis>$bladec(conidx)</emphasis> - internal connection index
-			</para></listitem>
 		</itemizedlist>
-		<para>
-		Exported pseudo-variables are documented at &kamwikilink;.
-		</para>
 	</section>
 
 </chapter>
