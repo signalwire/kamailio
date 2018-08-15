@@ -71,11 +71,12 @@ static bladec_evroutes_t _bladec_rts;
 extern str _bladec_config_path;
 
 swclt_sess_t _bladec_session = {0};
+swclt_hmon_t _bladec_session_monitor = {0};
 
 typedef struct baldec_globals {
-	swclt_cfg_t lconfig;
-	swclt_ident_t target_identity;
-	const char *target_identity_str;
+	swclt_cfg_t cfgbladec;
+	swclt_cfg_t cfgclient;
+	const char *blade_bootstrap;
 	int istatus;
 } bladec_globals_t;
 
@@ -92,31 +93,32 @@ int bladec_client_init(void)
 
 	swclt_init(KS_LOG_LEVEL_INFO);
 
-	status = swclt_cfg_open_ex(&_bladec_globals.lconfig, _bladec_config_path.s, "local");
+	status = swclt_cfg_open_ex(&_bladec_globals.cfgbladec, _bladec_config_path.s, "bladec");
 	if(status != KS_STATUS_SUCCESS) {
-		LM_ERR("failed to open config: %s (%d)\n", _bladec_config_path.s, (int)status);
+		LM_ERR("failed to open config for bladec group: %s (%d)\n", _bladec_config_path.s, (int)status);
 		return -1;
 	}
-	status = swclt_cfg_lookup_identval(_bladec_globals.lconfig, "target_identity", &_bladec_globals.target_identity);
+
+	status = swclt_cfg_lookup_strval(_bladec_globals.cfgbladec, "blade_bootstrap",
+			&_bladec_globals.blade_bootstrap);
 	if(status != KS_STATUS_SUCCESS) {
-		LM_ERR("failed to load target_identity key in config: %s\n", _bladec_config_path.s);
+		LM_ERR("failed to load blade_bootstrap key in config: %s\n", _bladec_config_path.s);
 		goto error;
 	}
 
-	status = swclt_cfg_lookup_strval(_bladec_globals.lconfig, "target_identity", &_bladec_globals.target_identity_str);
-	if(status != KS_STATUS_SUCCESS) {
-		LM_ERR("failed to load target_identity key in config: %s\n", _bladec_config_path.s);
+    status = swclt_cfg_open_ex(&_bladec_globals.cfgclient, _bladec_config_path.s, "client");
+    if (status != KS_STATUS_SUCCESS) {
+		LM_ERR("failed to open config for client group: %s (%d)\n", _bladec_config_path.s, (int)status);
 		goto error;
 	}
 	_bladec_globals.istatus = 1;
 
-	LM_DBG("target identity string: %s\n", _bladec_globals.target_identity_str);
+	LM_DBG("blade bootstrap string: %s\n", _bladec_globals.blade_bootstrap);
 
 	return 0;
 
 error:
-	swclt_ident_destroy(&_bladec_globals.target_identity);
-	ks_handle_destroy(&_bladec_globals.lconfig);
+	ks_handle_destroy(&_bladec_globals.cfgbladec);
 
 	if (swclt_shutdown()) {
 		LM_ERR("shutdown was ungraceful\n");
@@ -124,25 +126,47 @@ error:
 	return -1;
 }
 
+static void bladec_session_state_handler(swclt_sess_t sess,
+			swclt_hstate_change_t *sinfo, const char *cbdata)
+{
+	SWCLT_HSTATE old_state = sinfo->old_state;
+	SWCLT_HSTATE new_state = sinfo->new_state;
+
+	LM_DBG("SignalWire Session State Change (%d => %d): %s\n",
+			old_state, new_state, swclt_hstate_describe_change(sinfo));
+
+	if (new_state == SWCLT_HSTATE_ONLINE) {
+		LM_DBG("Connected with NEW session\n");
+	} else if (new_state == SWCLT_HSTATE_OFFLINE) {
+		LM_DBG("Disconnected\n");
+	}
+}
+
+
 /**
  *
  */
 int bladec_client_session_start(void)
 {
+	ks_status_t status;
 	if(_bladec_globals.istatus != 1) {
 		LM_ERR("config struct was not initialized\n");
 		return -1;
 	}
-	LM_DBG("creating session to: %s\n", _bladec_globals.target_identity_str);
-	swclt_sess_create(&_bladec_session, _bladec_globals.target_identity_str,
-			_bladec_globals.lconfig);
+	LM_DBG("creating session to: %s\n", _bladec_globals.blade_bootstrap);
+	swclt_sess_create(&_bladec_session, _bladec_globals.blade_bootstrap,
+			_bladec_globals.cfgclient);
 	if(!_bladec_session) {
-		LM_ERR("failed connecting to: %s\n", _bladec_globals.target_identity_str);
+		LM_ERR("failed connecting to: %s\n", _bladec_globals.blade_bootstrap);
 		return -1;
 	}
-	LM_DBG("connecting to: %s\n", _bladec_globals.target_identity_str);
-	swclt_sess_connect(_bladec_session);
-	LM_DBG("connected to: %s\n", _bladec_globals.target_identity_str);
+	swclt_hmon_register(&_bladec_session_monitor, _bladec_session,
+			bladec_session_state_handler, NULL);
+
+	LM_DBG("connecting to: %s\n", _bladec_globals.blade_bootstrap);
+	status = swclt_sess_connect(_bladec_session);
+	LM_DBG("connected to: %s (status: %d)\n",
+			_bladec_globals.blade_bootstrap, status);
 
 	return 0;
 }
@@ -297,6 +321,16 @@ int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
 	swclt_cmd_t rcmd;
 	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
+
+	if(_bladec_globals.istatus != 1) {
+		LM_ERR("config struct was not initialized\n");
+		return -1;
+	}
+
+	if (!swclt_sess_connected(_bladec_session)) {
+		LM_ERR("session is not connected\n");
+		//return -1;
+	}
 
 	LM_DBG("relaying cmd - reqnodeid [%s] resnodeid [%s] evproto [%s]"
 			" evcmd [%.*s] evdata [%.*s] (%d)\n",
