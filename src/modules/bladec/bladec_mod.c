@@ -110,11 +110,6 @@ static int mod_init(void)
 		return -1;
 	}
 
-	if(bladec_client_init()<0) {
-		LM_ERR("failed to init the blade connector client\n");
-		return -1;
-	}
-
 	/* init faked sip msg */
 	if(faked_msg_init()<0) {
 		LM_ERR("failed to init faked sip message\n");
@@ -157,6 +152,12 @@ static int child_init(int rank)
 		if(_bladec_dispatcher_pid!=getpid()) {
 			bladec_close_notify_sockets_parent();
 		}
+
+		if(bladec_client_init()<0) {
+			LM_ERR("failed to init the blade connector client\n");
+			return -1;
+		}
+
 		if(bladec_client_session_start()<0) {
 			LM_ERR("failed to create blade session for process %d\n", rank);
 			return -1;
@@ -171,20 +172,16 @@ static int child_init(int rank)
 		/* child */
 		_bladec_dispatcher_pid = getpid();
 
+		/* initialize the config framework */
+		if (cfg_child_init())
+			return -1;
 		/* do child init to allow execution of rpc like functions */
 		if(init_child(PROC_RPC) < 0) {
 			LM_DBG("failed to do RPC child init for dispatcher\n");
 			return -1;
 		}
-		/* initialize the config framework */
-		if (cfg_child_init())
-			return -1;
 		/* main function for dispatcher */
 		bladec_close_notify_sockets_child();
-		if(bladec_client_session_start()<0) {
-			LM_ERR("failed to create blade session for dispatcher process\n");
-			return -1;
-		}
 		if(bladec_run_dispatcher()<0) {
 			LM_ERR("failed to initialize bladec dispatcher process\n");
 			return -1;
