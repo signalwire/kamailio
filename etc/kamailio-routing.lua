@@ -12,6 +12,7 @@
 --  the execution of the script. Use KSR.x.exit() after it or KSR.x.drop()
 --
 
+local cjson = require "cjson"
 
 -- global variables to enable/disable some features
 WITH_ANTIFLOOD=false
@@ -24,6 +25,11 @@ FLT_NATS=5
 
 FLB_NATB=6
 FLB_NATSIPPING=7
+
+AUTHURL="http://127.0.0.1:8088/auth"
+
+DOMAINAUTH= {}
+DOMAINAUTH["counterpath.sip.signalwire.com"] = 1
 
 -- SIP request routing
 -- equivalent of request_route{}
@@ -62,6 +68,9 @@ function ksr_request_route()
 	-- authentication
 	ksr_route_auth();
 
+	-- registrations
+	ksr_route_registrar();
+
 	-- record routing for dialog forming requests (in case they are routed)
 	-- - remove preloaded route headers
 	KSR.hdr.remove("Route");
@@ -82,6 +91,7 @@ function ksr_request_route()
 
 	-- routing inbound and outbound
 	if KSR.dispatcher.ds_is_from_list("100") > 0 then
+		ksr_route_location();
 		if KSR.is_myself_ruri() then
 			KSR.sl.send_reply(404, "Local route");
 			KSR.x.exit();
@@ -146,7 +156,7 @@ function ksr_route_reqinit()
 		end
 	end
 	if KSR.corex.has_user_agent() then
-		local uastr = KSR.pv.get("$ua");
+		local uastr = KSR.pv.getw("$ua");
 		if (string.find(uastr, "friendly-scanner")
 				or string.find(uastr, "sipcli")) then
 			KSR.sl.sl_send_reply(200, "OK");
@@ -214,6 +224,51 @@ end
 
 -- IP authorization and user uthentication
 function ksr_route_auth()
+	-- skip auth for traffic from media servers
+	if KSR.dispatcher.ds_is_from_list("100") > 0 then
+		return 1;
+	end
+
+	local uafd = KSR.pv.get("$fd");
+
+	-- auth only a set of domains
+	if DOMAINAUTH[uafd] == nil then
+		return 1;
+	end
+
+	-- challenge if no Auth header
+	if KSR.is_REGISTER() then
+		if KSR.hdr.is_present("Authorization") < 0 then
+			KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+			KSR.x.exit();
+		end
+	elseif KSR.hdr.is_present("Proxy-Authorization") < 0 then
+		KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+		KSR.x.exit();
+	end
+
+	local hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+			.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
+	KSR.pv.sets("$var(hres)", "");
+	KSR.http_client.query_post(AUTHURL, hbody, "$var(hres)");
+
+	local hres = KSR.pv.getw("$var(hres)");
+	KSR.dbg("http query returned data: " .. hres .. "\n");
+	if string.len(hres) < 10 then
+		KSR.sl.sl_send_reply(500, "Backend unavailable");
+		KSR.x.exit();
+	end
+	local jsres = cjson.decode(hres);
+	if jsres["ha1"] == nil then
+		KSR.sl.sl_send_reply(500, "Backend unavailable");
+		KSR.x.exit();
+	end
+	if KSR.auth.pv_auth_check(uafd, jsres["ha1"], 1, 1) < 0 then
+		KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+		KSR.x.exit();
+	end
+
+	KSR.auth.consume_credentials();
 	return 1;
 end
 
@@ -221,7 +276,9 @@ end
 function ksr_route_natdetect()
 	KSR.force_rport();
 	if KSR.nathelper.nat_uac_test(19)>0 then
-		if KSR.siputils.is_first_hop()>0 then
+		if KSR.is_REGISTER() then
+			KSR.nathelper.fix_nated_register();
+		elseif KSR.siputils.is_first_hop()>0 then
 			KSR.nathelper.set_contact_alias();
 		end
 		KSR.setflag(FLT_NATS);
@@ -264,6 +321,44 @@ function ksr_route_dlguri()
 	end
 	return 1;
 end
+
+-- Handle SIP registrations
+function ksr_route_registrar()
+	if not KSR.is_REGISTER() then return 1; end
+	if KSR.isflagset(FLT_NATS) then
+		KSR.setbflag(FLB_NATB);
+		-- do SIP NAT pinging
+		KSR.setbflag(FLB_NATSIPPING);
+	end
+	if KSR.registrar.save("location", 0)<0 then
+		KSR.sl.sl_reply_error();
+	end
+	KSR.x.exit();
+end
+
+-- User location service
+function ksr_route_location()
+	-- only for a set of domains
+	local uard = KSR.pv.get("$rd");
+	if DOMAINAUTH[uard] == nil then
+		return 1;
+	end
+
+	local rc = KSR.registrar.lookup("location");
+	if rc<0 then
+		KSR.tm.t_newtran();
+		if rc==-2 then
+			KSR.sl.send_reply("405", "Method Not Allowed");
+		else
+			KSR.sl.send_reply("404", "Not Found");
+		end
+		KSR.x.exit();
+	end
+
+	ksr_route_relay();
+	KSR.x.exit();
+end
+
 
 -- Manage outgoing branches
 -- equivalent of branch_route[...]{}
