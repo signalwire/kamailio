@@ -8,12 +8,15 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
   dh-systemd \
   dpkg-dev \
   flex \
+  libcurl4-openssl-dev \
   libgeoip-dev \
   liblua5.1-0-dev \
   libncurses5-dev \
   libpcre3-dev \
   libssl-dev \
   libunistring-dev \
+  lua5.1 \
+  lua-cjson \
   openssl \
   pkg-config \
   uuid-dev \
