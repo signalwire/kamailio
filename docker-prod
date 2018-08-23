@@ -4,7 +4,7 @@ then
   echo "-----------------------"
   read -p "Push to production? Enter A for Being Awesome: " yn
   case $yn in
-    [Aa]* ) docker push signalwire/kamailio; break;;
+    [Aa]* ) docker push signalwire/kamailio;;
     * ) exit;;
   esac
 fi

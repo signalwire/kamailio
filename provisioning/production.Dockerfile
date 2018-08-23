@@ -18,12 +18,14 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
   pkg-config \
   uuid-dev \
   xsltproc \
-  zlib1g-dev && rm -rf /var/lib/apt/lists/*
+  zlib1g-dev \
+  dnsutils \
+  libjemalloc-dev && rm -rf /var/lib/apt/lists/*
 
 COPY kamailio /usr/local/src/kamailio
 WORKDIR /usr/local/src/kamailio
-RUN make include_modules="app_lua tls" cfg
-RUN make all
+RUN make -j`nproc -all` include_modules="app_lua tls" cfg
+RUN make -j`nproc -all` all
 RUN make install
 WORKDIR src/modules/tls
 RUN make install-tls-cert
