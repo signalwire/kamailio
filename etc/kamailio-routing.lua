@@ -176,7 +176,7 @@ function ksr_route_reqinit()
 		KSR.x.exit();
 	end
 
-	if KSR.sanity.sanity_check(1511, 7)<0 then
+	if KSR.sanity.sanity_check(1511, 7) < 0 then
 		KSR.err("Malformed SIP message from "
 				.. KSR.pv.get("$si") .. ":" .. KSR.pv.get("$sp") .."\n");
 		KSR.x.exit();

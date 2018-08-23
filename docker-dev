@@ -1,0 +1,1 @@
+docker-compose -f provisioning/docker-compose.yml -f provisioning/docker-compose.dev.yml --project-name kamailio "$@"

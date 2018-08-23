@@ -31,11 +31,16 @@ RUN make install
 WORKDIR src/modules/tls
 RUN make install-tls-cert
 
-
 COPY etc/kamailio.cfg /usr/local/etc/kamailio/kamailio.cfg
 COPY etc/kamailio-routing.lua /usr/local/etc/kamailio/kamailio-routing.lua
 COPY etc/dispatcher.list /usr/local/etc/kamailio/dispatcher.list
+COPY provisioning/docker-entrypoint.sh /docker-entrypoint.sh
 WORKDIR /usr/local/src
 
-ENTRYPOINT ["/usr/local/sbin/kamailio"]
-CMD ["-DD", "-ddd", "-E", "-e", "-m", "256", "-M", "12", "-A", "KAM_IP_LOCAL=172.17.0.2", "-A", "KAM_IP_PUBLIC=192.168.178.75"]
+# Add Tini
+ENV TINI_VERSION v0.18.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+ENTRYPOINT ["/tini", "--"]
+
+CMD ["/docker-entrypoint.sh"]
