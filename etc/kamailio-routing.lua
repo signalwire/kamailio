@@ -16,6 +16,7 @@ local cjson = require "cjson"
 
 -- global variables to enable/disable some features
 WITH_ANTIFLOOD=false
+WITH_AUTHCACHE=false
 
 -- global variables corresponding to defined values (e.g., flags) in kamailio.cfg
 FLT_ACC=1
@@ -247,23 +248,36 @@ function ksr_route_auth()
 		KSR.x.exit();
 	end
 
-	local hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-			.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
-	KSR.pv.sets("$var(hres)", "");
-	KSR.http_client.query_post(AUTHURL, hbody, "$var(hres)");
+	local uapasswd = "";
 
-	local hres = KSR.pv.getw("$var(hres)");
-	KSR.dbg("http query returned data: " .. hres .. "\n");
-	if string.len(hres) < 10 then
-		KSR.sl.sl_send_reply(500, "Backend unavailable");
-		KSR.x.exit();
+	if WITH_AUTHCACHE then
+		uapasswd = KSR.pv.getw("$sht(auth=>$fU@$fd)");
 	end
-	local jsres = cjson.decode(hres);
-	if jsres["ha1"] == nil then
-		KSR.sl.sl_send_reply(500, "Backend unavailable");
-		KSR.x.exit();
+
+	if uapasswd == nil or string.len(uapasswd) < 10 then
+		local hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+				.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
+		KSR.pv.sets("$var(hres)", "");
+		KSR.http_client.query_post(AUTHURL, hbody, "$var(hres)");
+
+		local hres = KSR.pv.getw("$var(hres)");
+		KSR.dbg("http query returned data: " .. hres .. "\n");
+		if string.len(hres) < 10 then
+			KSR.sl.sl_send_reply(500, "Backend unavailable");
+			KSR.x.exit();
+		end
+		local jsres = cjson.decode(hres);
+		if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
+			KSR.sl.sl_send_reply(500, "Backend unavailable");
+			KSR.x.exit();
+		end
+		uapasswd = jsres["ha1"];
+		if WITH_AUTHCACHE then
+			KSR.pv.sets("$sht(auth=>$fU@$fd)", uapasswd);
+		end
 	end
-	if KSR.auth.pv_auth_check(uafd, jsres["ha1"], 1, 1) < 0 then
+
+	if KSR.auth.pv_auth_check(uafd, uapasswd, 1, 1) < 0 then
 		KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
 		KSR.x.exit();
 	end
