@@ -10,6 +10,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
   flex \
   libgeoip-dev \
   liblua5.1-0-dev \
+  lua-cjson-dev \
   libncurses5-dev \
   libpcre3-dev \
   libssl-dev \
@@ -20,11 +21,12 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
   xsltproc \
   zlib1g-dev \
   dnsutils \
+  libcurl4-openssl-dev \
   libjemalloc-dev && rm -rf /var/lib/apt/lists/*
 
 COPY kamailio /usr/local/src/kamailio
 WORKDIR /usr/local/src/kamailio
-RUN make -j`nproc -all` include_modules="app_lua tls" cfg
+RUN make -j`nproc -all` include_modules="app_lua http_client tls" cfg
 RUN make -j`nproc -all` all
 RUN make install
 WORKDIR src/modules/tls
