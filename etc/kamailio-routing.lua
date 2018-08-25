@@ -238,7 +238,8 @@ function ksr_route_auth()
 
 	-- auth only a set of domains
 	if DOMAINAUTH[uafd] == nil then
-		return 1;
+		KSR.sl.sl_send_reply(500, "Backend unavailable");
+		KSR.x.exit();
 	end
 
 	-- challenge if no Auth header
