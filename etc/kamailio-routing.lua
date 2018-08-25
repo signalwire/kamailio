@@ -263,7 +263,8 @@ function ksr_route_auth()
 		local hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 				.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
 		KSR.pv.sets("$var(hres)", "");
-		KSR.http_client.query_post(AUTHURL, hbody, "$var(hres)");
+		KSR.http_client.query_post_hdrs(AUTHURL, hbody,
+				"Content-Type: application/json", "$var(hres)");
 
 		local hres = KSR.pv.getw("$var(hres)");
 		KSR.dbg("http query returned data: " .. hres .. "\n");
