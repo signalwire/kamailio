@@ -27,7 +27,7 @@ FLT_NATS=5
 FLB_NATB=6
 FLB_NATSIPPING=7
 
-AUTHURL="http://127.0.0.1:8088/auth"
+AUTHURL="https://api.signalwire.com/api/provider_callback/kamailio/authorize"
 
 DOMAINAUTH= {}
 DOMAINAUTH["counterpath.sip.signalwire.com"] = 1
