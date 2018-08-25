@@ -31,6 +31,10 @@ AUTHURL="https://api.signalwire.com/api/provider_callback/kamailio/authorize"
 
 DOMAINAUTH= {}
 DOMAINAUTH["counterpath.sip.signalwire.com"] = 1
+DOMAINAUTH["evan.sip.signalwire.com"] = 1
+DOMAINAUTH["bria.swire.io"] = 1
+DOMAINAUTH["beta.bria-x.com"] = 1
+DOMAINAUTH["1.bria-x.com"] = 1
 
 -- SIP request routing
 -- equivalent of request_route{}
