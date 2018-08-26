@@ -238,7 +238,7 @@ function ksr_route_auth()
 
 	-- auth only a set of domains
 	if DOMAINAUTH[uafd] == nil then
-		KSR.sl.sl_send_reply(500, "Backend unavailable");
+		KSR.sl.sl_send_reply(500, "Domain unavailable");
 		KSR.x.exit();
 	end
 
@@ -274,7 +274,7 @@ function ksr_route_auth()
 		end
 		local jsres = cjson.decode(hres);
 		if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
-			KSR.sl.sl_send_reply(500, "Backend unavailable");
+			KSR.sl.sl_send_reply(500, "Profile unavailable");
 			KSR.x.exit();
 		end
 		uapasswd = jsres["ha1"];
