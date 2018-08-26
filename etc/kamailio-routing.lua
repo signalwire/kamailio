@@ -36,6 +36,26 @@ DOMAINAUTH["bria.swire.io"] = 1
 DOMAINAUTH["beta.bria-x.com"] = 1
 DOMAINAUTH["1.bria-x.com"] = 1
 
+-- list of addresses to allow traffic from without user auth
+-- must have subnet mask (CIDR notation - use /32 for single ip addr)
+ALLOWADDR={
+	"147.75.65.192/28",
+	"34.226.36.32/28",
+	"34.210.91.112/28",
+	"147.75.60.160/28"
+};
+
+-- match source ip against ALLOWADDR list
+function ksr_is_src_trusted()
+	local srcaddr = KSR.pv.get("$si");
+	for idx, val in pairs(ALLOWADDR) do
+		if ipops.ip_is_in_subnet(srcaddr, val) > 0 then
+			return true;
+		end
+	end
+	return false;
+end
+
 -- SIP request routing
 -- equivalent of request_route{}
 function ksr_request_route()
@@ -231,6 +251,11 @@ end
 function ksr_route_auth()
 	-- skip auth for traffic from media servers
 	if KSR.dispatcher.ds_is_from_list("100") > 0 then
+		return 1;
+	end
+
+	-- from trusted list of addresses
+	if ksr_is_src_trusted() then
 		return 1;
 	end
 
