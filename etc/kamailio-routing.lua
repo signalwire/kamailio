@@ -49,7 +49,7 @@ ALLOWADDR={
 function ksr_is_src_trusted()
 	local srcaddr = KSR.pv.get("$si");
 	for idx, val in pairs(ALLOWADDR) do
-		if ipops.ip_is_in_subnet(srcaddr, val) > 0 then
+		if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
 			return true;
 		end
 	end
