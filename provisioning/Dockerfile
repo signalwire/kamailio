@@ -25,7 +25,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
 
 COPY kamailio /usr/local/src/kamailio
 WORKDIR /usr/local/src/kamailio
-RUN make include_modules="app_lua tls" cfg
+RUN make include_modules="app_lua http_client tls outbound ipops" cfg
 RUN make all
 RUN make install
 WORKDIR src/modules/tls
