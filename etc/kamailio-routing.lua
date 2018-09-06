@@ -290,24 +290,24 @@ function ksr_route_auth()
 				and KSR.textops.search_hf("Contact", "x.signalwire.project", "f") > 0 then
 			local xsp = KSR.pv.getw("$(ct{tobody.params}{param.value,+x.signalwire.project})");
 			if string.len(xsp) < 10 then
-				lbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 						.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
 			else
 				if string.sub(xsp, 1, 1) == "\"" and string.sub(xsp, -1, -1) == "\"" then
 					-- value is already quoted
-					lbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+					hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 						.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
 						.. "\", \"project\": " .. xsp
 						.. "}";
 				else
-					lbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+					hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 						.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
 						.. "\", \"project\": \"" .. xsp
 						.. "\"}";
 				end
 			end
 		else
-			lbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+			hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 					.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
 		end
 		KSR.pv.sets("$var(hres)", "");
