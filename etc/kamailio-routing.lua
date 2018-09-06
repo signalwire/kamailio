@@ -305,7 +305,6 @@ function ksr_route_auth()
 						.. "\", \"project\": \"" .. xsp
 						.. "\"}";
 				end
-			else
 			end
 		else
 			lbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
