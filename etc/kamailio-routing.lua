@@ -284,8 +284,8 @@ function ksr_route_auth()
 		uapasswd = KSR.pv.getw("$sht(auth=>$fU@$fd)");
 	end
 
+	local hbody = "";
 	if uapasswd == nil or string.len(uapasswd) < 10 then
-		local hbody = "";
 		if KSR.hdr.is_present("Contact") > 0
 				and KSR.textops.search_hf("Contact", "x.signalwire.project", "f") > 0 then
 			local xsp = KSR.pv.getw("$(ct{tobody.params}{param.value,+x.signalwire.project})");
