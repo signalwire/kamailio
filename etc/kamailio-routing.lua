@@ -288,7 +288,7 @@ function ksr_route_auth()
 	if uapasswd == nil or string.len(uapasswd) < 10 then
 		if KSR.hdr.is_present("Contact") > 0
 				and KSR.textops.search_hf("Contact", "x.signalwire.project", "f") > 0 then
-			local xsp = KSR.pv.getw("$(ct{tobody.params}{param.value,+x.signalwire.project})");
+			local xsp = KSR.pv.getw("$(ct{tobody.params}{param.value,x.signalwire.project})");
 			if string.len(xsp) < 10 then
 				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 						.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
