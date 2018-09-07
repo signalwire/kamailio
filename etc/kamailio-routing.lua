@@ -181,7 +181,7 @@ function ksr_route_reqinit()
 		end
 	end
 	if KSR.corex.has_user_agent() then
-		local uastr = KSR.pv.getw("$ua");
+		local uastr = KSR.pv.gete("$ua");
 		if (string.find(uastr, "friendly-scanner")
 				or string.find(uastr, "sipcli")) then
 			KSR.sl.sl_send_reply(200, "OK");
@@ -281,15 +281,15 @@ function ksr_route_auth()
 	local uapasswd = "";
 
 	if WITH_AUTHCACHE then
-		uapasswd = KSR.pv.getw("$sht(auth=>$fU@$fd)");
+		uapasswd = KSR.pv.gete("$sht(auth=>$fU@$fd)");
 	end
 
 	local hbody = "";
-	if uapasswd == nil or string.len(uapasswd) < 10 then
+	if uapasswd == nil or string.len(uapasswd) < 8 then
 		if KSR.hdr.is_present("Contact") > 0
 				and KSR.textops.search_hf("Contact", "x.signalwire.project", "f") > 0 then
-			local xsp = KSR.pv.getw("$(ct{tobody.params}{param.value,x.signalwire.project})");
-			if string.len(xsp) < 10 then
+			local xsp = KSR.pv.gete("$(ct{tobody.params}{param.value,x.signalwire.project})");
+			if string.len(xsp) < 4 then
 				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 						.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
 			else
@@ -314,7 +314,7 @@ function ksr_route_auth()
 		KSR.http_client.query_post_hdrs(AUTHURL, hbody,
 				"Content-Type: application/json", "$var(hres)");
 
-		local hres = KSR.pv.getw("$var(hres)");
+		local hres = KSR.pv.gete("$var(hres)");
 		KSR.dbg("http query returned data: " .. hres .. "\n");
 		if string.len(hres) < 10 then
 			KSR.sl.sl_send_reply(500, "Backend unavailable");
