@@ -12,9 +12,11 @@
 --  the execution of the script. Use KSR.x.exit() after it or KSR.x.drop()
 --
 
+local cjson = require "cjson"
 
 -- global variables to enable/disable some features
 WITH_ANTIFLOOD=false
+WITH_AUTHCACHE=false
 
 -- global variables corresponding to defined values (e.g., flags) in kamailio.cfg
 FLT_ACC=1
@@ -24,6 +26,35 @@ FLT_NATS=5
 
 FLB_NATB=6
 FLB_NATSIPPING=7
+
+AUTHURL="https://api.signalwire.com/api/provider_callback/kamailio/authorize"
+
+DOMAINAUTH= {}
+DOMAINAUTH["counterpath.sip.signalwire.com"] = 1
+DOMAINAUTH["evan.sip.signalwire.com"] = 1
+DOMAINAUTH["bria.swire.io"] = 1
+DOMAINAUTH["beta.bria-x.com"] = 1
+DOMAINAUTH["1.bria-x.com"] = 1
+
+-- list of addresses to allow traffic from without user auth
+-- must have subnet mask (CIDR notation - use /32 for single ip addr)
+ALLOWADDR={
+	"147.75.65.192/28",
+	"34.226.36.32/28",
+	"34.210.91.112/28",
+	"147.75.60.160/28"
+};
+
+-- match source ip against ALLOWADDR list
+function ksr_is_src_trusted()
+	local srcaddr = KSR.pv.get("$si");
+	for idx, val in pairs(ALLOWADDR) do
+		if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
+			return true;
+		end
+	end
+	return false;
+end
 
 -- SIP request routing
 -- equivalent of request_route{}
@@ -62,6 +93,9 @@ function ksr_request_route()
 	-- authentication
 	ksr_route_auth();
 
+	-- registrations
+	ksr_route_registrar();
+
 	-- record routing for dialog forming requests (in case they are routed)
 	-- - remove preloaded route headers
 	KSR.hdr.remove("Route");
@@ -82,6 +116,7 @@ function ksr_request_route()
 
 	-- routing inbound and outbound
 	if KSR.dispatcher.ds_is_from_list("100") > 0 then
+		ksr_route_location();
 		if KSR.is_myself_ruri() then
 			KSR.sl.send_reply(404, "Local route");
 			KSR.x.exit();
@@ -145,9 +180,8 @@ function ksr_route_reqinit()
 			end
 		end
 	end
-
-	if KSR.corex.has_user_agent() and KSR.corex.has_user_agent() ~= -1 then
-		local uastr = KSR.pv.get("$ua");
+	if KSR.corex.has_user_agent() then
+		local uastr = KSR.pv.gete("$ua");
 		if (string.find(uastr, "friendly-scanner")
 				or string.find(uastr, "sipcli")) then
 			KSR.sl.sl_send_reply(200, "OK");
@@ -215,6 +249,94 @@ end
 
 -- IP authorization and user uthentication
 function ksr_route_auth()
+	-- skip auth for traffic from media servers
+	if KSR.dispatcher.ds_is_from_list("100") > 0 then
+		return 1;
+	end
+
+	-- from trusted list of addresses
+	if ksr_is_src_trusted() then
+		return 1;
+	end
+
+	local uafd = KSR.pv.get("$fd");
+
+	-- auth only a set of domains
+	if DOMAINAUTH[uafd] == nil then
+		KSR.sl.sl_send_reply(500, "Domain unavailable");
+		KSR.x.exit();
+	end
+
+	-- challenge if no Auth header
+	if KSR.is_REGISTER() then
+		if KSR.hdr.is_present("Authorization") < 0 then
+			KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+			KSR.x.exit();
+		end
+	elseif KSR.hdr.is_present("Proxy-Authorization") < 0 then
+		KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+		KSR.x.exit();
+	end
+
+	local uapasswd = "";
+
+	if WITH_AUTHCACHE then
+		uapasswd = KSR.pv.gete("$sht(auth=>$fU@$fd)");
+	end
+
+	local hbody = "";
+	if uapasswd == nil or string.len(uapasswd) < 8 then
+		if KSR.hdr.is_present("Contact") > 0
+				and KSR.textops.search_hf("Contact", "x.signalwire.project", "f") > 0 then
+			local xsp = KSR.pv.gete("$(ct{tobody.params}{param.value,x.signalwire.project})");
+			if string.len(xsp) < 4 then
+				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+						.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
+			else
+				if string.sub(xsp, 1, 1) == "\"" and string.sub(xsp, -1, -1) == "\"" then
+					-- value is already quoted
+					hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+						.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+						.. "\", \"project\": " .. xsp
+						.. "}";
+				else
+					hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+						.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+						.. "\", \"project\": \"" .. xsp
+						.. "\"}";
+				end
+			end
+		else
+			hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+					.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
+		end
+		KSR.pv.sets("$var(hres)", "");
+		KSR.http_client.query_post_hdrs(AUTHURL, hbody,
+				"Content-Type: application/json", "$var(hres)");
+
+		local hres = KSR.pv.gete("$var(hres)");
+		KSR.dbg("http query returned data: " .. hres .. "\n");
+		if string.len(hres) < 10 then
+			KSR.sl.sl_send_reply(500, "Backend unavailable");
+			KSR.x.exit();
+		end
+		local jsres = cjson.decode(hres);
+		if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
+			KSR.sl.sl_send_reply(500, "Profile unavailable");
+			KSR.x.exit();
+		end
+		uapasswd = jsres["ha1"];
+		if WITH_AUTHCACHE then
+			KSR.pv.sets("$sht(auth=>$fU@$fd)", uapasswd);
+		end
+	end
+
+	if KSR.auth.pv_auth_check(uafd, uapasswd, 1, 1) < 0 then
+		KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+		KSR.x.exit();
+	end
+
+	KSR.auth.consume_credentials();
 	return 1;
 end
 
@@ -222,7 +344,9 @@ end
 function ksr_route_natdetect()
 	KSR.force_rport();
 	if KSR.nathelper.nat_uac_test(19)>0 then
-		if KSR.siputils.is_first_hop()>0 then
+		if KSR.is_REGISTER() then
+			KSR.nathelper.fix_nated_register();
+		elseif KSR.siputils.is_first_hop()>0 then
 			KSR.nathelper.set_contact_alias();
 		end
 		KSR.setflag(FLT_NATS);
@@ -265,6 +389,44 @@ function ksr_route_dlguri()
 	end
 	return 1;
 end
+
+-- Handle SIP registrations
+function ksr_route_registrar()
+	if not KSR.is_REGISTER() then return 1; end
+	if KSR.isflagset(FLT_NATS) then
+		KSR.setbflag(FLB_NATB);
+		-- do SIP NAT pinging
+		KSR.setbflag(FLB_NATSIPPING);
+	end
+	if KSR.registrar.save("location", 0)<0 then
+		KSR.sl.sl_reply_error();
+	end
+	KSR.x.exit();
+end
+
+-- User location service
+function ksr_route_location()
+	-- only for a set of domains
+	local uard = KSR.pv.get("$rd");
+	if DOMAINAUTH[uard] == nil then
+		return 1;
+	end
+
+	local rc = KSR.registrar.lookup("location");
+	if rc<0 then
+		KSR.tm.t_newtran();
+		if rc==-2 then
+			KSR.sl.send_reply("405", "Method Not Allowed");
+		else
+			KSR.sl.send_reply("404", "Not Found");
+		end
+		KSR.x.exit();
+	end
+
+	ksr_route_relay();
+	KSR.x.exit();
+end
+
 
 -- Manage outgoing branches
 -- equivalent of branch_route[...]{}
