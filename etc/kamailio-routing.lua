@@ -67,6 +67,12 @@ function ksr_request_route()
 	-- per request initial checks
 	ksr_route_reqinit();
 
+	-- filter unsupported requests
+	if KSR.is_SUBSCRIBE() then
+		KSR.sl.send_reply(405, "Method Not Allowed");
+		KSR.x.exit();
+	end
+
 	-- NAT detection
 	ksr_route_natdetect();
 
