@@ -115,7 +115,7 @@ function ksr_request_route()
 	end
 
 	-- routing inbound and outbound
-	if KSR.dispatcher.ds_is_from_list(100, 3) > 0 then
+	if KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
 		ksr_route_location();
 		if KSR.is_myself_ruri() then
 			KSR.sl.send_reply(404, "Local route");
@@ -250,7 +250,7 @@ end
 -- IP authorization and user uthentication
 function ksr_route_auth()
 	-- skip auth for traffic from media servers
-	if KSR.dispatcher.ds_is_from_list(100, 3) > 0 then
+	if KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
 		return 1;
 	end
 
