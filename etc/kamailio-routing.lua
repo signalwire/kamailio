@@ -45,6 +45,10 @@ ALLOWADDR={
 	"147.75.60.160/28"
 };
 
+-- list of ip addresses that have the project id mapped statically
+PROJECTIPID = {}
+PROJECTIPID["127.0.0.1"] = "signalwire.localhost"
+
 -- match source ip against ALLOWADDR list
 function ksr_is_src_trusted()
 	local srcaddr = KSR.pv.get("$si");
@@ -62,6 +66,12 @@ function ksr_request_route()
 
 	-- per request initial checks
 	ksr_route_reqinit();
+
+	-- filter unsupported requests
+	if KSR.is_SUBSCRIBE() then
+		KSR.sl.send_reply(405, "Method Not Allowed");
+		KSR.x.exit();
+	end
 
 	-- NAT detection
 	ksr_route_natdetect();
@@ -286,29 +296,38 @@ function ksr_route_auth()
 
 	local hbody = "";
 	if uapasswd == nil or string.len(uapasswd) < 8 then
-		if KSR.hdr.is_present("Contact") > 0
-				and KSR.textops.search_hf("Contact", "x.signalwire.project", "f") > 0 then
-			local xsp = KSR.pv.gete("$(ct{tobody.params}{param.value,x.signalwire.project})");
-			if string.len(xsp) < 4 then
-				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-						.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
+		local srcaddr = KSR.pv.get("$si");
+		local xsp = "";
+		if PROJECTIPID[srcaddr] != nil then
+			if KSR.is_REGISTER() then
+				xsp = PROJECTIPID[srcaddr];
 			else
-				if string.sub(xsp, 1, 1) == "\"" and string.sub(xsp, -1, -1) == "\"" then
-					-- value is already quoted
-					hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-						.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
-						.. "\", \"project\": " .. xsp
-						.. "}";
-				else
-					hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-						.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
-						.. "\", \"project\": \"" .. xsp
-						.. "\"}";
-				end
+				KSR.sl.sl_send_reply(403, "Method restricted");
+				KSR.x.exit();
 			end
-		else
+		end
+		if string.len(xsp) < 4 then
+			if KSR.hdr.is_present("Contact") > 0
+					and KSR.textops.search_hf("Contact", "x.signalwire.project", "f") > 0 then
+				xsp = KSR.pv.gete("$(ct{tobody.params}{param.value,x.signalwire.project})");
+			end
+		end
+		if string.len(xsp) < 4 then
 			hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 					.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
+		else
+			if string.sub(xsp, 1, 1) == "\"" and string.sub(xsp, -1, -1) == "\"" then
+				-- value is already quoted
+				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+					.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+					.. "\", \"project\": " .. xsp
+					.. "}";
+			else
+				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
+					.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+					.. "\", \"project\": \"" .. xsp
+					.. "\"}";
+			end
 		end
 		KSR.pv.sets("$var(hres)", "");
 		KSR.http_client.query_post_hdrs(AUTHURL, hbody,
@@ -368,7 +387,7 @@ function ksr_route_natmanage()
 	end
 
 	if KSR.siputils.is_request()>0 then
-		if not KSR.siputils.has_totag() then
+		if KSR.siputils.has_totag()<0 then
 			if KSR.tmx.t_is_branch_route()>0 then
 				KSR.rr.add_rr_param(";nat=yes");
 			end
