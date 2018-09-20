@@ -362,8 +362,7 @@ int bladec_run_worker(int prank)
 /**
  *
  */
-int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
-		str *evcmd, str *evdata)
+int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 {
 	ks_status_t rcode;
 	swclt_cmd_t rcmd;
@@ -381,10 +380,9 @@ int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
 		//return -1;
 	}
 
-	LM_DBG("relaying cmd - reqnodeid [%s] resnodeid [%s] evproto [%s]"
+	LM_DBG("relaying cmd - reqnodeid [%s] evproto [%s]"
 			" evcmd [%.*s] evdata [%.*s] (%d)\n",
 			(reqnodeid->len>0)?reqnodeid->s:"none",
-			(resnodeid->len>0)?resnodeid->s:"none",
 			(evproto->len>0)?evproto->s:"none",
 			evcmd->len, evcmd->s,
 			evdata->len, evdata->s, evdata->len);
