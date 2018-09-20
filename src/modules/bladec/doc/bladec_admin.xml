@@ -234,7 +234,7 @@ event_route[bladec:message-received] {
 		</para>
 		<itemizedlist>
 			<listitem><para>
-				<emphasis>$bladec(msg)</emphasis> - received event message
+				<emphasis>$bladec(res)</emphasis> - received event response
 			</para></listitem>
 		</itemizedlist>
 	</section>

@@ -80,6 +80,7 @@ typedef struct baldec_globals {
 	ks_json_t *jcfg;
 	swclt_sess_t swses;
 	char blade_bootstrap[BLADE_BOOTSTRAP_SIZE];
+	char *swres;
 	int istatus;
 } bladec_globals_t;
 
@@ -368,13 +369,16 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 	swclt_cmd_t rcmd;
 	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
-	char *jres = NULL;
 
 	if(_bladec_globals.istatus != 1) {
 		LM_ERR("config struct was not initialized\n");
 		return -1;
 	}
 
+	if(_bladec_globals.swres) {
+		ks_json_free_ex((void**)(&_bladec_globals.swres));
+		_bladec_globals.swres = NULL;
+	}
 	if (!swclt_sess_connected(_bladec_session)) {
 		LM_ERR("session is not connected\n");
 		//return -1;
@@ -405,10 +409,10 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 		goto error;
 	}
 
-	jres = ks_json_print(result);
-	if(jres) {
-		LM_DBG("json result:\n%s\n", (jres)?jres:"<empty>");
-		ks_json_free_ex((void**)(&jres));
+	_bladec_globals.swres = ks_json_print(result);
+	if(_bladec_globals.swres) {
+		LM_DBG("json result:\n%s\n",
+				(_bladec_globals.swres)?_bladec_globals.swres:"<empty>");
 	}
 
 	ks_handle_destroy(&rcmd);
@@ -430,20 +434,8 @@ int pv_parse_bladec_name(pv_spec_t *sp, str *in)
 	switch(in->len)
 	{
 		case 3:
-			if(strncmp(in->s, "msg", 3)==0)
+			if(strncmp(in->s, "res", 3)==0)
 				sp->pvp.pvn.u.isname.name.n = 1;
-			else goto error;
-		break;
-		case 6:
-			if(strncmp(in->s, "conidx", 6)==0)
-				sp->pvp.pvn.u.isname.name.n = 0;
-			else goto error;
-		break;
-		case 7:
-			if(strncmp(in->s, "srcaddr", 7)==0)
-				sp->pvp.pvn.u.isname.name.n = 2;
-			else if(strncmp(in->s, "srcport", 7)==0)
-				sp->pvp.pvn.u.isname.name.n = 3;
 			else goto error;
 		break;
 		default:
@@ -473,20 +465,14 @@ int pv_get_bladec(sip_msg_t *msg, pv_param_t *param, pv_value_t *res)
 		return pv_get_null(msg, param, res);
 	}
 	evenv = bladec_get_msg_env(msg);
+	LM_DBG("local event env: %p\n", evenv);
 
 	switch(param->pvn.u.isname.name.n)
 	{
-		case 0:
-			return pv_get_sintval(msg, param, res, 0);
 		case 1:
-			if(evenv->msg.s==NULL)
+			if(_bladec_globals.swres==NULL)
 				return pv_get_null(msg, param, res);
-			return pv_get_strval(msg, param, res, &evenv->msg);
-		case 2:
-			return pv_get_strzval(msg, param, res,
-					"0.0.0.0");
-		case 3:
-			return pv_get_sintval(msg, param, res, 0);
+			return pv_get_strzval(msg, param, res, _bladec_globals.swres);
 		default:
 			return pv_get_null(msg, param, res);
 	}

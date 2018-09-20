@@ -220,4 +220,4 @@ event_route[bladec:message-received] {
 6. Exported Pseudo-Variables
 
    Exported pseudo-variables:
-     * $bladec(msg) - received event message
+     * $bladec(res) - received event response
