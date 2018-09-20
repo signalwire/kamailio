@@ -31,8 +31,8 @@ Daniel-Constantin Mierla
 
         4. Functions
 
-              4.1. bladec_relay(reqnid, resnid, evproto, evcmd, evdata)
-              4.2. bladec_async_relay(evdata)
+              4.1. bladec_relay(reqnid, evproto, evcmd, evdata)
+              4.2. bladec_async_relay(reqnid, evproto, evcmd, evdata)
 
         5. Event Routes
 
@@ -67,8 +67,8 @@ Chapter 1. Admin Guide
 
    4. Functions
 
-        4.1. bladec_relay(reqnid, resnid, evproto, evcmd, evdata)
-        4.2. bladec_async_relay(evdata)
+        4.1. bladec_relay(reqnid, evproto, evcmd, evdata)
+        4.2. bladec_async_relay(reqnid, evproto, evcmd, evdata)
 
    5. Event Routes
 
@@ -152,10 +152,10 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 
 4. Functions
 
-   4.1. bladec_relay(reqnid, resnid, evproto, evcmd, evdata)
-   4.2. bladec_async_relay(evdata)
+   4.1. bladec_relay(reqnid, evproto, evcmd, evdata)
+   4.2. bladec_async_relay(reqnid, evproto, evcmd, evdata)
 
-4.1.  bladec_relay(reqnid, resnid, evproto, evcmd, evdata)
+4.1.  bladec_relay(reqnid, evproto, evcmd, evdata)
 
    Relay the command given as parameter to connected session.
 
@@ -167,7 +167,7 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 
    Example 1.4. bladec_relay usage
 ...
-bladec_relay("here", "there", "siprouting", "route",
+bladec_relay("here", siprouting", "route",
         "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 ...
 
@@ -181,7 +181,7 @@ bladec_relay("here", "there", "siprouting", "route",
 }
 ...
 
-4.2.  bladec_async_relay(evdata)
+4.2.  bladec_async_relay(reqnid, evproto, evcmd, evdata)
 
    Note: not implemented yet.
 
@@ -197,7 +197,7 @@ bladec_relay("here", "there", "siprouting", "route",
 
    Example 1.6. bladec_async_relay usage
 ...
-bladec_async_relay("here", "there", "siprouting", "route",
+bladec_async_relay("here", siprouting", "route",
                 "{ \"event\": \"suspend\",\n \"data\":"
                         " { \"index\": \"$T(id_index)\", \"label\": \"$T(id_labe
 l)\" }\n}");

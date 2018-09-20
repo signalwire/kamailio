@@ -136,7 +136,7 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 	<title>Functions</title>
 	<section id="bladec.f.bladec_relay">
 		<title>
-		<function moreinfo="none">bladec_relay(reqnid, resnid, evproto, evcmd, evdata)</function>
+		<function moreinfo="none">bladec_relay(reqnid, evproto, evcmd, evdata)</function>
 		</title>
 		<para>
 		Relay the command given as parameter to connected session.
@@ -153,7 +153,7 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 		<title><function>bladec_relay</function> usage</title>
 		<programlisting format="linespecific">
 ...
-bladec_relay("here", "there", "siprouting", "route",
+bladec_relay("here", siprouting", "route",
         "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 ...
 </programlisting>
@@ -176,7 +176,7 @@ bladec_relay("here", "there", "siprouting", "route",
 
 	<section id="bladec.f.bladec_async_relay">
 		<title>
-		<function moreinfo="none">bladec_async_relay(evdata)</function>
+		<function moreinfo="none">bladec_async_relay(reqnid, evproto, evcmd, evdata)</function>
 		</title>
 		<para>
 		Note: not implemented yet.
@@ -196,7 +196,7 @@ bladec_relay("here", "there", "siprouting", "route",
 		<title><function>bladec_async_relay</function> usage</title>
 		<programlisting format="linespecific">
 ...
-bladec_async_relay("here", "there", "siprouting", "route",
+bladec_async_relay("here", siprouting", "route",
 		"{ \"event\": \"suspend\",\n \"data\":"
 			" { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}");
 ...
