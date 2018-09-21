@@ -164,6 +164,8 @@ int bladec_client_init(void)
 
 	LM_DBG("blade bootstrap string: %s\n", _bladec_globals.blade_bootstrap);
 
+	_bladec_globals.istatus = 1;
+
 	return 0;
 
 error:
