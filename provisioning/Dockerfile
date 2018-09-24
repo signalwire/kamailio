@@ -10,6 +10,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
   flex \
   libcurl4-openssl-dev \
   libgeoip-dev \
+  libhiredis-dev \
   liblua5.1-0-dev \
   libncurses5-dev \
   libpcre3-dev \
@@ -25,7 +26,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
 
 COPY kamailio /usr/local/src/kamailio
 WORKDIR /usr/local/src/kamailio
-RUN make include_modules="app_lua http_client tls outbound ipops" cfg
+RUN make include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis" cfg
 RUN make all
 RUN make install
 WORKDIR src/modules/tls
