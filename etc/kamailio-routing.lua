@@ -316,15 +316,24 @@ function ksr_route_auth()
 			end
 		end
 		if string.len(xsp) < 4 then
+			if string.match(KSR.pv.get("$fu"), "counterpath") then
+				xsp = "219c4f54-fa22-46b4-8c95-60edaf6cd1f8"
+			end
+			if string.match(KSR.pv.get("$fu"), "evan") then
+				xsp = "79c0d9a1-68e6-4352-b312-6cf769380aa8"
+			end
+		
 			hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-					.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
+				.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+				.. "\", \"project\": \"" .. xsp
+				.. "\"}";
 		else
 			if string.sub(xsp, 1, 1) == "\"" and string.sub(xsp, -1, -1) == "\"" then
 				-- value is already quoted
 				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 					.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
-					.. "\", \"project\": " .. xsp
-					.. "}";
+					.. "\", \"project\": \"" .. xsp
+					.. "\"}";
 			else
 				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 					.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
