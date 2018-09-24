@@ -35,6 +35,9 @@ DOMAINAUTH["evan.sip.signalwire.com"] = 1
 DOMAINAUTH["bria.swire.io"] = 1
 DOMAINAUTH["beta.bria-x.com"] = 1
 DOMAINAUTH["1.bria-x.com"] = 1
+DOMAINAUTH["sip.softphone.com"] = 1
+DOMAINAUTH["sip.bria-x.org"] = 1
+DOMAINAUTH["sip.mobilevoiplive.com"] = 1
 
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
