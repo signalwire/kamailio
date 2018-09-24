@@ -15,7 +15,7 @@
 local cjson = require "cjson"
 
 -- global variables to enable/disable some features
-WITH_ANTIFLOOD=false
+WITH_ANTIFLOOD=true
 WITH_AUTHCACHE=false
 
 -- global variables corresponding to defined values (e.g., flags) in kamailio.cfg
@@ -39,6 +39,8 @@ DOMAINAUTH["1.bria-x.com"] = 1
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
+	"10.0.0.0/24",
+	"10.255.0.0/24",
 	"147.75.65.192/28",
 	"34.226.36.32/28",
 	"34.210.91.112/28",
@@ -298,7 +300,7 @@ function ksr_route_auth()
 	if uapasswd == nil or string.len(uapasswd) < 8 then
 		local srcaddr = KSR.pv.get("$si");
 		local xsp = "";
-		if PROJECTIPID[srcaddr] != nil then
+		if PROJECTIPID[srcaddr] ~= nil then
 			if KSR.is_REGISTER() then
 				xsp = PROJECTIPID[srcaddr];
 			else
