@@ -300,7 +300,7 @@ function ksr_route_auth()
 	if uapasswd == nil or string.len(uapasswd) < 8 then
 		local srcaddr = KSR.pv.get("$si");
 		local xsp = "";
-		if PROJECTIPID[srcaddr] != nil then
+		if PROJECTIPID[srcaddr] ~= nil then
 			if KSR.is_REGISTER() then
 				xsp = PROJECTIPID[srcaddr];
 			else
