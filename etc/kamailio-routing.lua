@@ -35,6 +35,9 @@ DOMAINAUTH["evan.sip.signalwire.com"] = 1
 DOMAINAUTH["bria.swire.io"] = 1
 DOMAINAUTH["beta.bria-x.com"] = 1
 DOMAINAUTH["1.bria-x.com"] = 1
+DOMAINAUTH["sip.softphone.com"] = 1
+DOMAINAUTH["sip.bria-x.org"] = 1
+DOMAINAUTH["sip.mobilevoiplive.com"] = 1
 
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
@@ -128,6 +131,14 @@ function ksr_request_route()
 
 	-- routing inbound and outbound
 	if KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
+		ksr_route_location();
+		if KSR.is_myself_ruri() then
+			KSR.sl.send_reply(404, "Local route");
+			KSR.x.exit();
+		end
+		ksr_route_dlguri();
+		ksr_route_relay();
+	elseif KSR.dispatcher.ds_is_from_list_mode(200, 3) > 0 then
 		ksr_route_location();
 		if KSR.is_myself_ruri() then
 			KSR.sl.send_reply(404, "Local route");
@@ -264,6 +275,8 @@ function ksr_route_auth()
 	-- skip auth for traffic from media servers
 	if KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
 		return 1;
+	elseif KSR.dispatcher.ds_is_from_list_mode(200, 3) > 0 then
+		return 1;
 	end
 
 	-- from trusted list of addresses
@@ -315,15 +328,24 @@ function ksr_route_auth()
 			end
 		end
 		if string.len(xsp) < 4 then
+			if string.match(KSR.pv.get("$fu"), "counterpath") then
+				xsp = "219c4f54-fa22-46b4-8c95-60edaf6cd1f8"
+			end
+			if string.match(KSR.pv.get("$fu"), "evan") then
+				xsp = "79c0d9a1-68e6-4352-b312-6cf769380aa8"
+			end
+		
 			hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-					.. "\", \"domain\": \"" .. KSR.pv.get("$fd") .. "\"}";
+				.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+				.. "\", \"project\": \"" .. xsp
+				.. "\"}";
 		else
 			if string.sub(xsp, 1, 1) == "\"" and string.sub(xsp, -1, -1) == "\"" then
 				-- value is already quoted
 				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 					.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
-					.. "\", \"project\": " .. xsp
-					.. "}";
+					.. "\", \"project\": \"" .. xsp
+					.. "\"}";
 			else
 				hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 					.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
@@ -490,9 +512,16 @@ end
 -- Dispatch requests
 function ksr_dispatch()
 	-- round robin (4) dispatching on group 100
-	if KSR.dispatcher.ds_select_dst(100, 4) < 0 then
-		KSR.sl.send_reply(404, "No destination");
-		KSR.x.exit();
+	if string.match(KSR.pv.get("$fu"), "evan") then
+		if KSR.dispatcher.ds_select_dst(200, 4) < 0 then
+			KSR.sl.send_reply(404, "No destination");
+			KSR.x.exit();
+		end
+	else 
+		if KSR.dispatcher.ds_select_dst(100, 4) < 0 then
+			KSR.sl.send_reply(404, "No destination");
+			KSR.x.exit();
+		end
 	end
 
 	KSR.dbg("--- SCRIPT: going to <" .. KSR.pv.get("$ru") .. "> via <"
