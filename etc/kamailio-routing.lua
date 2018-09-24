@@ -136,6 +136,14 @@ function ksr_request_route()
 		end
 		ksr_route_dlguri();
 		ksr_route_relay();
+	elseif KSR.dispatcher.ds_is_from_list_mode(200, 3) > 0 then
+		ksr_route_location();
+		if KSR.is_myself_ruri() then
+			KSR.sl.send_reply(404, "Local route");
+			KSR.x.exit();
+		end
+		ksr_route_dlguri();
+		ksr_route_relay();
 	else
 		KSR.hdr.remove("P-SRC-IP");
 		KSR.hdr.append("P-SRC-IP: " .. KSR.pv.get("$si") .. "\r\n");
@@ -264,6 +272,8 @@ end
 function ksr_route_auth()
 	-- skip auth for traffic from media servers
 	if KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
+		return 1;
+	elseif KSR.dispatcher.ds_is_from_list_mode(200, 3) > 0 then
 		return 1;
 	end
 
@@ -500,9 +510,16 @@ end
 -- Dispatch requests
 function ksr_dispatch()
 	-- round robin (4) dispatching on group 100
-	if KSR.dispatcher.ds_select_dst(100, 4) < 0 then
-		KSR.sl.send_reply(404, "No destination");
-		KSR.x.exit();
+	if string.match(KSR.pv.get("$fu"), "evan") then
+		if KSR.dispatcher.ds_select_dst(200, 4) < 0 then
+			KSR.sl.send_reply(404, "No destination");
+			KSR.x.exit();
+		end
+	else 
+		if KSR.dispatcher.ds_select_dst(100, 4) < 0 then
+			KSR.sl.send_reply(404, "No destination");
+			KSR.x.exit();
+		end
 	end
 
 	KSR.dbg("--- SCRIPT: going to <" .. KSR.pv.get("$ru") .. "> via <"
