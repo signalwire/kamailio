@@ -17,6 +17,7 @@ local cjson = require "cjson"
 -- global variables to enable/disable some features
 WITH_ANTIFLOOD=true
 WITH_AUTHCACHE=false
+WITH_REDISROUTE=false
 
 -- global variables corresponding to defined values (e.g., flags) in kamailio.cfg
 FLT_ACC=1
@@ -354,7 +355,7 @@ function ksr_route_auth()
 			if string.match(KSR.pv.get("$fu"), "evan") then
 				xsp = "79c0d9a1-68e6-4352-b312-6cf769380aa8"
 			end
-		
+
 			hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 				.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
 				.. "\", \"project\": \"" .. xsp
@@ -531,17 +532,33 @@ end
 
 -- Dispatch requests
 function ksr_dispatch()
-	-- round robin (4) dispatching on group 100
+	local dsgrp = 100;
+	if WITH_REDISROUTE then
+		-- get routing info from redis
+		KSR.ndb_redis.redis_free("r1");
+		KSR.ndb_redis.redis_cmd_p1("srv1", "GET %s", "routeto:" .. KSR.pv.get("$fU") .. "@".. KSR.pv.get("$fd"), "r1");
+		local r1type = KSR.pv.get("$redis(r1=>type)");
+		if r1type == KSR.pv.get("$redisd(rpl_int)") then
+			dsgrp = KSR.pv.get("$redis(r1=>value)");
+		elseif r1type == KSR.pv.get("$redisd(rpl_str)") then
+			local r1val = KSR.pv.get("$redis(r1=>value)");
+			if string.len(r1val) > 4 then
+				-- direct routing by address
+				KSR.setdsturi(r1val);
+				KSR.ndb_redis.redis_free("r1");
+				ksr_route_relay();
+				KSR.x.exit();
+			end
+		end
+		KSR.ndb_redis.redis_free("r1");
+	end
 	if string.match(KSR.pv.get("$fu"), "evan") then
-		if KSR.dispatcher.ds_select_dst(200, 4) < 0 then
-			KSR.sl.send_reply(404, "No destination");
-			KSR.x.exit();
-		end
-	else 
-		if KSR.dispatcher.ds_select_dst(100, 4) < 0 then
-			KSR.sl.send_reply(404, "No destination");
-			KSR.x.exit();
-		end
+		dsgrp = 200;
+	end
+	-- round robin (4) dispatching on group 'dsgrp' (default 100)
+	if KSR.dispatcher.ds_select_dst(dsgrp, 4) < 0 then
+		KSR.sl.send_reply(404, "No destination");
+		KSR.x.exit();
 	end
 
 	KSR.dbg("--- SCRIPT: going to <" .. KSR.pv.get("$ru") .. "> via <"
