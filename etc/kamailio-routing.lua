@@ -542,12 +542,17 @@ function ksr_dispatch()
 			dsgrp = KSR.pv.get("$redis(r1=>value)");
 		elseif r1type == KSR.pv.get("$redisd(rpl_str)") then
 			local r1val = KSR.pv.get("$redis(r1=>value)");
-			if string.len(r1val) > 4 then
-				-- direct routing by address
-				KSR.setdsturi(r1val);
-				KSR.ndb_redis.redis_free("r1");
-				ksr_route_relay();
-				KSR.x.exit();
+			local r1num = tonumber(r1val);
+			if r1num == nil then
+				if string.len(r1val) > 4 then
+					-- direct routing by address
+					KSR.setdsturi(r1val);
+					KSR.ndb_redis.redis_free("r1");
+					ksr_route_relay();
+					KSR.x.exit();
+				end
+			else
+				dsgrp = r1num;
 			end
 		end
 		KSR.ndb_redis.redis_free("r1");
