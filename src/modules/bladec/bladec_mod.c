@@ -84,18 +84,16 @@ static pv_export_t mod_pvs[] = {
 
 
 struct module_exports exports = {
-	"bladec",
+	"bladec",       /* module name */
 	DEFAULT_DLFLAGS, /* dlopen flags */
-	cmds,
-	params,
-	0,
-	0,              /* exported MI functions */
+	cmds,           /* exported function */
+	params,         /* exported parameters */
+	0,              /* exported rpc functions */
 	mod_pvs,        /* exported pseudo-variables */
-	0,              /* extra processes */
-	mod_init,       /* module initialization function */
-	0,              /* response function */
-	mod_destroy,    /* destroy function */
-	child_init      /* per child init function */
+	0,              /* response processing function */
+	mod_init,       /* module init function */
+	child_init,     /* per child init function */
+	mod_destroy     /* module destroy function */
 };
 
 
