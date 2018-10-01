@@ -59,12 +59,16 @@ static int w_bladec_relay(sip_msg_t* msg, char* reqnid, char* evproto,
 		char* evcmd, char* evdata);
 static int w_bladec_async_relay(sip_msg_t* msg, char* reqnid, char* evproto,
 		char* evcmd, char* evdata);
+static int w_bladec_channel_broadcast(sip_msg_t* msg, char* evproto,
+		char * evchannel, char* evname, char* evdata);
 
 static cmd_export_t cmds[]={
-	{"bladec_relay",		(cmd_function)w_bladec_relay,		4, fixup_spve_all,
-		0, ANY_ROUTE},
-	{"bladec_async_relay",	(cmd_function)w_bladec_async_relay, 4, fixup_spve_all,
-		0, REQUEST_ROUTE},
+	{"bladec_relay",		(cmd_function)w_bladec_relay,
+		4, fixup_spve_all, 0, ANY_ROUTE},
+	{"bladec_async_relay",	(cmd_function)w_bladec_async_relay,
+		4, fixup_spve_all, 0, REQUEST_ROUTE},
+	{"bladec_channel_broadcast",	(cmd_function)w_bladec_channel_broadcast,
+		4, fixup_spve_all, 0, ANY_ROUTE},
 	{0, 0, 0, 0, 0, 0}
 };
 
@@ -357,6 +361,63 @@ static int ki_bladec_relay(sip_msg_t *msg, str *reqnodeid, str *evproto,
 	return bladec_relay(reqnodeid, evproto, evcmd, evdata);
 }
 
+static int w_bladec_channel_broadcast(sip_msg_t* msg, char* evproto,
+		char * evchannel, char* evname, char* evdata)
+{
+	str sproto = STR_NULL;
+	str schannel = STR_NULL;
+	str sname = STR_NULL;
+	str sdata = STR_NULL;
+
+	if(evproto==NULL || evchannel==0 || evname==NULL) {
+		LM_ERR("invalid parameters\n");
+		return -1;
+	}
+
+	if(fixup_get_svalue(msg, (gparam_t*)evproto, &sproto)!=0) {
+		LM_ERR("unable to get proto\n");
+		return -1;
+	}
+	if(fixup_get_svalue(msg, (gparam_t*)evchannel, &schannel)!=0) {
+		LM_ERR("unable to get channel\n");
+		return -1;
+	}
+	if(fixup_get_svalue(msg, (gparam_t*)evname, &sname)!=0) {
+		LM_ERR("unable to get event name\n");
+		return -1;
+	}
+	if(sname.s==NULL || sname.len == 0) {
+		LM_ERR("invalid cmd parameter\n");
+		return -1;
+	}
+	if(fixup_get_svalue(msg, (gparam_t*)evdata, &sdata)!=0) {
+		LM_ERR("unable to get data\n");
+		return -1;
+	}
+	if(sdata.s==NULL || sdata.len == 0) {
+		LM_ERR("invalid data parameter\n");
+		return -1;
+	}
+
+	if(bladec_channel_broadcast(&sproto, &schannel, &sname, &sdata)<0) {
+		LM_ERR("failed to relay event - evname [%.*s] data [%.*s]\n",
+				sname.len, sname.s, sdata.len, sdata.s);
+		return -1;
+	}
+
+	return 1;
+}
+
+
+/**
+ *
+ */
+static int ki_bladec_channel_broadcast(sip_msg_t *msg, str *evproto,
+		str *evchannel, str *evname, str *evdata)
+{
+	return bladec_channel_broadcast(evproto, evchannel, evname, evdata);
+}
+
 /**
  *
  */
@@ -364,6 +425,11 @@ static int ki_bladec_relay(sip_msg_t *msg, str *reqnodeid, str *evproto,
 static sr_kemi_t sr_kemi_bladec_exports[] = {
 	{ str_init("bladec"), str_init("relay"),
 		SR_KEMIP_INT, ki_bladec_relay,
+		{ SR_KEMIP_STR, SR_KEMIP_STR, SR_KEMIP_STR,
+			SR_KEMIP_STR, SR_KEMIP_NONE, SR_KEMIP_NONE }
+	},
+	{ str_init("bladec"), str_init("channel_broadcast"),
+		SR_KEMIP_INT, ki_bladec_channel_broadcast,
 		{ SR_KEMIP_STR, SR_KEMIP_STR, SR_KEMIP_STR,
 			SR_KEMIP_STR, SR_KEMIP_NONE, SR_KEMIP_NONE }
 	},

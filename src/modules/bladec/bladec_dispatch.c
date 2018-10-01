@@ -428,6 +428,43 @@ error:
 /**
  *
  */
+int bladec_channel_broadcast(str *evproto, str *evchannel, str *evname,
+		str *evdata)
+{
+	ks_json_t *params = NULL;
+
+	if(_bladec_globals.istatus != 1) {
+		LM_ERR("config struct was not initialized\n");
+		return -1;
+	}
+
+	if(_bladec_globals.swres) {
+		ks_json_free_ex((void**)(&_bladec_globals.swres));
+		_bladec_globals.swres = NULL;
+	}
+	if (!swclt_sess_connected(_bladec_session)) {
+		LM_ERR("session is not connected\n");
+		//return -1;
+	}
+
+	LM_DBG("relaying cmd - evproto [%s] evchannel [%s]"
+			" evname [%.*s] evdata [%.*s] (%d)\n",
+			(evproto->len>0)?evproto->s:"none",
+			(evchannel->len>0)?evchannel->s:"none",
+			evname->len, evname->s,
+			evdata->len, evdata->s, evdata->len);
+
+	params = ks_json_parse((const char *)evdata->s);
+
+	swclt_sess_broadcast(_bladec_session, evproto->s, evchannel->s, evname->s,
+			&params);
+
+	return 1;
+}
+
+/**
+ *
+ */
 int pv_parse_bladec_name(pv_spec_t *sp, str *in)
 {
 	if(sp==NULL || in==NULL || in->len<=0)
