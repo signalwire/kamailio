@@ -136,7 +136,7 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 	<title>Functions</title>
 	<section id="bladec.f.bladec_relay">
 		<title>
-		<function moreinfo="none">bladec_relay(reqnid, resnid, evproto, evcmd, evdata)</function>
+		<function moreinfo="none">bladec_relay(reqnid, evproto, evcmd, evdata)</function>
 		</title>
 		<para>
 		Relay the command given as parameter to connected session.
@@ -147,22 +147,25 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 		bladec_relay().
 		</para>
 		<para>
+		KEMI Lua function: KSR.bladec.relay(str reqnid, str evproto, str evcmd, str evdata).
+		</para>
+		<para>
 		This function can be used from ANY_ROUTE.
 		</para>
 		<example>
 		<title><function>bladec_relay</function> usage</title>
 		<programlisting format="linespecific">
 ...
-bladec_relay("here", "there", "siprouting", "route",
+bladec_relay("here", "siprouting", "route",
         "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 ...
 </programlisting>
 		</example>
 		<para>
-		The above exaple will send the following message over tcp:
+		The above exaple will send the following message over the network:
 		</para>
 		<example>
-		<title>TCP message</title>
+		<title>Network Message</title>
 		<programlisting format="linespecific">
 ...
 {
@@ -176,7 +179,7 @@ bladec_relay("here", "there", "siprouting", "route",
 
 	<section id="bladec.f.bladec_async_relay">
 		<title>
-		<function moreinfo="none">bladec_async_relay(evdata)</function>
+		<function moreinfo="none">bladec_async_relay(reqnid, evproto, evcmd, evdata)</function>
 		</title>
 		<para>
 		Note: not implemented yet.
@@ -196,9 +199,37 @@ bladec_relay("here", "there", "siprouting", "route",
 		<title><function>bladec_async_relay</function> usage</title>
 		<programlisting format="linespecific">
 ...
-bladec_async_relay("here", "there", "siprouting", "route",
+bladec_async_relay("here", "siprouting", "route",
 		"{ \"event\": \"suspend\",\n \"data\":"
 			" { \"index\": \"$T(id_index)\", \"label\": \"$T(id_label)\" }\n}");
+...
+</programlisting>
+		</example>
+	</section>
+
+	<section id="bladec.f.bladec_channel_broadcast">
+		<title>
+		<function moreinfo="none">bladec_channel_broadcast(evproto, evchannel, evname, evdata)</function>
+		</title>
+		<para>
+		Broadcast the event given as parameter to a channel of the connected session.
+		</para>
+		<para>
+		The function is passing the task to blade network immediately, there is
+		no blade response returned back to the config.
+		</para>
+		<para>
+		KEMI Lua function: KSR.bladec.channel_broadcast(str evproto, str evchannel, str evname, str evdata).
+		</para>
+		<para>
+		This function can be used from ANY_ROUTE.
+		</para>
+		<example>
+		<title><function>bladec_relay</function> usage</title>
+		<programlisting format="linespecific">
+...
+bladec_channel_broadcast("freeswitch", "kamailio", "registration"
+        "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 ...
 </programlisting>
 		</example>
@@ -234,7 +265,7 @@ event_route[bladec:message-received] {
 		</para>
 		<itemizedlist>
 			<listitem><para>
-				<emphasis>$bladec(msg)</emphasis> - received event message
+				<emphasis>$bladec(res)</emphasis> - received event response
 			</para></listitem>
 		</itemizedlist>
 	</section>

@@ -31,8 +31,10 @@ Daniel-Constantin Mierla
 
         4. Functions
 
-              4.1. bladec_relay(reqnid, resnid, evproto, evcmd, evdata)
-              4.2. bladec_async_relay(evdata)
+              4.1. bladec_relay(reqnid, evproto, evcmd, evdata)
+              4.2. bladec_async_relay(reqnid, evproto, evcmd, evdata)
+              4.3. bladec_channel_broadcast(evproto, evchannel, evname,
+                      evdata)
 
         5. Event Routes
 
@@ -46,8 +48,9 @@ Daniel-Constantin Mierla
    1.2. Set event_callback parameter
    1.3. Set config parameter
    1.4. bladec_relay usage
-   1.5. TCP message
+   1.5. Network Message
    1.6. bladec_async_relay usage
+   1.7. bladec_relay usage
 
 Chapter 1. Admin Guide
 
@@ -67,8 +70,9 @@ Chapter 1. Admin Guide
 
    4. Functions
 
-        4.1. bladec_relay(reqnid, resnid, evproto, evcmd, evdata)
-        4.2. bladec_async_relay(evdata)
+        4.1. bladec_relay(reqnid, evproto, evcmd, evdata)
+        4.2. bladec_async_relay(reqnid, evproto, evcmd, evdata)
+        4.3. bladec_channel_broadcast(evproto, evchannel, evname, evdata)
 
    5. Event Routes
 
@@ -152,10 +156,11 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 
 4. Functions
 
-   4.1. bladec_relay(reqnid, resnid, evproto, evcmd, evdata)
-   4.2. bladec_async_relay(evdata)
+   4.1. bladec_relay(reqnid, evproto, evcmd, evdata)
+   4.2. bladec_async_relay(reqnid, evproto, evcmd, evdata)
+   4.3. bladec_channel_broadcast(evproto, evchannel, evname, evdata)
 
-4.1.  bladec_relay(reqnid, resnid, evproto, evcmd, evdata)
+4.1.  bladec_relay(reqnid, evproto, evcmd, evdata)
 
    Relay the command given as parameter to connected session.
 
@@ -163,17 +168,20 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
    for response, therefore the processing of the configuration waits for
    bladec_relay().
 
+   KEMI Lua function: KSR.bladec.relay(str reqnid, str evproto, str evcmd,
+   str evdata).
+
    This function can be used from ANY_ROUTE.
 
    Example 1.4. bladec_relay usage
 ...
-bladec_relay("here", "there", "siprouting", "route",
+bladec_relay("here", "siprouting", "route",
         "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 ...
 
-   The above exaple will send the following message over tcp:
+   The above exaple will send the following message over the network:
 
-   Example 1.5. TCP message
+   Example 1.5. Network Message
 ...
 {
  "event": "test",
@@ -181,7 +189,7 @@ bladec_relay("here", "there", "siprouting", "route",
 }
 ...
 
-4.2.  bladec_async_relay(evdata)
+4.2.  bladec_async_relay(reqnid, evproto, evcmd, evdata)
 
    Note: not implemented yet.
 
@@ -197,10 +205,29 @@ bladec_relay("here", "there", "siprouting", "route",
 
    Example 1.6. bladec_async_relay usage
 ...
-bladec_async_relay("here", "there", "siprouting", "route",
+bladec_async_relay("here", "siprouting", "route",
                 "{ \"event\": \"suspend\",\n \"data\":"
                         " { \"index\": \"$T(id_index)\", \"label\": \"$T(id_labe
 l)\" }\n}");
+...
+
+4.3.  bladec_channel_broadcast(evproto, evchannel, evname, evdata)
+
+   Broadcast the event given as parameter to a channel of the connected
+   session.
+
+   The function is passing the task to blade network immediately, there is
+   no blade response returned back to the config.
+
+   KEMI Lua function: KSR.bladec.channel_broadcast(str evproto, str
+   evchannel, str evname, str evdata).
+
+   This function can be used from ANY_ROUTE.
+
+   Example 1.7. bladec_relay usage
+...
+bladec_channel_broadcast("freeswitch", "kamailio", "registration"
+        "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
 ...
 
 5. Event Routes
@@ -220,4 +247,4 @@ event_route[bladec:message-received] {
 6. Exported Pseudo-Variables
 
    Exported pseudo-variables:
-     * $bladec(msg) - received event message
+     * $bladec(res) - received event response

@@ -35,8 +35,7 @@ int bladec_run_dispatcher();
 
 int bladec_run_worker(int prank);
 
-int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
-		str *evcmd, str *evdata);
+int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata);
 
 void bladec_init_environment(void);
 
@@ -55,5 +54,8 @@ int bladec_set_tag(sip_msg_t* msg, str* stag);
 int bladec_client_init(void);
 
 int bladec_client_session_start(void);
+
+int bladec_channel_broadcast(str *evproto, str *evchannel, str *evname,
+		str *evdata);
 
 #endif

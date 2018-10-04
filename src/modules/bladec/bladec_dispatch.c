@@ -73,52 +73,103 @@ extern str _bladec_config_path;
 swclt_sess_t _bladec_session = {0};
 swclt_hmon_t _bladec_session_monitor = {0};
 
+#define BLADE_BOOTSTRAP_SIZE 1024
+
 typedef struct baldec_globals {
-	swclt_cfg_t cfgbladec;
-	swclt_cfg_t cfgclient;
-	const char *blade_bootstrap;
+	swclt_config_t *swcfg;
+	ks_json_t *jcfg;
+	swclt_sess_t swses;
+	char blade_bootstrap[BLADE_BOOTSTRAP_SIZE];
+	char *swres;
 	int istatus;
 } bladec_globals_t;
 
 static bladec_globals_t _bladec_globals = {0};
+
+ks_json_t *bladec_load_json_config_file(char *cfgpath)
+{
+	ks_json_t *jcfg = NULL;
+	ks_size_t lob = 1024;
+	char *buf = NULL;
+	ks_size_t eob = 0;
+	FILE *fp = NULL;
+
+	buf = ks_pool_alloc(NULL, lob);
+	if(buf==NULL) {
+		LM_ERR("failure to allocate ks pool memory\n");
+		return NULL;
+	}
+
+	if (!(fp = fopen(cfgpath, "r"))) {
+		LM_ERR("could not open config file: %s\n", cfgpath);
+		return NULL;
+	}
+
+	while (!feof(fp)) {
+		ks_size_t consumed = 0;
+		ks_size_t available = lob - eob;
+		if (available <= 1) {
+			lob *= 2;
+			buf = ks_pool_resize(NULL, lob);
+			available = lob - eob;
+		}
+		consumed = fread(buf + eob, 1, available - 1, fp);
+		eob += consumed;
+	}
+	fclose(fp);
+	buf[eob] = '\0';
+
+	jcfg = ks_json_parse(buf);
+	ks_pool_free(&buf);
+
+	return jcfg;
+}
 
 /**
  *
  */
 int bladec_client_init(void)
 {
-	ks_status_t status;
+	const char *tmp = NULL;
 
 	memset(&_bladec_globals, 0, sizeof(bladec_globals_t));
 
 	swclt_init(KS_LOG_LEVEL_INFO);
 
-	status = swclt_cfg_open_ex(&_bladec_globals.cfgbladec, _bladec_config_path.s, "bladec");
-	if(status != KS_STATUS_SUCCESS) {
-		LM_ERR("failed to open config for bladec group: %s (%d)\n", _bladec_config_path.s, (int)status);
-		return -1;
-	}
-
-	status = swclt_cfg_lookup_strval(_bladec_globals.cfgbladec, "blade_bootstrap",
-			&_bladec_globals.blade_bootstrap);
-	if(status != KS_STATUS_SUCCESS) {
-		LM_ERR("failed to load blade_bootstrap key in config: %s\n", _bladec_config_path.s);
+	_bladec_globals.jcfg = bladec_load_json_config_file(_bladec_config_path.s);
+	if(_bladec_globals.jcfg == NULL) {
+		LM_ERR("failed to load and parse config file\n");
 		goto error;
 	}
 
-    status = swclt_cfg_open_ex(&_bladec_globals.cfgclient, _bladec_config_path.s, "client");
-    if (status != KS_STATUS_SUCCESS) {
-		LM_ERR("failed to open config for client group: %s (%d)\n", _bladec_config_path.s, (int)status);
-		goto error;
+	swclt_config_create(&_bladec_globals.swcfg);
+
+	strncpy(_bladec_globals.blade_bootstrap, "switchblade",
+			sizeof(_bladec_globals.blade_bootstrap));
+	if (_bladec_globals.jcfg
+			&& (tmp = ks_json_get_object_cstr(_bladec_globals.jcfg,
+					"blade_bootstrap"))) {
+		if (tmp[0]) {
+			strncpy(_bladec_globals.blade_bootstrap, tmp,
+					sizeof(_bladec_globals.blade_bootstrap));
+		}
 	}
-	_bladec_globals.istatus = 1;
+	if ((tmp = getenv("KAMAILIO_BLADE_BOOTSTRAP"))) {
+		strncpy(_bladec_globals.blade_bootstrap, tmp,
+				sizeof(_bladec_globals.blade_bootstrap));
+	}
+	swclt_config_load_from_json(_bladec_globals.swcfg, _bladec_globals.jcfg);
+	swclt_config_load_from_env(_bladec_globals.swcfg);
+
 
 	LM_DBG("blade bootstrap string: %s\n", _bladec_globals.blade_bootstrap);
+
+	_bladec_globals.istatus = 1;
 
 	return 0;
 
 error:
-	ks_handle_destroy(&_bladec_globals.cfgbladec);
+	swclt_config_destroy(&_bladec_globals.swcfg);
 
 	if (swclt_shutdown()) {
 		LM_ERR("shutdown was ungraceful\n");
@@ -155,7 +206,7 @@ int bladec_client_session_start(void)
 	}
 	LM_DBG("creating session to: %s\n", _bladec_globals.blade_bootstrap);
 	swclt_sess_create(&_bladec_session, _bladec_globals.blade_bootstrap,
-			_bladec_globals.cfgclient);
+			_bladec_globals.swcfg);
 	if(!_bladec_session) {
 		LM_ERR("failed connecting to: %s\n", _bladec_globals.blade_bootstrap);
 		return -1;
@@ -314,8 +365,7 @@ int bladec_run_worker(int prank)
 /**
  *
  */
-int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
-		str *evcmd, str *evdata)
+int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 {
 	ks_status_t rcode;
 	swclt_cmd_t rcmd;
@@ -327,15 +377,18 @@ int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
 		return -1;
 	}
 
+	if(_bladec_globals.swres) {
+		ks_json_free_ex((void**)(&_bladec_globals.swres));
+		_bladec_globals.swres = NULL;
+	}
 	if (!swclt_sess_connected(_bladec_session)) {
 		LM_ERR("session is not connected\n");
 		//return -1;
 	}
 
-	LM_DBG("relaying cmd - reqnodeid [%s] resnodeid [%s] evproto [%s]"
+	LM_DBG("relaying cmd - reqnodeid [%s] evproto [%s]"
 			" evcmd [%.*s] evdata [%.*s] (%d)\n",
 			(reqnodeid->len>0)?reqnodeid->s:"none",
-			(resnodeid->len>0)?resnodeid->s:"none",
 			(evproto->len>0)?evproto->s:"none",
 			evcmd->len, evcmd->s,
 			evdata->len, evdata->s, evdata->len);
@@ -344,7 +397,6 @@ int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
 
 	rcode = swclt_sess_execute(_bladec_session,
 				(reqnodeid->len>0)?reqnodeid->s:NULL,
-				(resnodeid->len>0)?resnodeid->s:NULL,
 				(evproto->len>0)?evproto->s:NULL,
 				evcmd->s,
 				&params,
@@ -359,12 +411,55 @@ int bladec_relay(str *reqnodeid, str *resnodeid, str *evproto,
 		goto error;
 	}
 
+	_bladec_globals.swres = ks_json_print(result);
+	if(_bladec_globals.swres) {
+		LM_DBG("json result:\n%s\n",
+				(_bladec_globals.swres)?_bladec_globals.swres:"<empty>");
+	}
+
 	ks_handle_destroy(&rcmd);
 	return 1;
 
 error:
 	ks_handle_destroy(&rcmd);
 	return -1;
+}
+
+/**
+ *
+ */
+int bladec_channel_broadcast(str *evproto, str *evchannel, str *evname,
+		str *evdata)
+{
+	ks_json_t *params = NULL;
+
+	if(_bladec_globals.istatus != 1) {
+		LM_ERR("config struct was not initialized\n");
+		return -1;
+	}
+
+	if(_bladec_globals.swres) {
+		ks_json_free_ex((void**)(&_bladec_globals.swres));
+		_bladec_globals.swres = NULL;
+	}
+	if (!swclt_sess_connected(_bladec_session)) {
+		LM_ERR("session is not connected\n");
+		//return -1;
+	}
+
+	LM_DBG("relaying cmd - evproto [%s] evchannel [%s]"
+			" evname [%.*s] evdata [%.*s] (%d)\n",
+			(evproto->len>0)?evproto->s:"none",
+			(evchannel->len>0)?evchannel->s:"none",
+			evname->len, evname->s,
+			evdata->len, evdata->s, evdata->len);
+
+	params = ks_json_parse((const char *)evdata->s);
+
+	swclt_sess_broadcast(_bladec_session, evproto->s, evchannel->s, evname->s,
+			&params);
+
+	return 1;
 }
 
 /**
@@ -378,20 +473,8 @@ int pv_parse_bladec_name(pv_spec_t *sp, str *in)
 	switch(in->len)
 	{
 		case 3:
-			if(strncmp(in->s, "msg", 3)==0)
+			if(strncmp(in->s, "res", 3)==0)
 				sp->pvp.pvn.u.isname.name.n = 1;
-			else goto error;
-		break;
-		case 6:
-			if(strncmp(in->s, "conidx", 6)==0)
-				sp->pvp.pvn.u.isname.name.n = 0;
-			else goto error;
-		break;
-		case 7:
-			if(strncmp(in->s, "srcaddr", 7)==0)
-				sp->pvp.pvn.u.isname.name.n = 2;
-			else if(strncmp(in->s, "srcport", 7)==0)
-				sp->pvp.pvn.u.isname.name.n = 3;
 			else goto error;
 		break;
 		default:
@@ -421,20 +504,14 @@ int pv_get_bladec(sip_msg_t *msg, pv_param_t *param, pv_value_t *res)
 		return pv_get_null(msg, param, res);
 	}
 	evenv = bladec_get_msg_env(msg);
+	LM_DBG("local event env: %p\n", evenv);
 
 	switch(param->pvn.u.isname.name.n)
 	{
-		case 0:
-			return pv_get_sintval(msg, param, res, 0);
 		case 1:
-			if(evenv->msg.s==NULL)
+			if(_bladec_globals.swres==NULL)
 				return pv_get_null(msg, param, res);
-			return pv_get_strval(msg, param, res, &evenv->msg);
-		case 2:
-			return pv_get_strzval(msg, param, res,
-					"0.0.0.0");
-		case 3:
-			return pv_get_sintval(msg, param, res, 0);
+			return pv_get_strzval(msg, param, res, _bladec_globals.swres);
 		default:
 			return pv_get_null(msg, param, res);
 	}
