@@ -55,6 +55,8 @@ ALLOWADDR={
 PROJECTIPID = {}
 PROJECTIPID["127.0.0.1"] = "signalwire.localhost"
 
+local g_crt_projectid = ""
+
 -- match source ip against ALLOWADDR list
 function ksr_is_src_trusted()
 	local srcaddr = KSR.pv.get("$si");
@@ -273,6 +275,8 @@ end
 
 -- IP authorization and user uthentication
 function ksr_route_auth()
+	g_crt_projectid = "";
+
 	-- skip auth for traffic from media servers
 	if KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
 		return 1;
@@ -335,7 +339,7 @@ function ksr_route_auth()
 			if string.match(KSR.pv.get("$fu"), "evan") then
 				xsp = "79c0d9a1-68e6-4352-b312-6cf769380aa8"
 			end
-		
+
 			hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 				.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
 				.. "\", \"project\": \"" .. xsp
@@ -354,6 +358,7 @@ function ksr_route_auth()
 					.. "\"}";
 			end
 		end
+		g_crt_projectid = xsp;
 		KSR.pv.sets("$var(hres)", "");
 		KSR.http_client.query_post_hdrs(AUTHURL, hbody,
 				"Content-Type: application/json", "$var(hres)");
@@ -463,7 +468,7 @@ function ksr_route_registrar()
 		else
 			-- UA has no valid registration record
 			evcmd = "unregister";
-			evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. "\", \"type\": \"sip\" }";
+			evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\" }";
 		end
 		KSR.bladec.relay(localaddr, "registrar", evcmd, evdata);
 	end
