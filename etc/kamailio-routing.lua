@@ -463,7 +463,7 @@ function ksr_route_registrar()
 		if KSR.registrar.registered_uri("location", touri) > 0 then
 			-- UA has a valid registration record
 			evcmd = "register";
-			evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. "\", \"type\": \"sip\", \"domain\": \""
+			evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
 						.. todomain .. "\", \"host\": \"" .. localaddr .. "\" }";
 		else
 			-- UA has no valid registration record
