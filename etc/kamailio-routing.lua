@@ -465,7 +465,7 @@ function ksr_route_registrar()
 			evcmd = "unregister";
 			evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. "\", \"type\": \"sip\" }";
 		end
-		KSR.bladec.relay(localaddr, "freeswitch", evcmd, evdata);
+		KSR.bladec.relay(localaddr, "registrar", evcmd, evdata);
 	end
 	KSR.x.exit();
 end
