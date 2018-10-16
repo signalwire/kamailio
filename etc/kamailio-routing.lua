@@ -17,6 +17,7 @@ local cjson = require "cjson"
 -- global variables to enable/disable some features
 WITH_ANTIFLOOD=true
 WITH_AUTHCACHE=false
+WITH_BLADENOTIFY=false
 
 -- global variables corresponding to defined values (e.g., flags) in kamailio.cfg
 FLT_ACC=1
@@ -443,6 +444,28 @@ function ksr_route_registrar()
 	end
 	if KSR.registrar.save("location", 0)<0 then
 		KSR.sl.sl_reply_error();
+		KSR.x.exit();
+	end
+
+	if WITH_BLADENOTIFY then
+		local touri = KSR.pv.getw("$tu");
+		local touser = KSR.pv.getw("$tU");
+		local todomain = KSR.pv.getw("$td");
+		-- local address = localip:localport
+		local localaddr = KSR.pv.getw("$Ri") .. ":" .. KSR.pv.getw("$Rp");
+		local evcmd = "";
+		local evdata = "";
+		if KSR.registrar.registered_uri("location", touri) > 0 then
+			-- UA has a valid registration record
+			evcmd = "register";
+			evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. "\", \"type\": \"sip\", \"domain\": \""
+						.. todomain .. "\", \"host\": \"" .. localaddr .. "\" }";
+		else
+			-- UA has no valid registration record
+			evcmd = "unregister";
+			evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. "\", \"type\": \"sip\" }";
+		end
+		KSR.bladec.relay(localaddr, "freeswitch", evcmd, evdata);
 	end
 	KSR.x.exit();
 end
