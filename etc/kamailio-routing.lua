@@ -17,6 +17,7 @@ local cjson = require "cjson"
 -- global variables to enable/disable some features
 WITH_ANTIFLOOD=true
 WITH_AUTHCACHE=false
+WITH_REDISROUTE=false
 
 -- global variables corresponding to defined values (e.g., flags) in kamailio.cfg
 FLT_ACC=1
@@ -50,6 +51,11 @@ ALLOWADDR={
 	"147.75.60.160/28"
 };
 
+-- list of freeswitch addresses to allow traffic from without user auth
+-- must have subnet mask (CIDR notation - use /32 for single ip addr)
+FSADDR={
+};
+
 -- list of ip addresses that have the project id mapped statically
 PROJECTIPID = {}
 PROJECTIPID["127.0.0.1"] = "signalwire.localhost"
@@ -58,6 +64,17 @@ PROJECTIPID["127.0.0.1"] = "signalwire.localhost"
 function ksr_is_src_trusted()
 	local srcaddr = KSR.pv.get("$si");
 	for idx, val in pairs(ALLOWADDR) do
+		if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
+			return true;
+		end
+	end
+	return false;
+end
+
+-- match source ip against FSADDR list
+function ksr_is_src_fsaddr()
+	local srcaddr = KSR.pv.get("$si");
+	for idx, val in pairs(FSADDR) do
 		if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
 			return true;
 		end
@@ -130,7 +147,9 @@ function ksr_request_route()
 	end
 
 	-- routing inbound and outbound
-	if KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
+	if ksr_is_src_fsaddr()
+			or KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0
+			or KSR.permissions.allow_source_address(100) > 0 then
 		ksr_route_location();
 		if KSR.is_myself_ruri() then
 			KSR.sl.send_reply(404, "Local route");
@@ -273,7 +292,9 @@ end
 -- IP authorization and user uthentication
 function ksr_route_auth()
 	-- skip auth for traffic from media servers
-	if KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
+	if ksr_is_src_fsaddr()
+			or KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0
+			or KSR.permissions.allow_source_address(100) > 0 then
 		return 1;
 	elseif KSR.dispatcher.ds_is_from_list_mode(200, 3) > 0 then
 		return 1;
@@ -334,7 +355,7 @@ function ksr_route_auth()
 			if string.match(KSR.pv.get("$fu"), "evan") then
 				xsp = "79c0d9a1-68e6-4352-b312-6cf769380aa8"
 			end
-		
+
 			hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
 				.. "\", \"domain\": \"" .. KSR.pv.get("$fd")
 				.. "\", \"project\": \"" .. xsp
@@ -511,17 +532,38 @@ end
 
 -- Dispatch requests
 function ksr_dispatch()
-	-- round robin (4) dispatching on group 100
+	local dsgrp = 100;
+	if WITH_REDISROUTE then
+		-- get routing info from redis
+		KSR.ndb_redis.redis_free("r1");
+		KSR.ndb_redis.redis_cmd_p1("srv1", "GET %s", "routeto:" .. KSR.pv.get("$fU") .. "@".. KSR.pv.get("$fd"), "r1");
+		local r1type = KSR.pv.get("$redis(r1=>type)");
+		if r1type == KSR.pv.get("$redisd(rpl_int)") then
+			dsgrp = KSR.pv.get("$redis(r1=>value)");
+		elseif r1type == KSR.pv.get("$redisd(rpl_str)") then
+			local r1val = KSR.pv.get("$redis(r1=>value)");
+			local r1num = tonumber(r1val);
+			if r1num == nil then
+				if string.len(r1val) > 4 then
+					-- direct routing by address
+					KSR.setdsturi(r1val);
+					KSR.ndb_redis.redis_free("r1");
+					ksr_route_relay();
+					KSR.x.exit();
+				end
+			else
+				dsgrp = r1num;
+			end
+		end
+		KSR.ndb_redis.redis_free("r1");
+	end
 	if string.match(KSR.pv.get("$fu"), "evan") then
-		if KSR.dispatcher.ds_select_dst(200, 4) < 0 then
-			KSR.sl.send_reply(404, "No destination");
-			KSR.x.exit();
-		end
-	else 
-		if KSR.dispatcher.ds_select_dst(100, 4) < 0 then
-			KSR.sl.send_reply(404, "No destination");
-			KSR.x.exit();
-		end
+		dsgrp = 200;
+	end
+	-- round robin (4) dispatching on group 'dsgrp' (default 100)
+	if KSR.dispatcher.ds_select_dst(dsgrp, 4) < 0 then
+		KSR.sl.send_reply(404, "No destination");
+		KSR.x.exit();
 	end
 
 	KSR.dbg("--- SCRIPT: going to <" .. KSR.pv.get("$ru") .. "> via <"

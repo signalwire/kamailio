@@ -66,6 +66,28 @@ HA1=`echo -n "$USERNAME:$REALM:$PASSWORD" | md5sum | awk '{ print $1 }'`
 
   * lua-cjson - used to parse the JSON data inside Lua script
 
+## Redis Backend ##
+
+For `permissions` module, add records like:
+
+```
+hmset address:entry::1 grp 1 ip_addr "127.0.0.1" mask 32 port 0
+```
+
+The key `address:entry::1` must have the prefix `address:entry::`, then the
+suffix doesn't really matter, it just has to make the key unique for each record.
+
+For routing users to specific instances, add records like:
+
+```
+set routeto:alice@127.0.0.1 500
+# or
+set routeto:alice@127.0.0.1 sip:127.0.0.1:5080
+```
+
+The first variant is routing calls from alice via dispatcher group 500, the
+second variant is setting the next hop address directly, without using dispatcher.
+
 ## Notes ##
 
   * UDP, TCP and TLS are enabled (testing so far was done for UDP)
