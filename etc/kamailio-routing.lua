@@ -39,6 +39,7 @@ DOMAINAUTH["beta.bria-x.com"] = 1
 DOMAINAUTH["1.bria-x.com"] = 1
 DOMAINAUTH["sip.softphone.com"] = 1
 DOMAINAUTH["sip.bria-x.org"] = 1
+DOMAINAUTH["sip.bria-x.net"] = 1
 DOMAINAUTH["sip.mobilevoiplive.com"] = 1
 
 -- list of addresses to allow traffic from without user auth
