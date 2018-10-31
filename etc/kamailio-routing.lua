@@ -38,17 +38,21 @@ DOMAINAUTH["beta.bria-x.com"] = 1
 DOMAINAUTH["1.bria-x.com"] = 1
 DOMAINAUTH["sip.softphone.com"] = 1
 DOMAINAUTH["sip.bria-x.org"] = 1
+DOMAINAUTH["sip.bria-x.net"] = 1
 DOMAINAUTH["sip.mobilevoiplive.com"] = 1
 
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
+	"159.65.244.171/32",
 	"10.0.0.0/24",
 	"10.255.0.0/24",
 	"147.75.65.192/28",
 	"34.226.36.32/28",
 	"34.210.91.112/28",
-	"147.75.60.160/28"
+	"147.75.60.160/28",
+	"67.231.1.188/32",
+	"67.231.4.138/32"
 };
 
 -- list of freeswitch addresses to allow traffic from without user auth
