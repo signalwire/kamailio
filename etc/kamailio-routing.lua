@@ -45,6 +45,7 @@ DOMAINAUTH["sip.mobilevoiplive.com"] = 1
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
+	"159.65.244.171/32",
 	"10.0.0.0/24",
 	"10.255.0.0/24",
 	"147.75.65.192/28",
