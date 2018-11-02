@@ -470,7 +470,7 @@ function ksr_route_registrar()
 			evcmd = "unregister";
 			evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\" }";
 		end
-		KSR.bladec.relay("", "registrar", evcmd, evdata);
+		KSR.mqueue.mq_add("mqregister", evcmd, evdata);
 	end
 	KSR.x.exit();
 end
@@ -570,6 +570,17 @@ function ksr_failure_dispatch()
 			KSR.tm.t_on_failure("ksr_failure_dispatch");
 			ksr_route_relay();
 			KSR.x.exit();
+		end
+	end
+end
+
+-- RTimer callback to retrieve message from mqueue and push to blade network
+function ksr_rtimer_bladec(evname)
+	while KSR.mqueue.mq_fetch("mqregister") > 0 do
+		local bevcmd = KSR.pv.gete("$mqk(mqregister)");
+		local bevdata = KSR.pv.gete("$mqv(mqregister)");
+		if string.len(bevcmd) > 0 and string.len(bevdata) > 0 then
+			KSR.bladec.relay("", "registrar", bevcmd, bevdata);
 		end
 	end
 end
