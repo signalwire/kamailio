@@ -1,4 +1,3 @@
 # list of addresses
 
-100 sip:159.65.253.227:35185;transport=tcp
-200 sip:159.65.253.227:35185;transport=tcp
+100 sip:209.105.235.37:35180;transport=tcp
