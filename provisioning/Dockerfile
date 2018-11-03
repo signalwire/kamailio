@@ -25,8 +25,9 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
   zlib1g-dev
 
 COPY kamailio /usr/local/src/kamailio
+COPY src/modules/bladec /usr/local/src/kamailio/src/modules/bladec
 WORKDIR /usr/local/src/kamailio
-RUN make include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis" cfg
+RUN make include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec" cfg
 RUN make all
 RUN make install
 WORKDIR src/modules/tls
