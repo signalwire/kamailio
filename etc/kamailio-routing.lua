@@ -212,7 +212,7 @@ function ksr_route_reqinit()
         if not KSR.is_myself_suri() then
             if not KSR.pv.is_null("$sht(ipban=>$si)") then
                 -- ip is already blocked
-                KSR.dbg("request from blocked IP - " .. KSR.pv.get("$rm")
+                KSR.info("request from blocked IP - " .. KSR.pv.get("$rm")
                         .. " from " .. KSR.pv.get("$fu") .. " (IP:"
                         .. KSR.pv.get("$si") .. ":" .. KSR.pv.get("$sp") .. ")\n");
                 KSR.x.exit();
@@ -383,7 +383,7 @@ function ksr_route_auth()
                 "Content-Type: application/json", "$var(hres)");
 
         local hres = KSR.pv.gete("$var(hres)");
-        KSR.dbg("http query returned data: " .. hres .. "\n");
+        KSR.info("http query returned data: " .. hres .. "\n");
         if string.len(hres) < 10 then
             KSR.sl.sl_send_reply(500, "Backend unavailable");
             KSR.x.exit();
@@ -523,7 +523,7 @@ end
 -- Manage outgoing branches
 -- equivalent of branch_route[...]{}
 function ksr_branch_manage()
-    KSR.dbg("new branch [".. KSR.pv.get("$T_branch_idx")
+    KSR.info("new branch [".. KSR.pv.get("$T_branch_idx")
                 .. "] to ".. KSR.pv.get("$ru") .. "\n");
     ksr_route_natmanage();
     return 1;
@@ -532,7 +532,7 @@ end
 -- Manage incoming replies
 -- equivalent of onreply_route[...]{}
 function ksr_onreply_manage()
-    KSR.dbg("incoming reply\n");
+    KSR.info("incoming reply\n");
     local scode = KSR.pv.get("$rs");
     if scode>100 and scode<299 then
         ksr_route_natmanage();
@@ -597,7 +597,7 @@ function ksr_dispatch()
         KSR.x.exit();
     end
 
-    KSR.dbg("--- SCRIPT: going to <" .. KSR.pv.get("$ru") .. "> via <"
+    KSR.info("--- SCRIPT: going to <" .. KSR.pv.get("$ru") .. "> via <"
             .. KSR.pv.get("$du") .. ">\n");
     KSR.tm.t_on_failure("ksr_failure_dispatch");
     ksr_route_relay();
@@ -625,6 +625,7 @@ function ksr_rtimer_bladec(evname)
 		local bevcmd = KSR.pv.gete("$mqk(mqregister)");
 		local bevdata = KSR.pv.gete("$mqv(mqregister)");
 		if string.len(bevcmd) > 0 and string.len(bevdata) > 0 then
+			KSR.info("Sending blade.execute: " .. bevcmd .. " - " .. bevdata .. "\n"); 
 			KSR.bladec.relay("", "registrar", bevcmd, bevdata);
 		end
 	end
