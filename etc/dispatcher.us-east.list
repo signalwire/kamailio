@@ -1,0 +1,10 @@
+# list of addresses
+
+# Toronto
+100 sip:178.128.235.231:35181;transport=tls
+
+# NYC
+100 sip:159.65.253.227:35181;transport=tls
+
+# Counterpath temporary context
+200 sip:159.65.253.227:35185;transport=tls

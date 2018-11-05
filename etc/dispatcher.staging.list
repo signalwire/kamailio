@@ -1,0 +1,6 @@
+# list of addresses
+
+100 sip:209.105.235.37:35181;transport=tls
+
+# Counterpath temporary context
+200 sip:209.105.235.37:35185;transport=tls

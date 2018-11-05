@@ -39,7 +39,11 @@ COPY etc/kamailio.cfg /usr/local/etc/kamailio/kamailio.cfg
 COPY etc/kamailio-routing.lua /usr/local/etc/kamailio/kamailio-routing.lua
 COPY etc/kamailio-bladec.cfg /usr/local/etc/kamailio/kamailio-bladec.cfg
 COPY ca /usr/local/etc/kamailio/blade/ca
-COPY etc/dispatcher.list /usr/local/etc/kamailio/dispatcher.list
+COPY etc/dispatcher.staging.list /usr/local/etc/kamailio/dispatcher.staging.list
+COPY etc/dispatcher.us-west.list /usr/local/etc/kamailio/dispatcher.us-west.list
+COPY etc/dispatcher.us-east.list /usr/local/etc/kamailio/dispatcher.us-east.list
+COPY etc/dispatcher.eu.list /usr/local/etc/kamailio/dispatcher.eu.list
+COPY etc/dispatcher.se-asia.list /usr/local/etc/kamailio/dispatcher.se-asia.list
 COPY etc/tls.cfg /usr/local/etc/kamailio/tls.cfg
 COPY tls/ /usr/local/etc/kamailio/tls
 COPY provisioning/docker-entrypoint.sh /docker-entrypoint.sh
