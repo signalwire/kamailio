@@ -29,7 +29,7 @@ FLT_NATS=5
 FLB_NATB=6
 FLB_NATSIPPING=7
 
-AUTHURL=os.getenv('KAMAILIO_AUTHORIZATION_ROUTE')
+AUTHURL=os.getenv('KAMAILIO_AUTHORIZATION_URL')
 -- AUTHURL="https://api.swire.io/api/provider_callback/kamailio/authorize"
 
 -- Special domain authorization for CNAME'd domains
