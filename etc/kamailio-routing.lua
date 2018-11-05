@@ -586,10 +586,10 @@ function ksr_dispatch()
         KSR.ndb_redis.redis_free("r1");
     end
 
-    -- Quick redirect for specific test user
-    -- if string.match(KSR.pv.get("$fu"), "evan-testing-internal") then
-    --    dsgrp = 200;
-    -- end
+    -- Quick redirect for specific test domain
+    if string.match(KSR.pv.get("$fu"), "softphone") or string.match(KSR.pv.get("$fu"), "counterpath") then
+        dsgrp = 200;
+    end
 
     -- round robin (4) dispatching on group 'dsgrp' (default 100)
     if KSR.dispatcher.ds_select_dst(dsgrp, 4) < 0 then
