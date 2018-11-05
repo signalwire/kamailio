@@ -478,7 +478,7 @@ function ksr_route_registrar()
         local touser = KSR.pv.getw("$tU");
         local todomain = KSR.pv.getw("$td");
         -- local address = localip:localport
-        local localaddr = KSR.pv.getw("$RAi") .. ":" .. KSR.pv.getw("$RAp");
+        local localaddr = KSR.pv.getw("$RAi") .. ":5061";
         local evcmd = "";
         local evdata = "";
         if KSR.registrar.registered_uri("location", touri) > 0 then
