@@ -155,13 +155,8 @@ static int child_init(int rank)
 			bladec_close_notify_sockets_parent();
 		}
 
-		if(bladec_client_init()<0) {
+		if(bladec_client_process_init()<0) {
 			LM_ERR("failed to init the blade connector client\n");
-			return -1;
-		}
-
-		if(bladec_client_session_start()<0) {
-			LM_ERR("failed to create blade session for process %d\n", rank);
 			return -1;
 		}
 		return 0;
