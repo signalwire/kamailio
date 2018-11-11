@@ -1,0 +1,10 @@
+# list of addresses
+
+# Amsterdam
+100 sip:167.99.42.191:35181;transport=tls
+
+# UK
+100 sip:159.65.80.152:35181;transport=tls
+
+# Counterpath temporary context
+200 sip:167.99.42.191:35185;transport=tls

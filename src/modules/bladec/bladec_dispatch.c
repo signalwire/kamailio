@@ -37,6 +37,7 @@
 #include "../../core/sr_module.h"
 #include "../../core/dprint.h"
 #include "../../core/ut.h"
+#include "../../core/pt.h"
 #include "../../core/cfg/cfg_struct.h"
 #include "../../core/kemi.h"
 #include "../../core/fmsg.h"
@@ -82,6 +83,7 @@ typedef struct baldec_globals {
 	char blade_bootstrap[BLADE_BOOTSTRAP_SIZE];
 	char *swres;
 	int istatus;
+	int sstatus;
 } bladec_globals_t;
 
 static bladec_globals_t _bladec_globals = {0};
@@ -128,11 +130,22 @@ ks_json_t *bladec_load_json_config_file(char *cfgpath)
 /**
  *
  */
-int bladec_client_init(void)
+int bladec_client_process_init(void)
+{
+	memset(&_bladec_globals, 0, sizeof(bladec_globals_t));
+	return 0;
+}
+
+/**
+ *
+ */
+int bladec_client_prepare(void)
 {
 	const char *tmp = NULL;
 
-	memset(&_bladec_globals, 0, sizeof(bladec_globals_t));
+	if(_bladec_globals.istatus != 0) {
+		return 0;
+	}
 
 	swclt_init(KS_LOG_LEVEL_INFO);
 
@@ -160,7 +173,6 @@ int bladec_client_init(void)
 	}
 	swclt_config_load_from_json(_bladec_globals.swcfg, _bladec_globals.jcfg);
 	swclt_config_load_from_env(_bladec_globals.swcfg);
-
 
 	LM_DBG("blade bootstrap string: %s\n", _bladec_globals.blade_bootstrap);
 
@@ -200,9 +212,13 @@ static void bladec_session_state_handler(swclt_sess_t sess,
 int bladec_client_session_start(void)
 {
 	ks_status_t status;
-	if(_bladec_globals.istatus != 1) {
+	if(_bladec_globals.istatus == 0) {
 		LM_ERR("config struct was not initialized\n");
 		return -1;
+	}
+	if(_bladec_globals.sstatus != 0) {
+		LM_DBG("session was already initialized\n");
+		return 0;
 	}
 	LM_DBG("creating session to: %s\n", _bladec_globals.blade_bootstrap);
 	swclt_sess_create(&_bladec_session, _bladec_globals.blade_bootstrap,
@@ -218,6 +234,8 @@ int bladec_client_session_start(void)
 	status = swclt_sess_connect(_bladec_session);
 	LM_DBG("connected to: %s (status: %d)\n",
 			_bladec_globals.blade_bootstrap, status);
+
+	_bladec_globals.sstatus = 1;
 
 	return 0;
 }
@@ -372,11 +390,18 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
 
+	if(bladec_client_prepare()<0) {
+		LM_ERR("failed to prepare the blade connector client\n");
+		return -1;
+	}
 	if(_bladec_globals.istatus != 1) {
 		LM_ERR("config struct was not initialized\n");
 		return -1;
 	}
-
+	if(bladec_client_session_start()<0) {
+		LM_ERR("failed to create blade session for process %d\n", my_pid());
+		return -1;
+	}
 	if(_bladec_globals.swres) {
 		ks_json_free_ex((void**)(&_bladec_globals.swres));
 		_bladec_globals.swres = NULL;
