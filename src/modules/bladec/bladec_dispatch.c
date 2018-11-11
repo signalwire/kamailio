@@ -389,6 +389,7 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 	swclt_cmd_t rcmd;
 	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
+	int cmdattempt = 0;
 
 	if(bladec_client_prepare()<0) {
 		LM_ERR("failed to prepare the blade connector client\n");
@@ -407,7 +408,7 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 		_bladec_globals.swres = NULL;
 	}
 	if (!swclt_sess_connected(_bladec_session)) {
-		LM_ERR("session is not connected\n");
+		LM_DBG("session is not connected\n");
 		//return -1;
 	}
 
@@ -420,6 +421,7 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 
 	params = ks_json_parse((const char *)evdata->s);
 
+cmdretry:
 	rcode = swclt_sess_execute(_bladec_session,
 				(reqnodeid->len>0)?reqnodeid->s:NULL,
 				(evproto->len>0)?evproto->s:NULL,
@@ -432,8 +434,14 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 	swclt_cmd_result(rcmd, (const ks_json_t **)&result);
 
 	if (!result) {
-		LM_ERR("no result to command\n");
-		goto error;
+		if(cmdattempt!=0) {
+			LM_WARN("no result to command (attempt: %d)\n", cmdattempt);
+			goto error;
+		} else {
+			LM_DBG("no result to command (attempt: %d)\n", cmdattempt);
+			cmdattempt++;
+			goto cmdretry;
+		}
 	}
 
 	_bladec_globals.swres = ks_json_print(result);
@@ -468,7 +476,7 @@ int bladec_channel_broadcast(str *evproto, str *evchannel, str *evname,
 		_bladec_globals.swres = NULL;
 	}
 	if (!swclt_sess_connected(_bladec_session)) {
-		LM_ERR("session is not connected\n");
+		LM_DBG("session is not connected\n");
 		//return -1;
 	}
 
