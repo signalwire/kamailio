@@ -315,6 +315,7 @@ function ksr_route_auth()
 
     -- auth only a set of domains
     if DOMAINAUTH[uafd] == nil and not string.find(uafd, 'sip.signalwire.com') and not string.find(uafd, 'sip.swire.io') then
+        KSR.info("500 Domain unavailable for " .. uafd .. "\n");
         KSR.sl.sl_send_reply(500, "Domain unavailable");
         KSR.x.exit();
     end
@@ -385,12 +386,14 @@ function ksr_route_auth()
         local hres = KSR.pv.gete("$var(hres)");
         KSR.info("http query returned data: " .. hres .. "\n");
         if string.len(hres) < 10 then
+            KSR.info("500 Backend unavailable: hres error - " .. hres .." - on " .. KSR.pv.get("$fu") .. "@" .. KSR.pv.get("$fd") .. "with xsp: " .. xsp .. "\n");
             KSR.sl.sl_send_reply(500, "Backend unavailable");
             KSR.x.exit();
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];
         if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
+            KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.pv.get("$fu") .. "@" .. KSR.pv.get("$fd") .. "with xsp: " .. xsp .. "\n");
             KSR.sl.sl_send_reply(500, "Profile unavailable");
             KSR.x.exit();
         end
