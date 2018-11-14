@@ -42,9 +42,6 @@ DOMAINAUTH["sip.mobilevoiplive.com"] = 1
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
-    "209.105.235.37/32",
-    "159.65.244.171/32",
-    "10.92.0.0/16",
     "147.75.65.192/28",
     "34.226.36.32/28",
     "34.210.91.112/28",
@@ -56,6 +53,13 @@ ALLOWADDR={
 -- list of freeswitch addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 FSADDR={
+    "159.65.80.152/32",
+    "178.128.235.231/32",
+    "159.65.253.227/32",
+    "167.99.42.191/32",
+    "104.248.158.21/32",
+    "104.248.75.157/32",
+    "10.92.0.0/16"
 };
 
 -- list of ip addresses that have the project id mapped statically
@@ -315,7 +319,7 @@ function ksr_route_auth()
 
     -- auth only a set of domains
     if DOMAINAUTH[uafd] == nil and not string.find(uafd, 'sip.signalwire.com') and not string.find(uafd, 'sip.swire.io') then
-        KSR.info("500 Domain unavailable for " .. uafd .. "\n");
+        KSR.info("500 Domain unavailable for " .. KSR.pv.get("$fu") .. "\n");
         KSR.sl.sl_send_reply(500, "Domain unavailable");
         KSR.x.exit();
     end
@@ -386,14 +390,14 @@ function ksr_route_auth()
         local hres = KSR.pv.gete("$var(hres)");
         KSR.info("http query returned data: " .. hres .. "\n");
         if string.len(hres) < 10 then
-            KSR.info("500 Backend unavailable: hres error - " .. hres .." - on " .. KSR.pv.get("$fu") .. "@" .. KSR.pv.get("$fd") .. "with xsp: " .. xsp .. "\n");
+            KSR.info("500 Backend unavailable: hres error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
             KSR.sl.sl_send_reply(500, "Backend unavailable");
             KSR.x.exit();
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];
         if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
-            KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.pv.get("$fu") .. "@" .. KSR.pv.get("$fd") .. "with xsp: " .. xsp .. "\n");
+            KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
             KSR.sl.sl_send_reply(500, "Profile unavailable");
             KSR.x.exit();
         end
@@ -504,6 +508,7 @@ function ksr_route_location()
     -- only for a set of domains
     local uard = KSR.pv.get("$rd");
     if DOMAINAUTH[uard] == nil and not string.find(uard, 'sip.signalwire.com') and not string.find(uard, 'sip.swire.io') then
+        KSR.info("======> UARD: " .. uard .. "\n");
         return 1;
     end
 
