@@ -388,11 +388,18 @@ function ksr_route_auth()
                 "Content-Type: application/json", "$var(hres)");
 
         local hres = KSR.pv.gete("$var(hres)");
-        KSR.info("http query returned data: " .. hres .. "\n");
+        KSR.dbg("http query returned data: " .. hres .. "\n");
         if string.len(hres) < 10 then
-            KSR.info("500 Backend unavailable: hres error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
-            KSR.sl.sl_send_reply(500, "Backend unavailable");
-            KSR.x.exit();
+            -- no proper result -- try one more time the http api query
+            KSR.pv.sets("$var(hres)", "");
+            KSR.http_client.query_post_hdrs(AUTHURL, hbody,
+                    "Content-Type: application/json", "$var(hres)");
+            hres = KSR.pv.gete("$var(hres)");
+            if string.len(hres) < 10 then
+                KSR.info("500 Backend unavailable: hres error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
+                KSR.sl.sl_send_reply(500, "Backend unavailable");
+                KSR.x.exit();
+            end
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];
