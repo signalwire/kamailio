@@ -427,7 +427,7 @@ end
 -- Caller NAT detection
 function ksr_route_natdetect()
     KSR.force_rport();
-    if KSR.nathelper.nat_uac_test(19)>0 then
+    if KSR.nathelper.nat_uac_test(83)>0 then
         if KSR.is_REGISTER() then
             KSR.nathelper.fix_nated_register();
         elseif KSR.siputils.is_first_hop()>0 then
@@ -459,7 +459,7 @@ function ksr_route_natmanage()
         end
     end
     if KSR.siputils.is_reply()>0 then
-        if KSR.isbflagset(FLB_NATB) then
+        if KSR.isbflagset(FLB_NATB) or KSR.nathelper.nat_uac_test(64)>0 then
             KSR.nathelper.set_contact_alias();
         end
     end
@@ -644,4 +644,33 @@ function ksr_rtimer_bladec(evname)
 			KSR.bladec.relay("", "registrar", bevcmd, bevdata);
 		end
 	end
+end
+
+-- xhttp request callback
+function ksr_xhttp_request(evname)
+	KSR.set_reply_no_connect();
+	KSR.dbg("HTTP Request Received\n");
+
+	local hupgrade = KSR.pv.gete("$hdr(Upgrade)");
+	local hconnection = KSR.pv.gete("$hdr(Connection)");
+
+	if KSR.is_method_in("G") and string.match(hupgrade, "websocket")
+			and string.match(hconnection, "Upgrade") then
+		local hhost = KSR.pv.gete("$hdr(Host)");
+		if string.len(hhost) <= 0 or not KSR.is_myself("sip:" .. hhost) then
+			KSR.info("Bad host: " .. hhost .. "\n");
+			KSR.xhhtp.xhttp_reply(403, "Forbidden", "", "");
+			KSR.x.exit();
+		end
+		local lret = KSR.websocket.handle_handshake();
+		if lret > 0 then
+			KSR.dbg("weksocket handshake ok\n");
+			KSR.x.exit();
+		end
+		if lret == 0 then
+			KSR.dbg("weksocket handshake failure\n");
+			KSR.x.exit();
+		end
+	end
+	KSR.xhhtp.xhttp_reply("404", "Not found", "", "");
 end
