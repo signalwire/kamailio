@@ -595,7 +595,7 @@ function ksr_dispatch()
     end
 
     -- Quick redirect for specific test domain
-    if string.match(KSR.pv.get("$fu"), "softphone.com") or string.match(KSR.pv.get("$fu"), "counterpath.com") or string.match(KSR.pv.get("$fu"), "bria-x") or string.match(KSR.pv.get("$fu"), "mobilevoiplive.com") then
+    if string.match(KSR.pv.get("$fu"), "softphone.com") or string.match(KSR.pv.get("$fu"), "counterpath.com") or string.match(KSR.pv.get("$fu"), "bria%-x") or string.match(KSR.pv.get("$fu"), "mobilevoiplive.com") then
         dsgrp = 200;
     end
 
