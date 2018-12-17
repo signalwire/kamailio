@@ -3,19 +3,17 @@
 Load balancing (round-robin) to a farm of FreeSwitch systems and routing the
 traffic from FreeSwitch based on R-URI address.
 
-Addresses of FreeSwitch systems must be added inside `etc/dispatcher.list` with
+Addresses of FreeSwitch systems must be added inside multiple `etc/dispatcher.list`s with
 the group id `100`.
 
 It requires Kamailio master branch to be cloned in this directory.
 
 ## Usage ##
 
-Clone the required git repositories:
+Download the required Kamailio submodule:
 
 ```
-git clone https://github.com/signalwire/kamailio signalwire-kamailio
-cd signalwire-kamailio
-git clone https://github.com/kamailio/kamailio
+git submodule update --init --recursive
 ```
 
 Edit `etc/dispatcher.list` and add there the addresses for FreeSwitch systems.
