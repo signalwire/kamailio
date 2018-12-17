@@ -659,7 +659,7 @@ function ksr_xhttp_request(evname)
 		local hhost = KSR.pv.gete("$hdr(Host)");
 		if string.len(hhost) <= 0 or not KSR.is_myself("sip:" .. hhost) then
 			KSR.info("Bad host: " .. hhost .. "\n");
-			KSR.xhhtp.xhttp_reply(403, "Forbidden", "", "");
+			KSR.xhttp.xhttp_reply(403, "Forbidden", "", "");
 			KSR.x.exit();
 		end
 		local lret = KSR.websocket.handle_handshake();
@@ -672,5 +672,5 @@ function ksr_xhttp_request(evname)
 			KSR.x.exit();
 		end
 	end
-	KSR.xhhtp.xhttp_reply("404", "Not found", "", "");
+	KSR.xhttp.xhttp_reply("404", "Not found", "", "");
 end
