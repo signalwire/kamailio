@@ -388,7 +388,7 @@ function ksr_route_auth()
                 "Content-Type: application/json", "$var(hres)");
 
         local hres = KSR.pv.gete("$var(hres)");
-        KSR.dbg("http query returned data: " .. hres .. "\n");
+        KSR.info("Authorization HTTP query returned: " .. hres .. "\n");
         if string.len(hres) < 10 then
             -- no proper result -- try one more time the http api query
             KSR.pv.sets("$var(hres)", "");
@@ -396,7 +396,7 @@ function ksr_route_auth()
                     "Content-Type: application/json", "$var(hres)");
             hres = KSR.pv.gete("$var(hres)");
             if string.len(hres) < 10 then
-                KSR.info("500 Backend unavailable: hres error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
+                KSR.info("500 Backend unavailable: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
                 KSR.sl.sl_send_reply(500, "Backend unavailable");
                 KSR.x.exit();
             end
@@ -664,11 +664,11 @@ function ksr_xhttp_request(evname)
 		end
 		local lret = KSR.websocket.handle_handshake();
 		if lret > 0 then
-			KSR.dbg("weksocket handshake ok\n");
+			KSR.info("Websocket handshake successful\n");
 			KSR.x.exit();
 		end
 		if lret == 0 then
-			KSR.dbg("weksocket handshake failure\n");
+			KSR.info("Websocket handshake failed\n");
 			KSR.x.exit();
 		end
 	end
