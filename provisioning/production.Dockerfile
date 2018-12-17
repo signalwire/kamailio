@@ -28,7 +28,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
 COPY kamailio /usr/local/src/kamailio
 COPY src/modules/bladec /usr/local/src/kamailio/src/modules/bladec
 WORKDIR /usr/local/src/kamailio
-RUN make -j`nproc -all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions" cfg
+RUN make -j`nproc -all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket" cfg
 RUN make -j`nproc -all` all
 RUN make install
 WORKDIR src/modules/tls

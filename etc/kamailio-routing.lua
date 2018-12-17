@@ -388,11 +388,18 @@ function ksr_route_auth()
                 "Content-Type: application/json", "$var(hres)");
 
         local hres = KSR.pv.gete("$var(hres)");
-        KSR.info("http query returned data: " .. hres .. "\n");
+        KSR.info("Authorization HTTP query returned: " .. hres .. "\n");
         if string.len(hres) < 10 then
-            KSR.info("500 Backend unavailable: hres error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
-            KSR.sl.sl_send_reply(500, "Backend unavailable");
-            KSR.x.exit();
+            -- no proper result -- try one more time the http api query
+            KSR.pv.sets("$var(hres)", "");
+            KSR.http_client.query_post_hdrs(AUTHURL, hbody,
+                    "Content-Type: application/json", "$var(hres)");
+            hres = KSR.pv.gete("$var(hres)");
+            if string.len(hres) < 10 then
+                KSR.info("500 Backend unavailable: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
+                KSR.sl.sl_send_reply(500, "Backend unavailable");
+                KSR.x.exit();
+            end
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];
@@ -420,7 +427,7 @@ end
 -- Caller NAT detection
 function ksr_route_natdetect()
     KSR.force_rport();
-    if KSR.nathelper.nat_uac_test(19)>0 then
+    if KSR.nathelper.nat_uac_test(83)>0 then
         if KSR.is_REGISTER() then
             KSR.nathelper.fix_nated_register();
         elseif KSR.siputils.is_first_hop()>0 then
@@ -452,7 +459,7 @@ function ksr_route_natmanage()
         end
     end
     if KSR.siputils.is_reply()>0 then
-        if KSR.isbflagset(FLB_NATB) then
+        if KSR.isbflagset(FLB_NATB) or KSR.nathelper.nat_uac_test(64)>0 then
             KSR.nathelper.set_contact_alias();
         end
     end
@@ -637,4 +644,33 @@ function ksr_rtimer_bladec(evname)
 			KSR.bladec.relay("", "registrar", bevcmd, bevdata);
 		end
 	end
+end
+
+-- xhttp request callback
+function ksr_xhttp_request(evname)
+	KSR.set_reply_no_connect();
+	KSR.dbg("HTTP Request Received\n");
+
+	local hupgrade = KSR.pv.gete("$hdr(Upgrade)");
+	local hconnection = KSR.pv.gete("$hdr(Connection)");
+
+	if KSR.is_method_in("G") and string.match(hupgrade, "websocket")
+			and string.match(hconnection, "Upgrade") then
+		local hhost = KSR.pv.gete("$hdr(Host)");
+		if string.len(hhost) <= 0 or not KSR.is_myself("sip:" .. hhost) then
+			KSR.info("Bad host: " .. hhost .. "\n");
+			KSR.xhttp.xhttp_reply(403, "Forbidden", "", "");
+			KSR.x.exit();
+		end
+		local lret = KSR.websocket.handle_handshake();
+		if lret > 0 then
+			KSR.info("Websocket handshake successful\n");
+			KSR.x.exit();
+		end
+		if lret == 0 then
+			KSR.info("Websocket handshake failed\n");
+			KSR.x.exit();
+		end
+	end
+	KSR.xhttp.xhttp_reply("404", "Not found", "", "");
 end
