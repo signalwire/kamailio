@@ -158,6 +158,7 @@ function ksr_request_route()
     if ksr_is_src_fsaddr()
             or KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
             -- or KSR.permissions.allow_source_address(100) > 0 then
+        ksr_route_swoutbound();
         ksr_route_location();
         if KSR.is_myself_ruri() then
             KSR.sl.send_reply(404, "Local route");
@@ -166,6 +167,7 @@ function ksr_request_route()
         ksr_route_dlguri();
         ksr_route_relay();
     elseif KSR.dispatcher.ds_is_from_list_mode(200, 3) > 0 then
+        ksr_route_swoutbound();
         ksr_route_location();
         if KSR.is_myself_ruri() then
             KSR.sl.send_reply(404, "Local route");
@@ -534,6 +536,21 @@ function ksr_route_location()
     KSR.x.exit();
 end
 
+
+-- Outbound to external SIP providers
+function ksr_route_swoutbound()
+	if KSR.hdr.is_present("X-SignalWire-Outbound") < 0 then
+		return 1;
+	end
+	local obproxy = KSR.pv.gete("$hdr(X-SignalWire-Outbound-Proxy)");
+	if string.len(obproxy) > 4 then
+		KSR.setdsturi(obproxy);
+		KSR.hdr.remove("X-SignalWire-Outbound-Proxy");
+	end
+	KSR.hdr.remove("X-SignalWire-Outbound");
+	ksr_route_relay();
+	KSR.x.exit();
+end
 
 -- Manage outgoing branches
 -- equivalent of branch_route[...]{}
