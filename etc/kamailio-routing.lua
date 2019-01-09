@@ -103,6 +103,11 @@ function ksr_request_route()
         KSR.x.exit();
     end
 
+    if KSR.is_NOTIFY() then
+        KSR.sl.send_reply(405, "Method Not Allowed");
+        KSR.x.exit();
+    end
+
     -- NAT detection
     ksr_route_natdetect();
 
