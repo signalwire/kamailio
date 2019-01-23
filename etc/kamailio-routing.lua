@@ -153,9 +153,8 @@ function ksr_request_route()
         KSR.setflag(FLT_ACC); -- do accounting
 
         if KSR.corex.has_ruri_user() < 0 then
-            -- request with no Username in RURI
-            KSR.sl.sl_send_reply(484,"Address Incomplete");
-            return 1;
+            -- request with no Username in RURI - log and continue
+            KSR.info("INVITE received with no Username in RURI.\n");
         end
     end
 
