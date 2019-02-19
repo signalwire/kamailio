@@ -251,8 +251,7 @@ function ksr_route_reqinit()
     end
 
     if KSR.is_OPTIONS()
-            and KSR.is_myself_ruri()
-            and KSR.corex.has_ruri_user() < 0 then
+            and KSR.is_myself_ruri() then
         KSR.sl.sl_send_reply(200,"Keepalive");
         KSR.x.exit();
     end
