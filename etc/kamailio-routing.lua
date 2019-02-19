@@ -250,8 +250,7 @@ function ksr_route_reqinit()
         KSR.x.exit();
     end
 
-    if KSR.is_OPTIONS()
-            and KSR.is_myself_ruri() then
+    if KSR.is_OPTIONS() then
         KSR.sl.sl_send_reply(200,"Keepalive");
         KSR.x.exit();
     end
