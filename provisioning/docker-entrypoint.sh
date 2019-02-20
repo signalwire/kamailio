@@ -27,6 +27,7 @@ wait_term()
 }
 
 prep_term
+echo 65535 > /writable-proc/sys/net/core/somaxconn
 /usr/local/sbin/kamailio -DD -dd -E -e -m 256 -M 12 \
   -A KAM_IP_LOCAL=$(ip route get 1.1.1.1 | awk 'NR==1 {print $NF}') \
   -A KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com) \
