@@ -698,6 +698,7 @@ function ksr_xhttp_request(evname)
 			KSR.info("Websocket handshake failed\n");
 			KSR.x.exit();
 		end
-	end
+    end
+    KSR.info("404 - Rejecting websocket with invalid HTTP Method:" .. KSR.pv.getw("$rm") .. ", Upgrade: " .. hupgrade .. ", Connection: " .. hconnection .."\n");
 	KSR.xhttp.xhttp_reply("404", "Not found", "", "");
 end
