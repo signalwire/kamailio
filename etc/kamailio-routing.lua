@@ -499,11 +499,19 @@ function ksr_route_registrar()
         local localaddr = KSR.pv.getw("$RAi") .. ":5061";
         local evcmd = "";
         local evdata = "";
+        local webrtc_media = "false";
+
         if KSR.registrar.registered_uri("location", touri) > 0 then
             -- UA has a valid registration record
             evcmd = "register";
+
+            -- If the inbound protocol is WSS, assume we need webrtc media
+            if KSR.pv.getw("$proto") == "wss" then
+                webrtc_media = "true";
+            end
+
             evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
-                        .. todomain .. "\", \"host\": \"" .. localaddr .. "\" }";
+                        .. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"webrtc_media\": \"" .. webrtc_media .. "\" }";
         else
             -- UA has no valid registration record
             evcmd = "unregister";
