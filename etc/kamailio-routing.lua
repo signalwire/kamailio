@@ -643,7 +643,11 @@ function ksr_failure_dispatch()
 	if KSR.tm.t_is_canceled() > 0 then
 		return 1;
 	end
-	-- next DST - only for 4xx, 5xx and 6xx
+	-- no re-routing for specific reply codes
+	if KSR.tm.t_check_status("488|486") > 0 then
+		return 1;
+	end
+	-- next DST - only for the rest of 4xx, 5xx and 6xx
 	if KSR.tm.t_check_status("[4-6][0-9][0-9]") > 0 then
 		if KSR.dispatcher.ds_next_dst() > 0 then
 			KSR.tm.t_on_failure("ksr_failure_dispatch");
