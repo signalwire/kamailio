@@ -499,11 +499,19 @@ function ksr_route_registrar()
         local localaddr = KSR.pv.getw("$RAi") .. ":5061";
         local evcmd = "";
         local evdata = "";
+        local requested_media_webrtc = "false";
+
         if KSR.registrar.registered_uri("location", touri) > 0 then
             -- UA has a valid registration record
             evcmd = "register";
+
+            -- If the inbound protocol is WSS, assume we need webrtc media
+            if KSR.pv.getw("$proto") == "wss" then
+                requested_media_webrtc = "true";
+            end
+
             evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
-                        .. todomain .. "\", \"host\": \"" .. localaddr .. "\" }";
+                        .. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\" }";
         else
             -- UA has no valid registration record
             evcmd = "unregister";
@@ -694,6 +702,7 @@ function ksr_xhttp_request(evname)
 			KSR.info("Websocket handshake failed\n");
 			KSR.x.exit();
 		end
-	end
+    end
+    KSR.info("404 - Rejecting websocket with invalid HTTP Method:" .. KSR.pv.getw("$rm") .. ", Upgrade: " .. hupgrade .. ", Connection: " .. hconnection .."\n");
 	KSR.xhttp.xhttp_reply("404", "Not found", "", "");
 end
