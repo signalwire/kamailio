@@ -25,9 +25,12 @@ FLT_ACC=1
 FLT_ACCMISSED=2
 FLT_ACCFAILED=3
 FLT_NATS=5
+FLT_BRANCHDROP=15
 
 FLB_NATB=6
 FLB_NATSIPPING=7
+FLB_CLASSIC=8
+FLB_WEBRTC=9
 
 AUTHURL=os.getenv('KAMAILIO_AUTHORIZATION_URL')
 -- AUTHURL="https://api.swire.io/api/provider_callback/kamailio/authorize"
@@ -209,8 +212,20 @@ function ksr_route_relay()
         end
     end
 
-    if KSR.tm.t_relay()<0 then
-        KSR.sl.sl_reply_error();
+    if KSR.is_INVITE() and KSR.siputils.has_totag()<0 then
+        -- send reply from script if all outbound branches are dropped
+        KSR.tm.t_set_disable_internal_reply();
+        if KSR.tm.t_relay()<0 then
+            if KSR.isflagset(FLT_BRANCHDROP) then
+                KSR.tm.t_reply("404", "Target not found");
+            else
+                KSR.sl.sl_reply_error();
+            end
+        end
+    else
+        if KSR.tm.t_relay()<0 then
+            KSR.sl.sl_reply_error();
+        end
     end
     KSR.x.exit();
 end
@@ -486,6 +501,11 @@ function ksr_route_registrar()
         -- do SIP NAT pinging
         KSR.setbflag(FLB_NATSIPPING);
     end
+    if KSR.pv.getw("$proto") == "wss" then
+        KSR.setbflag(FLB_WEBRTC);
+    else
+        KSR.setbflag(FLB_CLASSIC);
+    end
     if KSR.registrar.save("location", 0)<0 then
         KSR.sl.sl_reply_error();
         KSR.x.exit();
@@ -567,6 +587,21 @@ end
 function ksr_branch_manage()
     KSR.info("new branch [".. KSR.pv.get("$T_branch_idx")
                 .. "] to ".. KSR.pv.get("$ru") .. "\n");
+    if KSR.is_INVITE() and KSR.siputils.has_totag()<0 then
+        local ttype = KSR.pv.gete("$hdr(X-Target-Type)");
+        if ttype == "classic" then
+            if not KSR.isbflagset(FLB_CLASSIC) then
+                KSR.setflag(FLT_BRANCHDROP);
+                KSR.x.drop();
+            end
+        elseif ttype == "webrtc" then
+            if not KSR.isbflagset(FLB_WEBRTC) then
+                KSR.setflag(FLT_BRANCHDROP);
+                KSR.x.drop();
+            end
+        end
+    end
+    KSR.hdr.remove("X-Target-Type");
     ksr_route_natmanage();
     return 1;
 end
