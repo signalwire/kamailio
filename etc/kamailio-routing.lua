@@ -214,7 +214,7 @@ function ksr_route_relay()
 
     if KSR.is_INVITE() and KSR.siputils.has_totag()<0 then
         -- send reply from script if all outbound branches are dropped
-        KSR.tm.t_set_disable_internal_reply();
+        KSR.tm.t_set_disable_internal_reply(1);
         if KSR.tm.t_relay()<0 then
             if KSR.isflagset(FLT_BRANCHDROP) then
                 KSR.tm.t_reply("404", "Target not found");
