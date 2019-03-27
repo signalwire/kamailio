@@ -427,7 +427,7 @@ function ksr_route_auth()
         g_crt_projectid = jsres["project_id"];
         if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
             KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
-            KSR.sl.sl_send_reply(500, "Profile unavailable");
+            KSR.sl.sl_send_reply(500, "Authentication unavailable");
             KSR.x.exit();
         end
         uapasswd = jsres["ha1"];
