@@ -1,35 +1,14 @@
 FROM signalwire/freeswitch-libs as intermediate
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes apt-utils \
-  autoconf gcc g++ make procps \
-  coreutils ctags curl gawk gdb git jq lynx ngrep sed vim wget \
-  bison \
-  debhelper \
-  dh-systemd \
-  dpkg-dev \
-  flex \
-  libgeoip-dev \
-  libhiredis-dev \
-  liblua5.1-0-dev \
-  lua-cjson-dev \
-  libncurses5-dev \
-  libpcre3-dev \
-  libssl-dev \
-  libunistring-dev \
-  openssl \
-  pkg-config \
-  uuid-dev \
-  xsltproc \
-  zlib1g-dev \
-  dnsutils \
-  libcurl4-openssl-dev \
-  libjemalloc-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
+  flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY kamailio /usr/local/src/kamailio
 COPY src/modules/bladec /usr/local/src/kamailio/src/modules/bladec
 WORKDIR /usr/local/src/kamailio
-RUN make -j`nproc -all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket nathelper" cfg \
-&& make -j`nproc -all` all && make install \
+RUN make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket nathelper" cfg \
+&& make -j`nproc --all` all && make install \
 && cd src/modules/tls && make install-tls-cert
 
 
