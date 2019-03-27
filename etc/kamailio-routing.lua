@@ -341,8 +341,8 @@ function ksr_route_auth()
 
     -- auth only a set of domains
     if DOMAINAUTH[uafd] == nil and not string.find(uafd, 'sip.signalwire.com') and not string.find(uafd, 'sip.swire.io') then
-        KSR.info("500 Domain unavailable for " .. KSR.pv.get("$fu") .. "\n");
-        KSR.sl.sl_send_reply(500, "Domain unavailable");
+        KSR.info("404 Domain unavailable for " .. KSR.pv.get("$fu") .. "\n");
+        KSR.sl.sl_send_reply(404, "Domain unavailable");
         KSR.x.exit();
     end
 
