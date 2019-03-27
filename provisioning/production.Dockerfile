@@ -27,10 +27,17 @@ RUN apt-get update && apt-get -y install --no-install-recommends --no-install-su
 
 ENV LC_ALL en_US.utf-8
 
-COPY --from=intermediate /usr/lib /usr/lib
-COPY --from=intermediate /usr/include /usr/include
 COPY --from=intermediate /lib/x86_64-linux-gnu /lib/x86_64-linux-gnu
-COPY --from=intermediate /usr/local /usr/local
+COPY --from=intermediate /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+
+COPY --from=intermediate /usr/lib/libsignalwire_client.so.1 /usr/lib/libsignalwire_client.so.1
+COPY --from=intermediate /usr/lib/libks.so.1 /usr/lib/libks.so.1
+
+COPY --from=intermediate /usr/local/lib64/kamailio /usr/local/lib64/kamailio
+COPY --from=intermediate /usr/local/lib64/kamailio/modules /usr/local/lib64/kamailio/modules
+COPY --from=intermediate /usr/local/etc /usr/local/etc
+COPY --from=intermediate /usr/local/sbin /usr/local/sbin
+
 
 COPY tls/ /usr/local/etc/kamailio/tls
 COPY ca/ /usr/local/etc/kamailio/blade/ca
