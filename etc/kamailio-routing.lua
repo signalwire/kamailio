@@ -97,6 +97,9 @@ end
 -- equivalent of request_route{}
 function ksr_request_route()
 
+    -- do not connect on tcp/tls to send reply
+    KSR.set_reply_no_connect();
+
     -- per request initial checks
     ksr_route_reqinit();
 
@@ -470,6 +473,11 @@ function ksr_route_natmanage()
         return 1;
     end
 
+    if KSR.isbflagset(FLB_NATB) then
+        -- do not connect on tcp/tls to send out if connection does not exist
+        KSR.set_forward_no_connect();
+    end
+
     if KSR.siputils.is_request()>0 then
         if KSR.siputils.has_totag()<0 then
             if KSR.tmx.t_is_branch_route()>0 then
@@ -562,6 +570,9 @@ function ksr_route_location()
         KSR.x.exit();
     end
 
+    -- do not connect on tcp/tls to forward request if contact connection does not exist
+    KSR.set_forward_no_connect();
+
     ksr_route_relay();
     KSR.x.exit();
 end
@@ -602,6 +613,7 @@ function ksr_branch_manage()
         end
     end
     KSR.hdr.remove("X-Target-Type");
+
     ksr_route_natmanage();
     return 1;
 end
