@@ -341,8 +341,8 @@ function ksr_route_auth()
 
     -- auth only a set of domains
     if DOMAINAUTH[uafd] == nil and not string.find(uafd, 'sip.signalwire.com') and not string.find(uafd, 'sip.swire.io') then
-        KSR.info("500 Domain unavailable for " .. KSR.pv.get("$fu") .. "\n");
-        KSR.sl.sl_send_reply(500, "Domain unavailable");
+        KSR.info("404 Domain unavailable for " .. KSR.pv.get("$fu") .. "\n");
+        KSR.sl.sl_send_reply(404, "Domain unavailable");
         KSR.x.exit();
     end
 
@@ -418,8 +418,8 @@ function ksr_route_auth()
                     "Content-Type: application/json", "$var(hres)");
             hres = KSR.pv.gete("$var(hres)");
             if string.len(hres) < 10 then
-                KSR.info("500 Backend unavailable: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. " with project: " .. xsp .. "\n");
-                KSR.sl.sl_send_reply(500, "Backend unavailable");
+                KSR.info("401 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. " with project: " .. xsp .. "\n");
+                KSR.sl.sl_send_reply(401, "Unauthorized");
                 KSR.x.exit();
             end
         end
@@ -427,7 +427,7 @@ function ksr_route_auth()
         g_crt_projectid = jsres["project_id"];
         if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
             KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
-            KSR.sl.sl_send_reply(500, "Profile unavailable");
+            KSR.sl.sl_send_reply(500, "Authentication unavailable");
             KSR.x.exit();
         end
         uapasswd = jsres["ha1"];
