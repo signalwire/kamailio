@@ -418,8 +418,8 @@ function ksr_route_auth()
                     "Content-Type: application/json", "$var(hres)");
             hres = KSR.pv.gete("$var(hres)");
             if string.len(hres) < 10 then
-                KSR.info("500 Backend unavailable: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. " with project: " .. xsp .. "\n");
-                KSR.sl.sl_send_reply(500, "Backend unavailable");
+                KSR.info("401 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. " with project: " .. xsp .. "\n");
+                KSR.sl.sl_send_reply(401, "Unauthorized");
                 KSR.x.exit();
             end
         end
