@@ -147,7 +147,7 @@ int bladec_client_prepare(void)
 		return 0;
 	}
 
-	swclt_init(KS_LOG_LEVEL_INFO);
+	swclt_init(KS_LOG_LEVEL_DEBUG);
 
 	_bladec_globals.jcfg = bladec_load_json_config_file(_bladec_config_path.s);
 	if(_bladec_globals.jcfg == NULL) {
