@@ -440,6 +440,8 @@ cmdretry:
 		} else {
 			LM_DBG("no result to command (attempt: %d)\n", cmdattempt);
 			cmdattempt++;
+			
+			ks_handle_destroy(&rcmd);
 			goto cmdretry;
 		}
 	}
