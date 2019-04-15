@@ -1,6 +1,13 @@
 # list of addresses
 
+# San Francisco
 100 sip:104.248.75.157:35181;transport=tls
+
+# Seattle
+100 sip:66.42.65.222:35181;transport=tls
+
+# Los Angeles
+100 sip:149.28.79.131:35181;transport=tls
 
 # Counterpath temporary context
 200 sip:104.248.75.157:35185;transport=tls
