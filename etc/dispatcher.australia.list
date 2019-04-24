@@ -1,0 +1,7 @@
+# list of addresses
+
+# Sydney
+100 sip:45.76.120.98:35181;transport=tls
+
+# Counterpath temporary context
+200 sip:45.76.120.98:35185;transport=tls
