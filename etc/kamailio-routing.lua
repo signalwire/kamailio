@@ -703,11 +703,28 @@ end
 function ksr_failure_dispatch()
 	if KSR.tm.t_is_canceled() > 0 then
 		return 1;
-	end
-	-- no re-routing for specific reply codes
-	if KSR.tm.t_check_status("488|486|480|403|603") > 0 then
-		return 1;
-	end
+    end
+
+
+    if KSR.tm.t_check_status("403|404|48[0-9]|502|6[0-9][0-9]") > 0 then
+        
+        -- Carrier-Specific Failures
+        
+        --  ======== Flowroute ========
+        -- Flowroute upstreams don't respect 603, and will constantly retry on many other codes
+        -- They require a 180/183 (use 183 w/o SDP to prevent ringing) 
+        -- Generate a 600, which is universally most likely to reject the call
+        -- Note: Flowroute should fix this on their side. We'll handle it for now.
+        if string.match(KSR.pv.get("$ct"), "flowroute.com") or string.match(KSR.pv.get("$fd"), "fl.gg") then
+            KSR.sl.send_reply(183, "Session Progress");
+            KSR.sl.send_reply(600, "Busy Everywhere");
+            KSR.x.exit();
+        end
+
+        -- Return original reply if unmatched
+        return 1;
+    end
+
 	-- next DST - only for the rest of 4xx, 5xx and 6xx
 	if KSR.tm.t_check_status("[4-6][0-9][0-9]") > 0 then
 		if KSR.dispatcher.ds_next_dst() > 0 then
