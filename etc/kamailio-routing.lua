@@ -705,9 +705,16 @@ function ksr_failure_dispatch()
 		return 1;
 	end
 	-- no re-routing for specific reply codes
-	if KSR.tm.t_check_status("488|486|480|403|600|603|604|606|607") > 0 then
-		return 1;
-	end
+	if KSR.tm.t_check_status("488|486|480|403") > 0 then
+        return 1;
+    end
+    
+    -- To deal with upstream-specific issus, return a 183 before routing the original reply onward.
+	if KSR.tm.t_check_status("6[0-9][0-9]") > 0 then
+        KSR.sl.send_reply(183, "Session Progress");
+        return 1;
+    end
+
 	-- next DST - only for the rest of 4xx, 5xx and 6xx
 	if KSR.tm.t_check_status("[4-6][0-9][0-9]") > 0 then
 		if KSR.dispatcher.ds_next_dst() > 0 then
