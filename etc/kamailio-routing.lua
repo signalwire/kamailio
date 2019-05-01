@@ -705,7 +705,7 @@ function ksr_failure_dispatch()
 		return 1;
 	end
 	-- no re-routing for specific reply codes
-	if KSR.tm.t_check_status("488|486|480|403|603") > 0 then
+	if KSR.tm.t_check_status("488|486|480|403|600|603|604|606|607") > 0 then
 		return 1;
 	end
 	-- next DST - only for the rest of 4xx, 5xx and 6xx
