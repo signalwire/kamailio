@@ -71,6 +71,27 @@ FSADDR={
     "159.65.144.130/32"
 };
 
+-- list of user agents to block as being likely spam/attack vectors
+BAD_USER_AGENTS={
+    "sipcli",
+    "sipvicious",
+    "sip-scan",
+    "sipsak",
+    "sundayddr",
+    "friendly",
+    "iWar",
+    "SIVuS",
+    "Gulp",
+    "sipv",
+    "smap",
+    "friendly",
+    "VaxIPUserAgent",
+    "VaxSIPUserAgent",
+    "siparmyknife",
+    "Test Agent",
+    "xcv123"
+}
+
 -- list of ip addresses that have the project id mapped statically
 PROJECTIPID = {}
 PROJECTIPID["127.0.0.1"] = "signalwire.localhost"
@@ -262,10 +283,16 @@ function ksr_route_reqinit()
     end
     if KSR.corex.has_user_agent() then
         local uastr = KSR.pv.gete("$ua");
-        if (string.find(uastr, "friendly-scanner")
-                or string.find(uastr, "sipcli")) then
-            KSR.sl.sl_send_reply(200, "OK");
-            KSR.x.exit();
+        for idx, val in pairs(BAD_USER_AGENTS) do
+            if string.match(uastr, val) then
+                KSR.sl.sl_send_reply(200, "OK");
+                KSR.err("SPAM ALERT: pike blocking " .. KSR.pv.get("$rm")
+                        .. " from " .. KSR.pv.get("$fu") .. " (IP:"
+                        .. KSR.pv.get("$si") .. ":" .. KSR.pv.get("$sp") .. ") for having "
+                        .. "a bad user agent\n");
+                KSR.pv.seti("$sht(ipban=>$si)", 1);
+                KSR.x.exit();
+            end
         end
     end
 
