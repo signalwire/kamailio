@@ -1,28 +1,8 @@
-FROM debian:stretch
+FROM signalwire/freeswitch-libs as intermediate
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes apt-utils \
-  autoconf gcc g++ make procps \
-  coreutils ctags curl gawk gdb git jq lynx ngrep sed vim wget \
-  bison \
-  debhelper \
-  dh-systemd \
-  dpkg-dev \
-  flex \
-  libcurl4-openssl-dev \
-  libgeoip-dev \
-  libhiredis-dev \
-  liblua5.1-0-dev \
-  libncurses5-dev \
-  libpcre3-dev \
-  libssl-dev \
-  libunistring-dev \
-  lua5.1 \
-  lua-cjson \
-  openssl \
-  pkg-config \
-  uuid-dev \
-  xsltproc \
-  zlib1g-dev
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
+  flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc dnsutils \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY kamailio /usr/local/src/kamailio
 COPY src/modules/bladec /usr/local/src/kamailio/src/modules/bladec
@@ -33,9 +13,7 @@ RUN make install
 WORKDIR src/modules/tls
 RUN make install-tls-cert
 
-COPY etc/kamailio.cfg /usr/local/etc/kamailio/kamailio.cfg
-COPY etc/kamailio-routing.lua /usr/local/etc/kamailio/kamailio-routing.lua
-COPY etc/dispatcher.list /usr/local/etc/kamailio/dispatcher.list
+COPY etc/ /usr/local/etc/kamailio
 COPY provisioning/docker-entrypoint.sh /docker-entrypoint.sh
 WORKDIR /usr/local/src
 

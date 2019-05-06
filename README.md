@@ -16,7 +16,7 @@ Download the required Kamailio submodule:
 git submodule update --init --recursive
 ```
 
-Edit `etc/dispatcher.list` and add there the addresses for FreeSwitch systems.
+Edit `etc/dispatcher.*.list` and add there the addresses for FreeSwitch systems.
 
 Edit `docker/Dockerfile` and set the private (local) and public IP addresses to be used by Kamailio.
 
@@ -50,6 +50,7 @@ Expected data in the response:
 ```
 {
   "ha1": "__the_md5_string_"
+  "project_id": "_the_project_id_"
 }
 ```
 

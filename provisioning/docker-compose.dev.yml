@@ -7,3 +7,12 @@ services:
     build:
       context: ../
       dockerfile: provisioning/Dockerfile
+    ports:
+      - 5060:5060/udp
+    env_file: ../.env
+    networks:
+      - signalwire_freeswitch
+
+networks:
+  signalwire_freeswitch:
+    external: true
