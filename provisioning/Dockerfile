@@ -13,10 +13,7 @@ RUN make install
 WORKDIR src/modules/tls
 RUN make install-tls-cert
 
-COPY etc/kamailio.cfg /usr/local/etc/kamailio/kamailio.cfg
-COPY etc/kamailio-bladec.cfg /usr/local/etc/kamailio/kamailio-bladec.cfg
-COPY etc/kamailio-routing.lua /usr/local/etc/kamailio/kamailio-routing.lua
-COPY etc/dispatcher*.list /usr/local/etc/kamailio/
+COPY etc/ /usr/local/etc/kamailio
 COPY provisioning/docker-entrypoint.sh /docker-entrypoint.sh
 WORKDIR /usr/local/src
 
