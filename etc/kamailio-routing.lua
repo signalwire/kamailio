@@ -451,8 +451,8 @@ function ksr_route_auth()
                     "Content-Type: application/json", "$var(hres)");
             hres = KSR.pv.gete("$var(hres)");
             if string.len(hres) < 10 then
-                KSR.info("401 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. " with project: " .. xsp .. "\n");
-                KSR.sl.sl_send_reply(401, "Unauthorized");
+                KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. " with project: " .. xsp .. "\n");
+                KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
                 KSR.x.exit();
             end
         end
