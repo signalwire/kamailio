@@ -392,6 +392,14 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 	ks_json_t *params = NULL;
 	int cmdattempt = 0;
 
+	if(evcmd==NULL || evcmd->s==NULL || evcmd->len<=0) {
+		LM_ERR("invalid event cmd parameter\n");
+		return -1;
+	}
+	if(evdata==NULL || evdata->s==NULL || evdata->len<=0) {
+		LM_ERR("invalid event data parameter\n");
+		return -1;
+	}
 	if(bladec_client_prepare()<0) {
 		LM_ERR("failed to prepare the blade connector client\n");
 		return -1;
@@ -421,6 +429,11 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 			evdata->len, evdata->s, evdata->len);
 
 	params = ks_json_parse((const char *)evdata->s);
+	if(params==NULL) {
+		LM_ERR("failed to parse event data (%d): [%.*s]\n",
+				evdata->len, evdata->len, evdata->s);
+		return -1;
+	}
 
 cmdretry:
 	rcode = swclt_sess_execute(_bladec_session,
@@ -441,7 +454,7 @@ cmdretry:
 		} else {
 			LM_DBG("no result to command (attempt: %d)\n", cmdattempt);
 			cmdattempt++;
-			
+
 			ks_handle_destroy(&rcmd);
 			goto cmdretry;
 		}

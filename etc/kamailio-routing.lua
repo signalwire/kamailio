@@ -547,10 +547,6 @@ function ksr_route_registrar()
     else
         KSR.setbflag(FLB_CLASSIC);
     end
-    if KSR.registrar.save("location", 0)<0 then
-        KSR.sl.sl_reply_error();
-        KSR.x.exit();
-    end
 
     if WITH_BLADENOTIFY then
         local touri = KSR.pv.getw("$tu");
@@ -562,23 +558,38 @@ function ksr_route_registrar()
         local evdata = "";
         local requested_media_webrtc = "false";
 
-        if KSR.registrar.registered_uri("location", touri) > 0 then
-            -- UA has a valid registration record
-            evcmd = "register";
+        -- push first a register event
+        evcmd = "register";
 
-            -- If the inbound protocol is WSS, assume we need webrtc media
-            if KSR.pv.getw("$proto") == "wss" then
-                requested_media_webrtc = "true";
-            end
+        -- If the inbound protocol is WSS, assume we need webrtc media
+        if KSR.pv.getw("$proto") == "wss" then
+            requested_media_webrtc = "true";
+        end
 
-            evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
-                        .. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\" }";
-        else
-            -- UA has no valid registration record
+        evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
+                     .. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\" }";
+        KSR.info("Sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
+        if KSR.bladec.relay("", "registrar", evcmd, evdata) < 0 then
+            KSR.warn("Failed sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
+            KSR.sl.send_reply(500, "Cluster registration failure");
+            KSR.x.exit();
+        end
+        if KSR.registrar.save("location", 0)<0 then
+            KSR.sl.sl_reply_error();
+        end
+        if KSR.registrar.registered_uri("location", touri) < 0 then
+            -- UA has no valid registration record - it was unregister - push it as a new event
             evcmd = "unregister";
             evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\" }";
+            KSR.mqueue.mq_add("mqregister", evcmd, evdata);
         end
-        KSR.mqueue.mq_add("mqregister", evcmd, evdata);
+        KSR.x.exit();
+    else
+        -- else for WITH_BLADENOTIFY - just do the usual save of registration
+        if KSR.registrar.save("location", 0)<0 then
+            KSR.sl.sl_reply_error();
+            KSR.x.exit();
+        end
     end
     KSR.x.exit();
 end
@@ -768,8 +779,10 @@ function ksr_rtimer_bladec(evname)
 		local bevcmd = KSR.pv.gete("$mqk(mqregister)");
 		local bevdata = KSR.pv.gete("$mqv(mqregister)");
 		if string.len(bevcmd) > 0 and string.len(bevdata) > 0 then
-			KSR.info("Sending blade.execute: " .. bevcmd .. " - " .. bevdata .. "\n"); 
-			KSR.bladec.relay("", "registrar", bevcmd, bevdata);
+			KSR.info("Sending queued blade.execute: " .. bevcmd .. " - " .. bevdata .. "\n");
+			if KSR.bladec.relay("", "registrar", bevcmd, bevdata) < 0 then
+				KSR.warn("Failed sending queued blade.execute: " .. bevcmd .. " - " .. bevdata .. "\n");
+			end
 		end
 	end
 end
