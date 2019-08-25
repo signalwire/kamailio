@@ -225,12 +225,12 @@ end
 function ksr_route_relay()
     -- enable additional event routes for forwarded requests
     -- - serial forking, RTP relaying handling, a.s.o.
-    if KSR.is_method_in("IBSU") then
+    if KSR.is_method_in("IBSU") or KSR.is_UPDATE() then
         if KSR.tm.t_is_set("branch_route")<0 then
             KSR.tm.t_on_branch("ksr_branch_manage");
         end
     end
-    if KSR.is_method_in("ISU") then
+    if KSR.is_method_in("ISU") or KSR.is_UPDATE() then
         if KSR.tm.t_is_set("onreply_route")<0 then
             KSR.tm.t_on_reply("ksr_onreply_manage");
         end
@@ -242,6 +242,11 @@ function ksr_route_relay()
         end
     end
 
+	if KSR.siputils.has_totag()<0 then
+		KSR.info("===== outgoing request (initial)\n");
+	else
+		KSR.info("===== outgoing request (dialog)\n");
+	end
     if KSR.is_INVITE() and KSR.siputils.has_totag()<0 then
         -- send reply from script if all outbound branches are dropped
         KSR.tm.t_set_disable_internal_reply(1);
@@ -665,7 +670,7 @@ end
 -- Manage incoming replies
 -- equivalent of onreply_route[...]{}
 function ksr_onreply_manage()
-    KSR.info("incoming reply\n");
+    KSR.info("===== incoming response (tm)\n");
     local scode = KSR.pv.get("$rs");
     if scode>100 and scode<299 then
         ksr_route_natmanage();
@@ -687,7 +692,7 @@ end
 -- SIP response handling
 -- equivalent of reply_route{}
 function ksr_reply_route()
-    KSR.info("===== response - from kamailio lua script\n");
+    KSR.info("===== incoming response (core)\n");
     return 1;
 end
 
