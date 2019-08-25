@@ -225,12 +225,12 @@ end
 function ksr_route_relay()
     -- enable additional event routes for forwarded requests
     -- - serial forking, RTP relaying handling, a.s.o.
-    if KSR.is_method_in("IBSU") or is_UPDATE() then
+    if KSR.is_method_in("IBSU") or KSR.is_UPDATE() then
         if KSR.tm.t_is_set("branch_route")<0 then
             KSR.tm.t_on_branch("ksr_branch_manage");
         end
     end
-    if KSR.is_method_in("ISU") or is_UPDATE() then
+    if KSR.is_method_in("ISU") or KSR.is_UPDATE() then
         if KSR.tm.t_is_set("onreply_route")<0 then
             KSR.tm.t_on_reply("ksr_onreply_manage");
         end
