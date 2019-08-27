@@ -28,6 +28,8 @@ Daniel-Constantin Mierla
               3.1. workers (int)
               3.2. event_callback (str)
               3.3. config (str)
+              3.4. cwait_interval (int)
+              3.5. cwait_usleep (int)
 
         4. Functions
 
@@ -47,10 +49,12 @@ Daniel-Constantin Mierla
    1.1. Set workers parameter
    1.2. Set event_callback parameter
    1.3. Set config parameter
-   1.4. bladec_relay usage
-   1.5. Network Message
-   1.6. bladec_async_relay usage
-   1.7. bladec_relay usage
+   1.4. Set cwait_interval parameter
+   1.5. Set cwait_usleep parameter
+   1.6. bladec_relay usage
+   1.7. Network Message
+   1.8. bladec_async_relay usage
+   1.9. bladec_relay usage
 
 Chapter 1. Admin Guide
 
@@ -67,6 +71,8 @@ Chapter 1. Admin Guide
         3.1. workers (int)
         3.2. event_callback (str)
         3.3. config (str)
+        3.4. cwait_interval (int)
+        3.5. cwait_usleep (int)
 
    4. Functions
 
@@ -107,6 +113,8 @@ Chapter 1. Admin Guide
    3.1. workers (int)
    3.2. event_callback (str)
    3.3. config (str)
+   3.4. cwait_interval (int)
+   3.5. cwait_usleep (int)
 
 3.1. workers (int)
 
@@ -154,6 +162,29 @@ end
 modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 ...
 
+3.4. cwait_interval (int)
+
+   How long in micro-seconds to wait if the session is not connected yet.
+
+   Default value is 0 (disabled - do not wait at all, go ahead and try to
+   send to blade network immediately).
+
+   Example 1.4. Set cwait_interval parameter
+...
+modparam("bladec", "cwait_interval", 5000)
+...
+
+3.5. cwait_usleep (int)
+
+   How long in micro-seconds to sleep if the session is not connected yet.
+
+   Default value is 500 (micro-seconds).
+
+   Example 1.5. Set cwait_usleep parameter
+...
+modparam("bladec", "cwait_usleep", 1000)
+...
+
 4. Functions
 
    4.1. bladec_relay(reqnid, evproto, evcmd, evdata)
@@ -173,7 +204,7 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 
    This function can be used from ANY_ROUTE.
 
-   Example 1.4. bladec_relay usage
+   Example 1.6. bladec_relay usage
 ...
 bladec_relay("here", "siprouting", "route",
         "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
@@ -181,7 +212,7 @@ bladec_relay("here", "siprouting", "route",
 
    The above exaple will send the following message over the network:
 
-   Example 1.5. Network Message
+   Example 1.7. Network Message
 ...
 {
  "event": "test",
@@ -203,7 +234,7 @@ bladec_relay("here", "siprouting", "route",
 
    This function can be used from REQUEST_ROUTE.
 
-   Example 1.6. bladec_async_relay usage
+   Example 1.8. bladec_async_relay usage
 ...
 bladec_async_relay("here", "siprouting", "route",
                 "{ \"event\": \"suspend\",\n \"data\":"
@@ -224,7 +255,7 @@ l)\" }\n}");
 
    This function can be used from ANY_ROUTE.
 
-   Example 1.7. bladec_relay usage
+   Example 1.9. bladec_relay usage
 ...
 bladec_channel_broadcast("freeswitch", "kamailio", "registration"
         "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");

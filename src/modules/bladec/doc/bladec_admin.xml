@@ -130,6 +130,47 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 </programlisting>
 		</example>
 	</section>
+	<section id="bladec.p.cwait_interval">
+		<title><varname>cwait_interval</varname> (int)</title>
+		<para>
+			How long in micro-seconds to wait if the session is not connected
+			yet.
+		</para>
+		<para>
+		<emphasis>
+			Default value is 0 (disabled - do not wait at all, go ahead
+			and try to send to blade network immediately).
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>cwait_interval</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "cwait_interval", 5000)
+...
+</programlisting>
+		</example>
+	</section>
+	<section id="bladec.p.cwait_usleep">
+		<title><varname>cwait_usleep</varname> (int)</title>
+		<para>
+			How long in micro-seconds to sleep if the session is not connected
+			yet.
+		</para>
+		<para>
+		<emphasis>
+			Default value is 500 (micro-seconds).
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>cwait_usleep</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "cwait_usleep", 1000)
+...
+</programlisting>
+		</example>
+	</section>
 	</section>
 
 	<section>
