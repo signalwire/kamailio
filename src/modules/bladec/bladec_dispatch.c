@@ -152,7 +152,7 @@ int bladec_client_prepare(void)
 	_bladec_globals.jcfg = bladec_load_json_config_file(_bladec_config_path.s);
 	if(_bladec_globals.jcfg == NULL) {
 		LM_ERR("failed to load and parse config file\n");
-		goto error0;
+		goto error;
 	}
 
 	swclt_config_create(&_bladec_globals.swcfg);
@@ -181,9 +181,6 @@ int bladec_client_prepare(void)
 	return 0;
 
 error:
-	swclt_config_destroy(&_bladec_globals.swcfg);
-
-error0:
 	if (swclt_shutdown()) {
 		LM_ERR("shutdown was ungraceful\n");
 	}
