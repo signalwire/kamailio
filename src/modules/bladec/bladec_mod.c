@@ -48,6 +48,8 @@ static int   _bladec_workers = 1;
 str _bladec_event_callback = STR_NULL;
 int _bladec_dispatcher_pid = -1;
 str _bladec_config_path = STR_NULL;
+int _bladec_cwait_interval = 0;
+int _bladec_cwait_usleep = 500;
 
 static tm_api_t tmb;
 
@@ -73,9 +75,11 @@ static cmd_export_t cmds[]={
 };
 
 static param_export_t params[]={
-	{"workers",           INT_PARAM,   &_bladec_workers},
+	{"workers",           PARAM_INT,   &_bladec_workers},
 	{"event_callback",    PARAM_STR,   &_bladec_event_callback},
 	{"config",            PARAM_STR,   &_bladec_config_path},
+	{"cwait_interval",    PARAM_INT,   &_bladec_cwait_interval},
+	{"cwait_usleep",      PARAM_INT,   &_bladec_cwait_usleep},
 	{0, 0, 0}
 };
 
@@ -121,6 +125,15 @@ static int mod_init(void)
 	if(load_tm_api( &tmb ) < 0) {
 		LM_INFO("cannot load the TM module functions - async relay disabled\n");
 		memset(&tmb, 0, sizeof(tm_api_t));
+	}
+
+	if(_bladec_cwait_interval  < 0) {
+		LM_WARN("connect wait interval param value is negative - resetting\n");
+		_bladec_cwait_interval = 0;
+	}
+	if(_bladec_cwait_usleep  <= 0) {
+		LM_WARN("connect wait usleep param value is invalid - resetting\n");
+		_bladec_cwait_usleep = 500;
 	}
 
 	/* add space for one extra process */

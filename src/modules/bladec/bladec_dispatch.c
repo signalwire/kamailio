@@ -45,6 +45,8 @@
 #include "bladec_dispatch.h"
 
 extern str _bladec_event_callback;
+extern int _bladec_cwait_interval;
+extern int _bladec_cwait_usleep;
 
 typedef struct _bladec_env {
 	int eset;
@@ -388,6 +390,8 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
 	int cmdattempt = 0;
+	int sconnected = 0;
+	int twait = 0;
 
 	if(evcmd==NULL || evcmd->s==NULL || evcmd->len<=0) {
 		LM_ERR("invalid event cmd parameter\n");
@@ -413,11 +417,18 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 		ks_json_free_ex((void**)(&_bladec_globals.swres));
 		_bladec_globals.swres = NULL;
 	}
-	if (!swclt_sess_connected(_bladec_session)) {
-		LM_DBG("session is not connected\n");
-		//return -1;
-	}
+	do {
+		if (!swclt_sess_connected(_bladec_session)) {
+			sleep_us(_bladec_cwait_usleep);
+			twait += _bladec_cwait_usleep;
+		} else {
+			sconnected = 1;
+		}
+	} while (sconnected == 0 && twait < _bladec_cwait_interval);
 
+	if(sconnected==0) {
+		LM_DBG("session is not yet connected - trying to send anyhow\n");
+	}
 	LM_DBG("relaying cmd - reqnodeid [%s] evproto [%s]"
 			" evcmd [%.*s] evdata [%.*s] (%d)\n",
 			(reqnodeid->len>0)?reqnodeid->s:"none",
