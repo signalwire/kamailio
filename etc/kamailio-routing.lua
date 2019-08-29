@@ -127,6 +127,11 @@ function ksr_request_route()
     -- do not connect on tcp/tls to send reply
     KSR.set_reply_no_connect();
 
+	if KSR.bladec.node_id_ready() < 0 then
+        KSR.sl.send_reply(500, "Instance initializing");
+        KSR.x.exit();
+    end
+
     -- per request initial checks
     ksr_route_reqinit();
 
@@ -562,6 +567,7 @@ function ksr_route_registrar()
         local evcmd = "";
         local evdata = "";
         local requested_media_webrtc = "false";
+        local inodeid = "";
 
         -- push first a register event
         evcmd = "register";
@@ -572,7 +578,15 @@ function ksr_route_registrar()
         end
 
         evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
-                     .. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\" }";
+		.. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\"";
+
+		inodeid = KSR.pv.gete("$bladec(nodeid)");
+		if string.len(inodeid) > 0 then
+			evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
+		end
+
+		evdata = evdata .. " }";
+
         KSR.info("Sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
         if KSR.bladec.relay("", "registrar", evcmd, evdata) < 0 then
             KSR.warn("Failed sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
