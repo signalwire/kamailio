@@ -431,6 +431,10 @@ int bladec_client_session_connect(void)
  */
 int bladec_node_id_sync(void)
 {
+	if (_bladec_mode_param!=1) {
+		return -1;
+	}
+
 	if(_bladec_sdata_global == NULL) {
 		LM_ERR("module not initialized properly\n");
 		return -1;
@@ -469,9 +473,15 @@ int bladec_node_id_sync(void)
  */
 int bladec_node_id_ready(void)
 {
+	if (_bladec_mode_param==0) {
+		/* no need to wait for instance node id */
+		return 1;
+	}
+
 	if(bladec_node_id_sync() == 0) {
 		return 1;
 	}
+
 	return -1;
 }
 /**
@@ -485,6 +495,7 @@ int bladec_run_dispatcher(char *laddr, int lport)
 
 	LM_DBG("starting dispatcher processing\n");
 	if (_bladec_mode_param==1) {
+		LM_DBG("preparing to set instance node id\n");
 		if(_bladec_sdata_global == NULL) {
 			LM_ERR("module not initialized properly\n");
 			return -1;
