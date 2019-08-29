@@ -60,4 +60,7 @@ int bladec_client_session_start(void);
 int bladec_channel_broadcast(str *evproto, str *evchannel, str *evname,
 		str *evdata);
 
+int bladec_sdata_global_init(void);
+int bladec_node_id_ready(void);
+
 #endif

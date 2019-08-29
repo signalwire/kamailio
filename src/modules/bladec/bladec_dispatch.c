@@ -44,6 +44,7 @@
 
 #include "bladec_dispatch.h"
 
+extern int _bladec_mode_param;
 extern str _bladec_event_callback;
 extern int _bladec_cwait_interval;
 extern int _bladec_cwait_usleep;
@@ -90,6 +91,41 @@ typedef struct baldec_globals {
 
 static bladec_globals_t _bladec_globals = {0};
 
+typedef struct _bladec_sdata {
+	int sflags;
+	gen_lock_t slock;
+	str node_id;
+} bladec_sdata_t;
+
+bladec_sdata_t *_bladec_sdata_global = NULL;
+str _bladec_local_node_id = STR_NULL;
+
+/**
+ *
+ */
+int bladec_sdata_global_init(void)
+{
+	if(_bladec_sdata_global != NULL) {
+		return 0;
+	}
+	_bladec_sdata_global = (bladec_sdata_t*)shm_malloc(sizeof(bladec_sdata_t));
+	if(_bladec_sdata_global == NULL) {
+		LM_ERR("no more shared memory\n");
+		return -1;
+	}
+	memset(&_bladec_sdata_global, 0, sizeof(bladec_sdata_t));
+	if (lock_init(&_bladec_sdata_global->slock)==0) {
+		LM_ERR("failed to initialize the lock\n");
+		shm_free(_bladec_sdata_global);
+		_bladec_sdata_global = NULL;
+		return -1;
+	}
+	return -1;
+}
+
+/**
+ *
+ */
 ks_json_t *bladec_load_json_config_file(char *cfgpath)
 {
 	ks_json_t *jcfg = NULL;
@@ -353,13 +389,133 @@ void bladec_close_notify_sockets_parent(void)
 	_bladec_notify_sockets[0] = -1;
 }
 
+/**
+ *
+ */
+int bladec_client_session_connect(void)
+{
+	int sconnected = 0;
+	int twait = 0;
 
+	if(bladec_client_prepare()<0) {
+		LM_ERR("failed to prepare the blade connector client\n");
+		return -1;
+	}
+	if(_bladec_globals.istatus != 1) {
+		LM_ERR("config struct was not initialized\n");
+		return -1;
+	}
+	if(bladec_client_session_start()<0) {
+		LM_ERR("failed to create blade session for process %d\n", my_pid());
+		return -1;
+	}
+	do {
+		if (!swclt_sess_connected(_bladec_session)) {
+			sleep_us(_bladec_cwait_usleep);
+			twait += _bladec_cwait_usleep;
+		} else {
+			sconnected = 1;
+		}
+	} while (sconnected == 0 && twait < _bladec_cwait_interval);
+
+	if(sconnected==0) {
+		LM_DBG("session is not yet connected - trying to send anyhow\n");
+		return -2;
+	}
+	return 0;
+}
+
+
+/**
+ *
+ */
+int bladec_node_id_sync(void)
+{
+	if(_bladec_sdata_global == NULL) {
+		LM_ERR("module not initialized properly\n");
+		return -1;
+	}
+
+	if(_bladec_local_node_id.s!=NULL && _bladec_local_node_id.len>0) {
+		return 0;
+	}
+
+	lock_get(&_bladec_sdata_global->slock);
+	if(_bladec_local_node_id.s != NULL) {
+		pkg_free(_bladec_local_node_id.s);
+		_bladec_local_node_id.s = NULL;
+	}
+	if(_bladec_sdata_global->node_id.s == NULL
+			&& _bladec_sdata_global->node_id.len <= 0) {
+		lock_release(&_bladec_sdata_global->slock);
+		return -1;
+	}
+	_bladec_local_node_id.s = pkg_malloc(_bladec_sdata_global->node_id.len + 1);
+	if(_bladec_local_node_id.s == NULL) {
+		lock_release(&_bladec_sdata_global->slock);
+		LM_ERR("no more pkg memory\n");
+		return -1;
+	}
+	memcpy(_bladec_local_node_id.s, _bladec_sdata_global->node_id.s,
+			_bladec_sdata_global->node_id.len);
+	_bladec_local_node_id.len = _bladec_sdata_global->node_id.len;
+	_bladec_local_node_id.s[_bladec_local_node_id.len] = '\0';
+	lock_release(&_bladec_sdata_global->slock);
+	return 0;
+}
+
+/**
+ *
+ */
+int bladec_node_id_ready(void)
+{
+	if(bladec_node_id_sync() == 0) {
+		return 1;
+	}
+	return -1;
+}
 /**
  *
  */
 int bladec_run_dispatcher(char *laddr, int lport)
 {
+	int ret = 0;
+	char *node_id = NULL;
+	int nlen = 0;
+
 	LM_DBG("starting dispatcher processing\n");
+	if (_bladec_mode_param==1) {
+		if(_bladec_sdata_global == NULL) {
+			LM_ERR("module not initialized properly\n");
+			return -1;
+		}
+		ret = bladec_client_session_connect();
+		if(ret<0) {
+			LM_ERR("session is not connected - exiting\n");
+			return -1;
+		}
+		swclt_sess_nodeid(_bladec_session, NULL, &node_id);
+		if(node_id==NULL) {
+			LM_ERR("no node id retrieved - exiting\n");
+			return -1;
+		}
+		nlen = strlen(node_id);
+		LM_DBG("the node id is: %s (%d)\n", node_id, nlen);
+		lock_get(&_bladec_sdata_global->slock);
+		if(_bladec_sdata_global->node_id.s != NULL) {
+			shm_free(_bladec_sdata_global->node_id.s);
+		}
+		_bladec_sdata_global->node_id.s = (char*)shm_malloc(nlen+1);
+		if(_bladec_sdata_global->node_id.s == NULL) {
+			LM_ERR("no more shared memory\n");
+			lock_release(&_bladec_sdata_global->slock);
+			return -1;
+		}
+		memcpy(_bladec_sdata_global->node_id.s, node_id, nlen);
+		_bladec_sdata_global->node_id.s[nlen] = '\0';
+		_bladec_sdata_global->node_id.len = nlen;
+		lock_release(&_bladec_sdata_global->slock);
+	}
 
 	while(1) {
 		sleep(3);
@@ -390,8 +546,7 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
 	int cmdattempt = 0;
-	int sconnected = 0;
-	int twait = 0;
+	int ret = 0;
 
 	if(evcmd==NULL || evcmd->s==NULL || evcmd->len<=0) {
 		LM_ERR("invalid event cmd parameter\n");
@@ -401,34 +556,20 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 		LM_ERR("invalid event data parameter\n");
 		return -1;
 	}
-	if(bladec_client_prepare()<0) {
-		LM_ERR("failed to prepare the blade connector client\n");
-		return -1;
-	}
-	if(_bladec_globals.istatus != 1) {
-		LM_ERR("config struct was not initialized\n");
-		return -1;
-	}
-	if(bladec_client_session_start()<0) {
-		LM_ERR("failed to create blade session for process %d\n", my_pid());
-		return -1;
-	}
 	if(_bladec_globals.swres) {
 		ks_json_free_ex((void**)(&_bladec_globals.swres));
 		_bladec_globals.swres = NULL;
 	}
-	do {
-		if (!swclt_sess_connected(_bladec_session)) {
-			sleep_us(_bladec_cwait_usleep);
-			twait += _bladec_cwait_usleep;
-		} else {
-			sconnected = 1;
-		}
-	} while (sconnected == 0 && twait < _bladec_cwait_interval);
 
-	if(sconnected==0) {
-		LM_DBG("session is not yet connected - trying to send anyhow\n");
+	ret = bladec_client_session_connect();
+	if(ret<0) {
+		if(ret==-2) {
+			LM_DBG("session is not yet connected - trying to send anyhow\n");
+		} else {
+			return -1;
+		}
 	}
+
 	LM_DBG("relaying cmd - reqnodeid [%s] evproto [%s]"
 			" evcmd [%.*s] evdata [%.*s] (%d)\n",
 			(reqnodeid->len>0)?reqnodeid->s:"none",
@@ -534,6 +675,11 @@ int pv_parse_bladec_name(pv_spec_t *sp, str *in)
 				sp->pvp.pvn.u.isname.name.n = 1;
 			else goto error;
 		break;
+		case 7:
+			if(strncmp(in->s, "node_id", 7)==0)
+				sp->pvp.pvn.u.isname.name.n = 2;
+			else goto error;
+		break;
 		default:
 			goto error;
 	}
@@ -569,6 +715,11 @@ int pv_get_bladec(sip_msg_t *msg, pv_param_t *param, pv_value_t *res)
 			if(_bladec_globals.swres==NULL)
 				return pv_get_null(msg, param, res);
 			return pv_get_strzval(msg, param, res, _bladec_globals.swres);
+		case 2:
+			if(bladec_node_id_sync()==0) {
+				return pv_get_strval(msg, param, res, &_bladec_local_node_id);
+			}
+			return pv_get_null(msg, param, res);
 		default:
 			return pv_get_null(msg, param, res);
 	}
