@@ -580,7 +580,7 @@ function ksr_route_registrar()
         evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
 		.. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\"";
 
-		inodeid = KSR.pv.gete("$bladec(nodeid)");
+		inodeid = KSR.pv.gete("$bladec(node_id)");
 		if string.len(inodeid) > 0 then
 			evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
 		end
