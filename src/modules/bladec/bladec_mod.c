@@ -51,6 +51,7 @@ int _bladec_dispatcher_pid = -1;
 str _bladec_config_path = STR_NULL;
 int _bladec_cwait_interval = 0;
 int _bladec_cwait_usleep = 500;
+int _bladec_cping_usleep = 3000;
 
 static tm_api_t tmb;
 
@@ -84,6 +85,7 @@ static param_export_t params[]={
 	{"config",            PARAM_STR,   &_bladec_config_path},
 	{"cwait_interval",    PARAM_INT,   &_bladec_cwait_interval},
 	{"cwait_usleep",      PARAM_INT,   &_bladec_cwait_usleep},
+	{"cping_usleep",      PARAM_INT,   &_bladec_cping_usleep},
 	{"mode",              PARAM_INT,   &_bladec_mode_param},
 	{0, 0, 0}
 };
@@ -145,6 +147,10 @@ static int mod_init(void)
 		_bladec_cwait_usleep = 500;
 	}
 
+	if(_bladec_cping_usleep <= 0) {
+		LM_WARN("connection ping usleep param value is invalid - resetting\n");
+		_bladec_cping_usleep = 3000;
+	}
 	/* add space for one extra process */
 	register_procs(1 + _bladec_workers);
 
