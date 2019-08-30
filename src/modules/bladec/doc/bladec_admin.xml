@@ -171,6 +171,26 @@ modparam("bladec", "cwait_usleep", 1000)
 </programlisting>
 		</example>
 	</section>
+	<section id="bladec.p.cping_usleep">
+		<title><varname>cping_usleep</varname> (int)</title>
+		<para>
+		How long in micro-seconds to sleep in between checking the instance
+		session node_id (pinging the connection).
+		</para>
+		<para>
+		<emphasis>
+			Default value is 3000 (micro-seconds).
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>cping_usleep</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "cping_usleep", 500000)
+...
+</programlisting>
+		</example>
+	</section>
 	<section id="bladec.p.mode">
 		<title><varname>mode</varname> (int)</title>
 		<para>
