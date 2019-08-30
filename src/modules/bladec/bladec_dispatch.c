@@ -119,7 +119,7 @@ int bladec_sdata_global_init(void)
 		LM_ERR("no more shared memory\n");
 		return -1;
 	}
-	memset(&_bladec_sdata_global, 0, sizeof(bladec_sdata_t));
+	memset(_bladec_sdata_global, 0, sizeof(bladec_sdata_t));
 	if (lock_init(&_bladec_sdata_global->slock)==0) {
 		LM_ERR("failed to initialize the lock\n");
 		shm_free(_bladec_sdata_global);
