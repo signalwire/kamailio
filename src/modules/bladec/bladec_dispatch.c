@@ -126,7 +126,7 @@ int bladec_sdata_global_init(void)
 		_bladec_sdata_global = NULL;
 		return -1;
 	}
-	return -1;
+	return 0;
 }
 
 /**
