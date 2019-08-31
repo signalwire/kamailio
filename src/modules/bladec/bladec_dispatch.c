@@ -779,11 +779,13 @@ int pv_get_bladec(sip_msg_t *msg, pv_param_t *param, pv_value_t *res)
 	if(param==NULL || res==NULL)
 		return -1;
 
-	if(_bladec_globals.istatus != 1) {
-		return pv_get_null(msg, param, res);
+	if(param->pvn.u.isname.name.n != 2) {
+		if(_bladec_globals.istatus != 1) {
+			return pv_get_null(msg, param, res);
+		}
+		evenv = bladec_get_msg_env(msg);
+		LM_DBG("local event env: %p\n", evenv);
 	}
-	evenv = bladec_get_msg_env(msg);
-	LM_DBG("local event env: %p\n", evenv);
 
 	switch(param->pvn.u.isname.name.n)
 	{
