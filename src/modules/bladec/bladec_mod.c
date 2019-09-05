@@ -44,10 +44,14 @@
 MODULE_VERSION
 
 static int   _bladec_workers = 1;
+int _bladec_mode_param = 0;
 
 str _bladec_event_callback = STR_NULL;
 int _bladec_dispatcher_pid = -1;
 str _bladec_config_path = STR_NULL;
+int _bladec_cwait_interval = 0;
+int _bladec_cwait_usleep = 500;
+int _bladec_cping_usleep = 3000;
 
 static tm_api_t tmb;
 
@@ -61,6 +65,7 @@ static int w_bladec_async_relay(sip_msg_t* msg, char* reqnid, char* evproto,
 		char* evcmd, char* evdata);
 static int w_bladec_channel_broadcast(sip_msg_t* msg, char* evproto,
 		char * evchannel, char* evname, char* evdata);
+static int w_bladec_node_id_ready(sip_msg_t* msg, char* p1, char* p2);
 
 static cmd_export_t cmds[]={
 	{"bladec_relay",		(cmd_function)w_bladec_relay,
@@ -69,13 +74,19 @@ static cmd_export_t cmds[]={
 		4, fixup_spve_all, 0, REQUEST_ROUTE},
 	{"bladec_channel_broadcast",	(cmd_function)w_bladec_channel_broadcast,
 		4, fixup_spve_all, 0, ANY_ROUTE},
+	{"bladec_node_id_ready",		(cmd_function)w_bladec_node_id_ready,
+		0, 0, 0, ANY_ROUTE},
 	{0, 0, 0, 0, 0, 0}
 };
 
 static param_export_t params[]={
-	{"workers",           INT_PARAM,   &_bladec_workers},
+	{"workers",           PARAM_INT,   &_bladec_workers},
 	{"event_callback",    PARAM_STR,   &_bladec_event_callback},
 	{"config",            PARAM_STR,   &_bladec_config_path},
+	{"cwait_interval",    PARAM_INT,   &_bladec_cwait_interval},
+	{"cwait_usleep",      PARAM_INT,   &_bladec_cwait_usleep},
+	{"cping_usleep",      PARAM_INT,   &_bladec_cping_usleep},
+	{"mode",              PARAM_INT,   &_bladec_mode_param},
 	{0, 0, 0}
 };
 
@@ -118,11 +129,28 @@ static int mod_init(void)
 		return -1;
 	}
 
+	if(bladec_sdata_global_init() < 0) {
+		return -1;
+	}
+
 	if(load_tm_api( &tmb ) < 0) {
 		LM_INFO("cannot load the TM module functions - async relay disabled\n");
 		memset(&tmb, 0, sizeof(tm_api_t));
 	}
 
+	if(_bladec_cwait_interval  < 0) {
+		LM_WARN("connect wait interval param value is negative - resetting\n");
+		_bladec_cwait_interval = 0;
+	}
+	if(_bladec_cwait_usleep  <= 0) {
+		LM_WARN("connect wait usleep param value is invalid - resetting\n");
+		_bladec_cwait_usleep = 500;
+	}
+
+	if(_bladec_cping_usleep <= 0) {
+		LM_WARN("connection ping usleep param value is invalid - resetting\n");
+		_bladec_cping_usleep = 3000;
+	}
 	/* add space for one extra process */
 	register_procs(1 + _bladec_workers);
 
@@ -416,6 +444,22 @@ static int ki_bladec_channel_broadcast(sip_msg_t *msg, str *evproto,
 /**
  *
  */
+static int w_bladec_node_id_ready(sip_msg_t* msg, char* p1, char* p2)
+{
+	return bladec_node_id_ready();
+}
+
+/**
+ *
+ */
+static int ki_bladec_node_id_ready(sip_msg_t* msg)
+{
+	return bladec_node_id_ready();
+}
+
+/**
+ *
+ */
 /* clang-format off */
 static sr_kemi_t sr_kemi_bladec_exports[] = {
 	{ str_init("bladec"), str_init("relay"),
@@ -427,6 +471,11 @@ static sr_kemi_t sr_kemi_bladec_exports[] = {
 		SR_KEMIP_INT, ki_bladec_channel_broadcast,
 		{ SR_KEMIP_STR, SR_KEMIP_STR, SR_KEMIP_STR,
 			SR_KEMIP_STR, SR_KEMIP_NONE, SR_KEMIP_NONE }
+	},
+	{ str_init("bladec"), str_init("node_id_ready"),
+		SR_KEMIP_INT, ki_bladec_node_id_ready,
+		{ SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE,
+			SR_KEMIP_NONE, SR_KEMIP_NONE, SR_KEMIP_NONE }
 	},
 
 	{ {0, 0}, {0, 0}, 0, NULL, { 0, 0, 0, 0, 0, 0 } }

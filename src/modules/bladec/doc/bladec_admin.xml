@@ -130,6 +130,88 @@ modparam("bladec", "config", "/etc/kamailio/kamailio-blade.cfg")
 </programlisting>
 		</example>
 	</section>
+	<section id="bladec.p.cwait_interval">
+		<title><varname>cwait_interval</varname> (int)</title>
+		<para>
+			How long in micro-seconds to wait if the session is not connected
+			yet.
+		</para>
+		<para>
+		<emphasis>
+			Default value is 0 (disabled - do not wait at all, go ahead
+			and try to send to blade network immediately).
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>cwait_interval</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "cwait_interval", 5000)
+...
+</programlisting>
+		</example>
+	</section>
+	<section id="bladec.p.cwait_usleep">
+		<title><varname>cwait_usleep</varname> (int)</title>
+		<para>
+			How long in micro-seconds to sleep if the session is not connected
+			yet.
+		</para>
+		<para>
+		<emphasis>
+			Default value is 500 (micro-seconds).
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>cwait_usleep</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "cwait_usleep", 1000)
+...
+</programlisting>
+		</example>
+	</section>
+	<section id="bladec.p.cping_usleep">
+		<title><varname>cping_usleep</varname> (int)</title>
+		<para>
+		How long in micro-seconds to sleep in between checking the instance
+		session node_id (pinging the connection).
+		</para>
+		<para>
+		<emphasis>
+			Default value is 3000 (micro-seconds).
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>cping_usleep</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "cping_usleep", 500000)
+...
+</programlisting>
+		</example>
+	</section>
+	<section id="bladec.p.mode">
+		<title><varname>mode</varname> (int)</title>
+		<para>
+		If set to 1, a &kamailio; process connects at startup to blade network
+		and sets the node_id of the SIP server instance. Then the value of the
+		instance node_id can be retrieven in script via $bladec(node_id).
+		</para>
+		<para>
+		<emphasis>
+			Default value is 0.
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>mode</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "mode", 1)
+...
+</programlisting>
+		</example>
+	</section>
 	</section>
 
 	<section>
@@ -235,6 +317,28 @@ bladec_channel_broadcast("freeswitch", "kamailio", "registration"
 		</example>
 	</section>
 
+	<section id="bladec.f.bladec_node_id_ready">
+		<title>
+		<function moreinfo="none">bladec_node_id_ready()</function>
+		</title>
+		<para>
+		Returns 1 (true in &kamailio;.cfg) if the instance node_id has been set
+		when 'mode' parameter is set to 1. Otherwise a nevative value (false
+		in &kamailio;.cfg).
+		</para>
+		<example>
+		<title><function>bladec_node_id_ready</function> usage</title>
+		<programlisting format="linespecific">
+...
+if(!bladec_node_id_ready()) {
+	sl-send-reply("500", "Instance not ready");
+	exit;
+}
+...
+</programlisting>
+		</example>
+	</section>
+
 	</section>
 
     <section>
@@ -266,6 +370,10 @@ event_route[bladec:message-received] {
 		<itemizedlist>
 			<listitem><para>
 				<emphasis>$bladec(res)</emphasis> - received event response
+			</para></listitem>
+			<listitem><para>
+				<emphasis>$bladec(node_id)</emphasis> - instance node_id when
+				the parameter 'mode' is set to 1.
 			</para></listitem>
 		</itemizedlist>
 	</section>
