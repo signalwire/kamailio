@@ -212,6 +212,28 @@ modparam("bladec", "mode", 1)
 </programlisting>
 		</example>
 	</section>
+	<section id="bladec.p.reconnect_limit">
+		<title><varname>reconnect_limit</varname> (int)</title>
+		<para>
+		If set to 0, &kamailio; keeps running even when the blade session that
+		gave the instance node id is disconnected. If greater than 0, then
+		&kamailio; shuts down after waiting the respective number of cycles
+		attempting to reconnect and failed.
+		</para>
+		<para>
+		<emphasis>
+			Default value is 0.
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>mode</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "reconnect_limit", 100)
+...
+</programlisting>
+		</example>
+	</section>
 	</section>
 
 	<section>
