@@ -580,12 +580,12 @@ function ksr_route_registrar()
         evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
 		.. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\"";
 
-		inodeid = KSR.pv.gete("$bladec(node_id)");
-		if string.len(inodeid) > 0 then
-			evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
-		end
+        inodeid = KSR.pv.gete("$bladec(node_id)");
+        if string.len(inodeid) > 0 then
+            evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
+        end
 
-		evdata = evdata .. " }";
+        evdata = evdata .. " }";
 
         KSR.info("Sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
         if KSR.bladec.relay("", "registrar", evcmd, evdata) < 0 then
@@ -599,7 +599,11 @@ function ksr_route_registrar()
         if KSR.registrar.registered_uri("location", touri) < 0 then
             -- UA has no valid registration record - it was unregister - push it as a new event
             evcmd = "unregister";
-            evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\" }";
+            evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\"";
+            if string.len(inodeid) > 0 then
+                evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
+            end
+            evdata = evdata .. " }";
             KSR.mqueue.mq_add("mqregister", evcmd, evdata);
         end
         KSR.x.exit();
