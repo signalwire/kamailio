@@ -50,7 +50,9 @@ ALLOWADDR={
     "34.210.91.112/28",
     "147.75.60.160/28",
     "67.231.1.188/32",
-    "67.231.4.138/32"
+    "67.231.4.138/32",
+    "67.231.4.70/32",
+    "67.231.3.4/32"
 };
 
 -- list of freeswitch addresses to allow traffic from without user auth
