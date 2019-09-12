@@ -571,6 +571,8 @@ function ksr_route_registrar()
         local requested_media_webrtc = "false";
         local inodeid = "";
 
+        KSR.cfgutils.lock(touri);
+
         -- push first a register event
         evcmd = "register";
 
@@ -582,15 +584,16 @@ function ksr_route_registrar()
         evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
 		.. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\"";
 
-		inodeid = KSR.pv.gete("$bladec(node_id)");
-		if string.len(inodeid) > 0 then
-			evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
-		end
+        inodeid = KSR.pv.gete("$bladec(node_id)");
+        if string.len(inodeid) > 0 then
+            evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
+        end
 
-		evdata = evdata .. " }";
+        evdata = evdata .. " }";
 
-        KSR.info("Sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
+        KSR.info("Sending direct blade.execute for register: " .. evcmd .. " - " .. evdata .. "\n");
         if KSR.bladec.relay("", "registrar", evcmd, evdata) < 0 then
+            KSR.cfgutils.unlock(touri);
             KSR.warn("Failed sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
             KSR.sl.send_reply(500, "Cluster registration failure");
             KSR.x.exit();
@@ -601,9 +604,19 @@ function ksr_route_registrar()
         if KSR.registrar.registered_uri("location", touri) < 0 then
             -- UA has no valid registration record - it was unregister - push it as a new event
             evcmd = "unregister";
-            evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\" }";
-            KSR.mqueue.mq_add("mqregister", evcmd, evdata);
+            evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\"";
+            if string.len(inodeid) > 0 then
+                evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
+            end
+            evdata = evdata .. " }";
+            KSR.info("Sending direct blade.execute for unregister: " .. evcmd .. " - " .. evdata .. "\n");
+            if KSR.bladec.relay("", "registrar", evcmd, evdata) < 0 then
+                KSR.warn("Failed sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
+            end
+            -- sending unregister in non-blocking mode via mqueue + rtimer
+            -- KSR.mqueue.mq_add("mqregister", evcmd, evdata);
         end
+        KSR.cfgutils.unlock(touri);
         KSR.x.exit();
     else
         -- else for WITH_BLADENOTIFY - just do the usual save of registration
