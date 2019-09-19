@@ -541,6 +541,7 @@ int bladec_update_node_id(int vdbg)
 		if(nlen == _bladec_sdata_global->node_id.len
 				&& memcmp(node_id, _bladec_sdata_global->node_id.s, nlen) == 0) {
 			/* same node id */
+			ks_pool_free(&node_id);
 			return 0;
 		}
 	}
@@ -558,6 +559,7 @@ int bladec_update_node_id(int vdbg)
 		if(_bladec_sdata_global->node_id.s == NULL) {
 			LM_ERR("no more shared memory\n");
 			lock_release(&_bladec_sdata_global->slock);
+			ks_pool_free(&node_id);
 			return -1;
 		}
 	}
@@ -566,6 +568,7 @@ int bladec_update_node_id(int vdbg)
 	_bladec_sdata_global->node_id.len = nlen;
 	_bladec_sdata_global->nversion++;
 	lock_release(&_bladec_sdata_global->slock);
+	ks_pool_free(&node_id);
 
 	return 0;
 }
@@ -691,10 +694,16 @@ cmdretry:
 				(_bladec_globals.swres)?_bladec_globals.swres:"<empty>");
 	}
 
+	if (params) {
+		ks_json_delete(&params);
+	}
 	ks_handle_destroy(&rcmd);
 	return 1;
 
 error:
+	if (params) {
+		ks_json_delete(&params);
+	}
 	ks_handle_destroy(&rcmd);
 	return -1;
 }
@@ -732,6 +741,10 @@ int bladec_channel_broadcast(str *evproto, str *evchannel, str *evname,
 
 	swclt_sess_broadcast(_bladec_session, evproto->s, evchannel->s, evname->s,
 			&params);
+
+	if (params) {
+		ks_json_delete(&params);
+	}
 
 	return 1;
 }
