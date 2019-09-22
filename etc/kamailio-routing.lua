@@ -100,6 +100,25 @@ PROJECTIPID["127.0.0.1"] = "signalwire.localhost"
 
 local g_crt_projectid = ""
 
+-- list of subdomains for pass through forwarding (no auth)
+-- * values with leading '.' (dot) to avoid mismatching in 'ends-with'
+SUBDOMAIN_PASSTHROUGH = {
+    ".dapps.signalwire.com",
+    ".dapps.swire.io"
+}
+
+-- match (ends-with) the parameter against SUBDOMAIN_PASSTHROUGH list
+function ksr_domain_pass_thorugh(sdomain)
+    local sdlen = string.len(sdomain);
+    for idx, val in pairs(SUBDOMAIN_PASSTHROUGH) do
+        local vallen = strlen(val);
+        if sdlen > vallen and string.sub(sdomain, -vallen) == val then
+            return true;
+        end
+    end
+    return false;
+end
+
 -- match source ip against ALLOWADDR list
 function ksr_is_src_trusted()
     local srcaddr = KSR.pv.get("$si");
@@ -384,6 +403,13 @@ function ksr_route_auth()
 
     local uafd = KSR.pv.get("$fd");
 
+    -- skip authentication for pass through subdomains
+    if KSR.is_INVITE() then
+        if ksr_domain_pass_thorugh(uafd) then
+            reuturn 1;
+        end
+    end
+
     -- auth only a set of domains
     if DOMAINAUTH[uafd] == nil and not string.find(uafd, 'sip.signalwire.com') and not string.find(uafd, 'sip.swire.io') then
         KSR.info("404 Domain unavailable for " .. KSR.pv.get("$fu") .. "\n");
@@ -394,11 +420,11 @@ function ksr_route_auth()
     -- challenge if no Auth header
     if KSR.is_REGISTER() then
         if KSR.hdr.is_present("Authorization") < 0 then
-            KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+            KSR.auth.auth_challenge(uafd, 0);
             KSR.x.exit();
         end
     elseif KSR.hdr.is_present("Proxy-Authorization") < 0 then
-        KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+        KSR.auth.auth_challenge(uafd, 0);
         KSR.x.exit();
     end
 
