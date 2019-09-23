@@ -406,7 +406,7 @@ function ksr_route_auth()
     -- skip authentication for pass through subdomains
     if KSR.is_INVITE() then
         if ksr_domain_pass_thorugh(KSR.pv.gete("$rd")) then
-            reuturn 1;
+            return 1;
         end
     end
 
