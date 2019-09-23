@@ -103,8 +103,8 @@ local g_crt_projectid = ""
 -- list of subdomains for pass through forwarding (no auth)
 -- * values with leading '.' (dot) to avoid mismatching in 'ends-with'
 SUBDOMAIN_PASSTHROUGH = {
-    ".dapps.signalwire.com",
-    ".dapps.swire.io"
+    ".dapp.signalwire.com",
+    ".dapp.swire.io"
 }
 
 -- match (ends-with) the parameter against SUBDOMAIN_PASSTHROUGH list
