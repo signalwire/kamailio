@@ -111,7 +111,7 @@ SUBDOMAIN_PASSTHROUGH = {
 function ksr_domain_pass_thorugh(sdomain)
     local sdlen = string.len(sdomain);
     for idx, val in pairs(SUBDOMAIN_PASSTHROUGH) do
-        local vallen = strlen(val);
+        local vallen = string.len(val);
         if sdlen > vallen and string.sub(sdomain, -vallen) == val then
             return true;
         end
