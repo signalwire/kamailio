@@ -100,6 +100,25 @@ PROJECTIPID["127.0.0.1"] = "signalwire.localhost"
 
 local g_crt_projectid = ""
 
+-- list of subdomains for pass through forwarding (no auth)
+-- * values with leading '.' (dot) to avoid mismatching in 'ends-with'
+SUBDOMAIN_PASSTHROUGH = {
+    ".dapp.signalwire.com",
+    ".dapp.swire.io"
+}
+
+-- match (ends-with) the parameter against SUBDOMAIN_PASSTHROUGH list
+function ksr_domain_pass_thorugh(sdomain)
+    local sdlen = string.len(sdomain);
+    for idx, val in pairs(SUBDOMAIN_PASSTHROUGH) do
+        local vallen = string.len(val);
+        if sdlen > vallen and string.sub(sdomain, -vallen) == val then
+            return true;
+        end
+    end
+    return false;
+end
+
 -- match source ip against ALLOWADDR list
 function ksr_is_src_trusted()
     local srcaddr = KSR.pv.get("$si");
@@ -384,6 +403,13 @@ function ksr_route_auth()
 
     local uafd = KSR.pv.get("$fd");
 
+    -- skip authentication for pass through subdomains
+    if KSR.is_INVITE() then
+        if ksr_domain_pass_thorugh(KSR.pv.gete("$rd")) then
+            return 1;
+        end
+    end
+
     -- auth only a set of domains
     if DOMAINAUTH[uafd] == nil and not string.find(uafd, 'sip.signalwire.com') and not string.find(uafd, 'sip.swire.io') then
         KSR.info("404 Domain unavailable for " .. KSR.pv.get("$fu") .. "\n");
@@ -394,11 +420,11 @@ function ksr_route_auth()
     -- challenge if no Auth header
     if KSR.is_REGISTER() then
         if KSR.hdr.is_present("Authorization") < 0 then
-            KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+            KSR.auth.auth_challenge(uafd, 0);
             KSR.x.exit();
         end
     elseif KSR.hdr.is_present("Proxy-Authorization") < 0 then
-        KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+        KSR.auth.auth_challenge(uafd, 0);
         KSR.x.exit();
     end
 
@@ -433,19 +459,19 @@ function ksr_route_auth()
             end
 
             hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-                .. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+                .. "\", \"domain\": \"" .. uafd
                 .. "\", \"project\": \"" .. xsp
                 .. "\"}";
         else
             if string.sub(xsp, 1, 1) == "\"" and string.sub(xsp, -1, -1) == "\"" then
                 -- value is already quoted
                 hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-                    .. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+                    .. "\", \"domain\": \"" .. uafd
                     .. "\", \"project\": \"" .. xsp
                     .. "\"}";
             else
                 hbody = "{ \"username\": \"" .. KSR.pv.get("$fu")
-                    .. "\", \"domain\": \"" .. KSR.pv.get("$fd")
+                    .. "\", \"domain\": \"" .. uafd
                     .. "\", \"project\": \"" .. xsp
                     .. "\"}";
             end
@@ -463,15 +489,15 @@ function ksr_route_auth()
                     "Content-Type: application/json", "$var(hres)");
             hres = KSR.pv.gete("$var(hres)");
             if string.len(hres) < 10 then
-                KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. " with project: " .. xsp .. "\n");
-                KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+                KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. uafd .. " with project: " .. xsp .. "\n");
+                KSR.auth.auth_challenge(uafd, 0);
                 KSR.x.exit();
             end
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];
         if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
-            KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.pv.get("$fU") .. "@" .. KSR.pv.get("$fd") .. "with project: " .. xsp .. "\n");
+            KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.pv.get("$fU") .. "@" .. uafd .. "with project: " .. xsp .. "\n");
             KSR.sl.sl_send_reply(500, "Authentication unavailable");
             KSR.x.exit();
         end
@@ -483,7 +509,7 @@ function ksr_route_auth()
     end
 
     if KSR.auth.pv_auth_check(uafd, uapasswd, 1, 1) < 0 then
-        KSR.auth.auth_challenge(KSR.pv.get("$fd"), 0);
+        KSR.auth.auth_challenge(uafd, 0);
         KSR.x.exit();
     end
 
