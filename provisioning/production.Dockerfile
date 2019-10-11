@@ -6,6 +6,13 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-ye
 
 COPY kamailio /usr/local/src/kamailio
 COPY src/modules/bladec /usr/local/src/kamailio/src/modules/bladec
+RUN rm -rf /usr/include/signalwire-client-c
+RUN rm -rf /usr/include/libks
+RUN rm /usr/lib/libsignalwire_client*
+RUN rm /usr/lib/libks*
+RUN cp /2.0/lib/*.so /usr/lib
+RUN mv /2.0/include/signalwire-client-c /usr/include/signalwire-client-c
+RUN mv /2.0/include/libks /usr/include/libks
 WORKDIR /usr/local/src/kamailio
 RUN make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket nathelper" cfg \
 && make -j`nproc --all` all && make install \
@@ -30,8 +37,8 @@ ENV LC_ALL en_US.utf-8
 COPY --from=intermediate /lib/x86_64-linux-gnu /lib/x86_64-linux-gnu
 COPY --from=intermediate /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
 
-COPY --from=intermediate /usr/lib/libsignalwire_client.so.1 /usr/lib/libsignalwire_client.so.1
-COPY --from=intermediate /usr/lib/libks.so.1 /usr/lib/libks.so.1
+COPY --from=intermediate /2.0/lib/libsignalwire_client.so.2 /usr/lib/libsignalwire_client.so.2
+COPY --from=intermediate /2.0/lib/libks.so.2 /usr/lib/libks.so.2
 
 COPY --from=intermediate /usr/local/lib64/kamailio /usr/local/lib64/kamailio
 COPY --from=intermediate /usr/local/lib64/kamailio/modules /usr/local/lib64/kamailio/modules
