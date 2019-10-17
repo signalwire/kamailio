@@ -204,8 +204,8 @@ int bladec_client_prepare(void)
 	strncpy(_bladec_globals.blade_bootstrap, "switchblade",
 			sizeof(_bladec_globals.blade_bootstrap));
 	if (_bladec_globals.jcfg
-			&& (tmp = ks_json_get_object_cstr(_bladec_globals.jcfg,
-					"blade_bootstrap"))) {
+			&& (tmp = ks_json_get_object_string(_bladec_globals.jcfg,
+					"blade_bootstrap", NULL))) {
 		if (tmp[0]) {
 			strncpy(_bladec_globals.blade_bootstrap, tmp,
 					sizeof(_bladec_globals.blade_bootstrap));
@@ -636,7 +636,7 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 		return -1;
 	}
 	if(_bladec_globals.swres) {
-		ks_json_free_ex((void**)(&_bladec_globals.swres));
+		free(_bladec_globals.swres);
 		_bladec_globals.swres = NULL;
 	}
 
@@ -673,7 +673,7 @@ cmdretry:
 
 	LM_DBG("res code: %ld\n", (long)rcode);
 
-	swclt_cmd_result(rcmd, (const ks_json_t **)&result);
+	swclt_cmd_result(rcmd, &result);
 
 	if (!result) {
 		if(cmdattempt!=0) {
@@ -722,7 +722,7 @@ int bladec_channel_broadcast(str *evproto, str *evchannel, str *evname,
 	}
 
 	if(_bladec_globals.swres) {
-		ks_json_free_ex((void**)(&_bladec_globals.swres));
+		free(_bladec_globals.swres);
 		_bladec_globals.swres = NULL;
 	}
 	if (!swclt_sess_connected(_bladec_session)) {
