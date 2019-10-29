@@ -32,7 +32,7 @@ fi
 
 prep_term
 echo 65535 > /writeable-proc/sys/net/core/somaxconn
-/usr/local/sbin/kamailio -DD -dd -E -e -m 256 -M 12 \
+/usr/local/sbin/kamailio -DD -dd -E -e -m 1024 -M 12 \
   -A KAM_IP_LOCAL=$(ip route get 1.1.1.1 | awk 'NR==1 {print $NF}') \
   -A KAM_IP_PUBLIC=${KAM_IP_PUBLIC} \
   -A KAM_IP_OTHER=$(ip addr | grep -Po '.+10.92.+\/16.+' | grep -Po 'inet \K[\d.]+') \
