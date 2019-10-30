@@ -604,10 +604,10 @@ int bladec_run_dispatcher(char *laddr, int lport)
 					LM_ERR("session is not connected (step: %u - count: %d)\n", n, cr);
 				} else {
 					LM_ERR("session is not connected (step: %u - count: %d) - exiting\n", n, cr);
+					return -1;
 				}
 				cr++;
 			}
-			return -1;
 		} else {
 			cr = 0;
 		}
