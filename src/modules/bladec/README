@@ -58,7 +58,7 @@ Daniel-Constantin Mierla
    1.5. Set cwait_usleep parameter
    1.6. Set cping_usleep parameter
    1.7. Set mode parameter
-   1.8. Set mode parameter
+   1.8. Set reconnect_limit parameter
    1.9. bladec_relay usage
    1.10. Network Message
    1.11. bladec_async_relay usage
@@ -235,7 +235,7 @@ modparam("bladec", "mode", 1)
 
    Default value is 0.
 
-   Example 1.8. Set mode parameter
+   Example 1.8. Set reconnect_limit parameter
 ...
 modparam("bladec", "reconnect_limit", 100)
 ...
