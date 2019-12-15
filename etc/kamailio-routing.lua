@@ -540,8 +540,11 @@ function ksr_route_natmanage()
     end
 
     if KSR.isbflagset(FLB_NATB) then
-        -- do not connect on tcp/tls to send out if connection does not exist
-        KSR.set_forward_no_connect();
+        if KSR.siputils.has_totag()<0 then
+            -- initial request with target behind nat
+            -- do not connect on tcp/tls to send out if connection does not exist
+            KSR.set_forward_no_connect();
+        end
     end
 
     if KSR.siputils.is_request()>0 then
@@ -563,6 +566,11 @@ end
 function ksr_route_dlguri()
     if not KSR.isdsturiset() then
         KSR.nathelper.handle_ruri_alias();
+        if KSR.isdsturiset() then
+            -- alias parameter was used - target behind nat
+            -- do not connect on tcp/tls to send out if connection does not exist
+            KSR.set_forward_no_connect();
+        end
     end
     return 1;
 end
