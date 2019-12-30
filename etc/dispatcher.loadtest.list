@@ -3,3 +3,6 @@
 100 sip:159.65.69.250:35181;transport=tls
 100 sip:104.156.230.94:35181;transport=tls
 100 sip:45.63.93.181:35181;transport=tls
+
+# Load testing machines with development FS
+300 sip:206.189.161.65:35181;transport=tls

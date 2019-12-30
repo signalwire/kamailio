@@ -779,6 +779,11 @@ function ksr_dispatch()
         dsgrp = 200;
     end
 
+    -- Quick redirect for specific test domain
+    if string.match(KSR.pv.get("$fu"), "swire2020") and string.match(KSR.pv.get("$fu"), "swire.io") then
+        dsgrp = 300;
+    end
+
     -- round robin (4) dispatching on group 'dsgrp' (default 100)
     if KSR.dispatcher.ds_select_dst(dsgrp, 4) < 0 then
         KSR.sl.send_reply(404, "No destination");

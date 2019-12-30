@@ -5,3 +5,6 @@
 
 # Counterpath temporary context
 200 sip:190.102.98.220:35185;transport=tls
+
+# Load testing machines with development FS
+300 sip:206.189.161.65:35181;transport=tls
