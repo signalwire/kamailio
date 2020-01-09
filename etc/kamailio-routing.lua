@@ -157,6 +157,7 @@ function ksr_request_route()
     end
 
     -- remove headers that should not be propagated
+    KSR.hdr.remove("X-SignalWire-OutboundAuthTime");
     KSR.hdr.remove("X-SignalWire-OutboundAuthToken");
 
     -- per request initial checks
