@@ -26,6 +26,7 @@ FLT_ACCMISSED=2
 FLT_ACCFAILED=3
 FLT_NATS=5
 FLT_BRANCHDROP=15
+FLT_AUTH_XKEYS=16
 
 FLB_NATB=6
 FLB_NATSIPPING=7
@@ -152,6 +153,9 @@ function ksr_request_route()
         KSR.sl.send_reply(500, "Instance initializing");
         KSR.x.exit();
     end
+
+    -- remove headers that should not be propagated
+    KSR.hdr.remove("X-SignalWire-OutboundAuthToken");
 
     -- per request initial checks
     ksr_route_reqinit();
@@ -394,6 +398,13 @@ function ksr_route_auth()
     -- from trusted list of addresses
     if ksr_is_src_trusted() then
         return 1;
+    end
+
+    -- from nodes with auth xkeys support
+    if KSR.hdr.is_present("X-SignalWire-OutboundAuthToken") > 0 then
+        if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256", "$rm:$ci:$fU:$rU") > 0 then
+            return 1;
+        end
     end
 
     local uafd = KSR.pv.get("$fd");
@@ -714,6 +725,11 @@ function ksr_branch_manage()
     KSR.hdr.remove("X-Target-Type");
 
     ksr_route_natmanage();
+
+    if KSR.isflagset(FLT_AUTH_XKEYS) then
+        KSR.auth_xkeys.auth_xkeys_add("X-SignalWire-OutboundAuthToken", "swk", "sha256", "$rm:$ci:$fU:$rU");
+    end
+
     return 1;
 end
 
@@ -790,6 +806,7 @@ function ksr_dispatch()
         KSR.x.exit();
     end
 
+    KSR.setflag(FLT_AUTH_XKEYS);
     KSR.info("--- SCRIPT: going to <" .. KSR.pv.get("$ru") .. "> via <"
             .. KSR.pv.get("$du") .. ">\n");
     KSR.tm.t_on_failure("ksr_failure_dispatch");
