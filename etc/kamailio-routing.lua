@@ -402,7 +402,8 @@ function ksr_route_auth()
 
     -- from nodes with auth xkeys support
     if KSR.hdr.is_present("X-SignalWire-OutboundAuthToken") > 0 then
-        if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256", "$rm:$ci:$fU:$rU") > 0 then
+        if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256",
+                KSR.pv.gete("$rm") .. ":" .. KSR.pv.gete("$ci") .. ":" .. KSR.pv.gete("$fU") .. ":" .. KSR.pv.gete("$rU")) > 0 then
             return 1;
         end
     end
@@ -727,7 +728,8 @@ function ksr_branch_manage()
     ksr_route_natmanage();
 
     if KSR.isflagset(FLT_AUTH_XKEYS) then
-        KSR.auth_xkeys.auth_xkeys_add("X-SignalWire-OutboundAuthToken", "swk", "sha256", "$rm:$ci:$fU:$rU");
+        KSR.auth_xkeys.auth_xkeys_add("X-SignalWire-OutboundAuthToken", "swk", "sha256",
+                KSR.pv.gete("$rm") .. ":" .. KSR.pv.gete("$ci") .. ":" .. KSR.pv.gete("$fU") .. ":" .. KSR.pv.gete("$rU"));
     end
 
     return 1;
