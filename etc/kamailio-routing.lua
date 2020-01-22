@@ -94,6 +94,20 @@ BAD_USER_AGENTS={
     "xcv123"
 }
 
+-- List of domains to skip  for Pike Blocking - must be the beginning of the URL "To" domain
+-- Note: to specify exact subdomain, you must Lua-escape the initial hyphen (e.g. [-])
+SKIP_ANTIFLOOD_DOMAINS = {
+    "robokiller[-]",
+    "servicetitanproduction[-]",
+    "servicetitanstaging[-]",
+    "counterpath[-]",
+    "dev[-]",
+    "us-west.carriers",
+    "us-east.carriers",
+    "eu.carriers",
+    "australia.carriers"
+}
+
 -- list of ip addresses that have the project id mapped statically
 PROJECTIPID = {}
 PROJECTIPID["127.0.0.1"] = "signalwire.localhost"
@@ -289,7 +303,13 @@ end
 
 -- Per SIP request initial checks
 function ksr_route_reqinit()
-    if WITH_ANTIFLOOD then
+
+    local skip_antiflood = false
+    for idx, val in pairs(SKIP_ANTIFLOOD_DOMAINS) do
+        if string.find(KSR.pv.get("$td"),"^" .. val) then skip_antiflood = true end
+    end
+
+    if WITH_ANTIFLOOD and not skip_antiflood then
         if not KSR.is_myself_suri() then
             if not KSR.pv.is_null("$sht(ipban=>$si)") then
                 -- ip is already blocked
