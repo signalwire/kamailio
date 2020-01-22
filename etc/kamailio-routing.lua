@@ -408,7 +408,7 @@ function ksr_route_auth()
             and KSR.hdr.is_present("X-SignalWire-OutboundAuthTime") > 0 then
         local timehdr = KSR.pv.gete("$hdr(X-SignalWire-OutboundAuthTime)");
         local tlimit = tonumber(timehdr);
-        if tlimit ~= NILL and tlimit >= os.time() then
+        if (tlimit ~= NILL) and (tlimit + AUTH_XKEYS_TIMEFRAME >= os.time()) then
             if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256",
                     timehdr .. ":" .. KSR.pv.gete("$rm") .. ":" .. KSR.pv.gete("$ci") .. ":" .. KSR.pv.gete("$fU") .. ":" .. KSR.pv.gete("$rU")) > 0 then
                 return 1;
@@ -736,7 +736,7 @@ function ksr_branch_manage()
     ksr_route_natmanage();
 
     if KSR.isflagset(FLT_AUTH_XKEYS) then
-        local timehdr = tostring(os.time() + AUTH_XKEYS_TIMEFRAME);
+        local timehdr = tostring(os.time());
         KSR.hdr.append("X-SignalWire-OutboundAuthTime: " .. timehdr .. "\r\n");
         KSR.auth_xkeys.auth_xkeys_add("X-SignalWire-OutboundAuthToken", "swk", "sha256",
                 timehdr .. ":" .. KSR.pv.gete("$rm") .. ":" .. KSR.pv.gete("$ci") .. ":" .. KSR.pv.gete("$fU") .. ":" .. KSR.pv.gete("$rU"));
