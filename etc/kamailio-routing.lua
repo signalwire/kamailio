@@ -221,6 +221,23 @@ function ksr_is_src_fsaddr()
     return false;
 end
 
+-- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS and FSADDR lists
+function ksr_skip_antiflood_for_transaction()
+    
+    local to_domain = KSR.pv.get("$td")
+    for idx, val in pairs(SKIP_ANTIFLOOD_DOMAINS) do
+        if string.find(to_domain,"^" .. val) then 
+            return true 
+        end
+    end
+    if ksr_is_src_fsaddr() then 
+        return true 
+    end
+
+    return false
+end
+
+
 -- SIP request routing
 -- equivalent of request_route{}
 function ksr_request_route()
@@ -370,12 +387,7 @@ end
 -- Per SIP request initial checks
 function ksr_route_reqinit()
 
-    local skip_antiflood = false
-    for idx, val in pairs(SKIP_ANTIFLOOD_DOMAINS) do
-        if string.find(KSR.pv.get("$td"),"^" .. val) then skip_antiflood = true end
-    end
-
-    if WITH_ANTIFLOOD and not skip_antiflood then
+    if WITH_ANTIFLOOD and not ksr_skip_antiflood_for_transaction() then
         if not KSR.is_myself_suri() then
             if not KSR.pv.is_null("$sht(ipban=>$si)") then
                 -- ip is already blocked
@@ -573,7 +585,7 @@ function ksr_route_auth()
                 KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. uafd .. " with project: " .. xsp .. "\n");
                 KSR.auth.auth_challenge(uafd, 0);
                 KSR.x.exit();
-            end
+            end 
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];
