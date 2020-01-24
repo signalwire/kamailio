@@ -904,6 +904,11 @@ function ksr_unregister_event(evname)
     local g_crt_projectid = KSR.pv.gete("$sht(project=>" .. aor .. ")");
     local inodeid = KSR.pv.gete("$bladec(node_id)");
 
+    if KSR.registrar.registered_uri("location", "sip:" .. aor) > 0 then
+        -- user still has valid contacts on the this node - don't remove all entries from registrar
+        return;
+    end
+
     user, domain = string.match(aor, "(.*)%@(.*)")
     evcmd = "unregister";
     evdata = "{ \"resource\": \"" .. user .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\"";
