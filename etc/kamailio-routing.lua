@@ -974,3 +974,32 @@ function ksr_xhttp_request(evname)
     KSR.info("404 - Rejecting websocket with invalid HTTP Method:" .. KSR.pv.getw("$rm") .. ", Upgrade: " .. hupgrade .. ", Connection: " .. hconnection .."\n");
 	KSR.xhttp.xhttp_reply("404", "Not found", "", "");
 end
+
+function ksr_unregister_event(evname)
+    local evcmd = "";
+    local evdata = "";
+    local aor = KSR.pv.getw("$ulc(exp=>aor)");
+    local g_crt_projectid = KSR.pv.gete("$sht(project=>" .. aor .. ")");
+    local inodeid = KSR.pv.gete("$bladec(node_id)");
+
+    if KSR.registrar.registered_uri("location", "sip:" .. aor) > 0 then
+        -- user still has valid contacts on the this node - don't remove all entries from registrar
+        return;
+    end
+
+    user, domain = string.match(aor, "(.*)%@(.*)")
+    evcmd = "unregister";
+    evdata = "{ \"resource\": \"" .. user .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\"";
+    if string.len(inodeid) > 0 then
+        evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
+    end
+    evdata = evdata .. " }";
+
+    -- sending unregister in non-blocking mode via mqueue + rtimer
+    if string.len(g_crt_projectid) > 0 then
+        KSR.info( "Expired contact for " .. aor .. " - Unregistering...\n");
+        KSR.mqueue.mq_add("mqregister", evcmd, evdata);
+    else
+        KSR.info( "Expired contact for " .. aor .. " - Missing Project ID, ignoring...\n");
+    end
+end
