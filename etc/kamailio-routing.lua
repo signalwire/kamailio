@@ -405,13 +405,13 @@ function ksr_route_reqinit()
             if not KSR.pv.is_null("$sht(ipban=>$si)") then
                 -- ip is already blocked
                 KSR.info("request from blocked IP - " .. KSR.pv.get("$rm")
-                        .. " from " .. KSR.pv.get("$fu") .. " (IP:"
+                        .. " from " .. KSR.pv.get("$fu") .. " and to " .. KSR.pv.get("$tu") .. " (IP:"
                         .. KSR.pv.get("$si") .. ":" .. KSR.pv.get("$sp") .. ")\n");
                 KSR.x.exit();
             end
             if KSR.pike.pike_check_req()<0 then
                 KSR.err("ALERT: pike blocking " .. KSR.pv.get("$rm")
-                        .. " from " .. KSR.pv.get("$fu") .. " (IP:"
+                        .. " from " .. KSR.pv.get("$fu") .. " and to " .. KSR.pv.get("$tu") .. " (IP:"
                         .. KSR.pv.get("$si") .. ":" .. KSR.pv.get("$sp") .. ")\n");
                 KSR.pv.seti("$sht(ipban=>$si)", 1);
                 KSR.x.exit();
