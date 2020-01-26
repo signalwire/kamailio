@@ -26,11 +26,14 @@ FLT_ACCMISSED=2
 FLT_ACCFAILED=3
 FLT_NATS=5
 FLT_BRANCHDROP=15
+FLT_AUTH_XKEYS=16
 
 FLB_NATB=6
 FLB_NATSIPPING=7
 FLB_CLASSIC=8
 FLB_WEBRTC=9
+
+AUTH_XKEYS_TIMEFRAME=300
 
 AUTHURL=os.getenv('KAMAILIO_AUTHORIZATION_URL')
 -- AUTHURL="https://api.swire.io/api/provider_callback/kamailio/authorize"
@@ -255,6 +258,10 @@ function ksr_request_route()
         KSR.sl.send_reply(500, "Instance initializing");
         KSR.x.exit();
     end
+
+    -- remove headers that should not be propagated
+    KSR.hdr.remove("X-SignalWire-OutboundAuthTime");
+    KSR.hdr.remove("X-SignalWire-OutboundAuthToken");
 
     -- per request initial checks
     ksr_route_reqinit();
@@ -498,6 +505,19 @@ function ksr_route_auth()
     -- from trusted list of addresses
     if ksr_is_src_trusted() then
         return 1;
+    end
+
+    -- from nodes with auth xkeys support
+    if KSR.hdr.is_present("X-SignalWire-OutboundAuthToken") > 0
+            and KSR.hdr.is_present("X-SignalWire-OutboundAuthTime") > 0 then
+        local timehdr = KSR.pv.gete("$hdr(X-SignalWire-OutboundAuthTime)");
+        local tlimit = tonumber(timehdr);
+        if (tlimit ~= NILL) and (tlimit + AUTH_XKEYS_TIMEFRAME >= os.time()) then
+            if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256",
+                    timehdr .. ":" .. KSR.pv.gete("$rm") .. ":" .. KSR.pv.gete("$ci") .. ":" .. KSR.pv.gete("$fU") .. ":" .. KSR.pv.gete("$rU")) > 0 then
+                return 1;
+            end
+        end
     end
 
     local uafd = KSR.pv.get("$fd");
@@ -818,6 +838,14 @@ function ksr_branch_manage()
     KSR.hdr.remove("X-Target-Type");
 
     ksr_route_natmanage();
+
+    if KSR.isflagset(FLT_AUTH_XKEYS) then
+        local timehdr = tostring(os.time());
+        KSR.hdr.append("X-SignalWire-OutboundAuthTime: " .. timehdr .. "\r\n");
+        KSR.auth_xkeys.auth_xkeys_add("X-SignalWire-OutboundAuthToken", "swk", "sha256",
+                timehdr .. ":" .. KSR.pv.gete("$rm") .. ":" .. KSR.pv.gete("$ci") .. ":" .. KSR.pv.gete("$fU") .. ":" .. KSR.pv.gete("$rU"));
+    end
+
     return 1;
 end
 
@@ -894,6 +922,7 @@ function ksr_dispatch()
         KSR.x.exit();
     end
 
+    KSR.setflag(FLT_AUTH_XKEYS);
     KSR.info("--- SCRIPT: going to <" .. KSR.pv.get("$ru") .. "> via <"
             .. KSR.pv.get("$du") .. ">\n");
     KSR.tm.t_on_failure("ksr_failure_dispatch");
