@@ -49,6 +49,7 @@ extern str _bladec_event_callback;
 extern int _bladec_cwait_interval;
 extern int _bladec_cwait_usleep;
 extern int _bladec_cping_usleep;
+extern int _bladec_reconnect_limit;
 
 typedef struct _bladec_env {
 	int eset;
@@ -523,12 +524,12 @@ int bladec_update_node_id(int vdbg)
 
 	ret = bladec_client_session_connect();
 	if(ret<0) {
-		LM_ERR("session is not connected - exiting\n");
+		LM_ERR("session is not connected\n");
 		return -1;
 	}
 	swclt_sess_nodeid(_bladec_session, NULL, &node_id);
 	if(node_id==NULL) {
-		LM_ERR("no node id retrieved - exiting\n");
+		LM_ERR("no node id retrieved\n");
 		return -1;
 	}
 	nlen = strlen(node_id);
@@ -579,6 +580,7 @@ int bladec_update_node_id(int vdbg)
 int bladec_run_dispatcher(char *laddr, int lport)
 {
 	int ret = 0;
+	int cr = 0;
 	uint32_t n = 0;
 	LM_DBG("starting dispatcher processing\n");
 	if (_bladec_mode_param==1) {
@@ -594,8 +596,23 @@ int bladec_run_dispatcher(char *laddr, int lport)
 		sleep_us(_bladec_cping_usleep);
 		ret = bladec_update_node_id(0);
 		if(ret<0) {
-			LM_ERR("session is not connected (step: %u)\n", n);
-			return -1;
+			if(_bladec_reconnect_limit <= 0) {
+				if((n % 100) == 0) {
+					LM_INFO("session is not connected (step: %u)\n", n);
+				} else {
+					LM_DBG("session is not connected (step: %u)\n", n);
+				}
+			} else {
+				if(cr < _bladec_reconnect_limit) {
+					LM_ERR("session is not connected (step: %u - count: %d)\n", n, cr);
+				} else {
+					LM_ERR("session is not connected (step: %u - count: %d) - exiting\n", n, cr);
+					return -1;
+				}
+				cr++;
+			}
+		} else {
+			cr = 0;
 		}
 		n++;
 	}
