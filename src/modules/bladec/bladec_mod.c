@@ -52,6 +52,7 @@ str _bladec_config_path = STR_NULL;
 int _bladec_cwait_interval = 0;
 int _bladec_cwait_usleep = 500;
 int _bladec_cping_usleep = 3000;
+int _bladec_reconnect_limit = 0;
 
 static tm_api_t tmb;
 
@@ -87,6 +88,8 @@ static param_export_t params[]={
 	{"cwait_usleep",      PARAM_INT,   &_bladec_cwait_usleep},
 	{"cping_usleep",      PARAM_INT,   &_bladec_cping_usleep},
 	{"mode",              PARAM_INT,   &_bladec_mode_param},
+	{"reconnect_limit",   PARAM_INT,   &_bladec_reconnect_limit},
+
 	{0, 0, 0}
 };
 
