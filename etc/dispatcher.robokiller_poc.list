@@ -32,3 +32,13 @@
 100 sip:165.227.77.207:35181;transport=tls
 100 sip:159.203.124.36:35181;transport=tls
 100 sip:165.227.77.199:35181;transport=tls
+100 sip:178.128.228.132:35181;transport=tls
+100 sip:178.128.228.148:35181;transport=tls
+100 sip:178.128.228.34:35181;transport=tls
+100 sip:178.128.239.171:35181;transport=tls
+100 sip:159.203.21.165:35181;transport=tls
+100 sip:138.197.159.46:35181;transport=tls
+100 sip:178.128.232.167:35181;transport=tls
+100 sip:178.128.232.232:35181;transport=tls
+100 sip:138.197.155.23:35181;transport=tls
+100 sip:178.128.228.79:35181;transport=tls
