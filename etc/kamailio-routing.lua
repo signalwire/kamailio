@@ -187,10 +187,10 @@ SKIP_ANTIFLOOD_DOMAINS = {
     "servicetitanstaging[-]",
     "counterpath[-]",
     "dev[-]",
-    "us-west.carriers",
-    "us-east.carriers",
+    "us.*.carriers",
     "eu.carriers",
-    "australia.carriers"
+    "australia.carriers",
+    "cust.*.auth.bandwidth.com"
 };
 
 -- List of IP ranges to skip for Pike Blocking 
@@ -247,12 +247,13 @@ function ksr_is_src_fsaddr()
     return false;
 end
 
--- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS and FSADDR lists
+-- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS, SKIP_ANTIFLOOD_IPS, and FSADDR lists
 function ksr_skip_antiflood_for_transaction()
     
-    local to_domain = KSR.pv.get("$td")
+    local to_domain = KSR.pv.get("$td");
+    local from_domain = KSR.pv.get("$fd");
     for idx, val in pairs(SKIP_ANTIFLOOD_DOMAINS) do
-        if string.find(to_domain,"^" .. val) then 
+        if string.find(to_domain,"^" .. val) or string.find(from_domain,"^" .. val) then 
             return true 
         end
     end
