@@ -145,8 +145,7 @@ FSADDR={
     "190.102.98.241/32",
     "190.102.98.242/32",
     "165.227.74.150/32",
-    "159.203.69.54/32",
-    "172.18.0.1/24"
+    "159.203.69.54/32"
 };
 
 -- list of user agents to block as being likely spam/attack vectors
@@ -168,9 +167,9 @@ BAD_USER_AGENTS={
     "siparmyknife",
     "Test Agent",
     "xcv123"
-}
+};
 
--- List of domains to skip  for Pike Blocking - must be the beginning of the URL "To" domain
+-- List of domains to skip for Pike Blocking - must be the beginning of the URL "To" domain
 -- Note: to specify exact subdomain, you must Lua-escape the initial hyphen (e.g. [-])
 SKIP_ANTIFLOOD_DOMAINS = {
     "robokiller[-]",
@@ -182,7 +181,14 @@ SKIP_ANTIFLOOD_DOMAINS = {
     "us-east.carriers",
     "eu.carriers",
     "australia.carriers"
-}
+};
+
+-- List of IP ranges to skip for Pike Blocking 
+-- Prevents Kamailio for denying service from internal IPs
+SKIP_ANTIFLOOD_IPS = {
+  "172.17.0.1/24",
+  "172.18.0.1/24"  
+};
 
 -- list of ip addresses that have the project id mapped statically
 PROJECTIPID = {}
@@ -240,11 +246,22 @@ function ksr_skip_antiflood_for_transaction()
             return true 
         end
     end
-    if ksr_is_src_fsaddr() then 
+
+    if ksr_is_src_fsaddr() or ksr_is_skip_antiflood_ip() then 
         return true 
     end
 
     return false
+end
+
+function ksr_is_skip_antiflood_ip()
+    local srcaddr = KSR.pv.get("$si");
+    for idx, val in pairs(SKIP_ANTIFLOOD_IPS) do
+        if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
+            return true;
+        end
+    end
+    return false;
 end
 
 
