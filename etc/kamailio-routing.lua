@@ -55,7 +55,9 @@ ALLOWADDR={
     "67.231.1.188/32",
     "67.231.4.138/32",
     "67.231.4.70/32",
-    "67.231.3.4/32"
+    "67.231.3.4/32",
+    "190.102.98.241/32",
+    "190.102.98.242/32"
 };
 
 -- list of freeswitch addresses to allow traffic from without user auth
@@ -71,9 +73,89 @@ FSADDR={
     "149.28.103.238/32",
     "45.77.183.80/32",
     "45.76.120.98/32",
+    "149.28.103.238/32",
+    "45.77.183.80/32",
+    "45.76.120.98/32",
     "149.28.79.131/32",
     "66.42.65.222/32",
-    "159.65.144.130/32"
+    "159.65.144.130/32",
+    "46.101.163.124/32",
+    "159.89.121.181/32",
+    "138.197.165.71/32",
+    "159.89.114.142/32",
+    "167.99.189.11/32",
+    "167.99.190.18/32",
+    "167.99.176.163/32",
+    "159.89.118.193/32",
+    "167.99.184.255/32",
+    "167.99.184.143/32",
+    "167.99.189.64/32",
+    "138.197.102.144/32",
+    "138.197.97.255/32",
+    "138.197.97.119/32",
+    "138.197.101.1/32",
+    "138.197.110.201/32",
+    "138.197.105.70/32",
+    "206.189.168.225/32",
+    "206.189.211.90/32",
+    "206.189.213.230/32",
+    "206.189.221.197/32",
+    "206.189.221.77/32",
+    "206.189.69.103/32",
+    "138.68.63.137/32",
+    "138.68.47.13/32",
+    "206.189.162.161/32",
+    "138.68.19.197/32",
+    "206.189.164.186/32",
+    "206.189.213.105/32",
+    "167.99.107.109/32",
+    "138.68.46.209/32",
+    "138.68.58.165/32",
+    "206.189.75.143/32",
+    "165.227.78.206/32",
+    "165.227.65.34/32",
+    "165.227.65.50/32",
+    "165.227.65.151/32",
+    "165.227.73.44/32",
+    "165.227.73.57/32",
+    "165.227.73.59/32",
+    "165.227.78.244/32",
+    "165.227.78.216/32",
+    "165.227.65.7/32",
+    "157.245.94.216/32",
+    "157.245.84.10/32",
+    "157.245.82.69/32",
+    "157.245.136.226/32",
+    "157.245.134.72/32",
+    "157.245.82.149/32",
+    "157.245.140.227/32",
+    "192.241.151.7/32",
+    "157.245.141.195/32",
+    "157.245.86.5/32",
+    "165.227.78.88/32",
+    "165.227.68.81/32",
+    "165.227.77.194/32",
+    "165.227.77.205/32",
+    "165.227.68.86/32",
+    "165.227.70.14/32",
+    "165.227.77.206/32",
+    "165.227.77.207/32",
+    "159.203.124.36/32",
+    "165.227.77.199/32",
+    "190.102.98.241/32",
+    "190.102.98.242/32",
+    "165.227.74.150/32",
+    "159.203.69.54/32",
+    "178.128.228.132/32",
+    "178.128.228.148/32",
+    "178.128.228.34/32",
+    "178.128.239.171/32",
+    "159.203.21.165/32",
+    "138.197.159.46/32",
+    "178.128.232.167/32",
+    "178.128.232.232/32",
+    "138.197.155.23/32",
+    "178.128.228.79/32"
 };
 
 -- list of user agents to block as being likely spam/attack vectors
@@ -95,9 +177,9 @@ BAD_USER_AGENTS={
     "siparmyknife",
     "Test Agent",
     "xcv123"
-}
+};
 
--- List of domains to skip  for Pike Blocking - must be the beginning of the URL "To" domain
+-- List of domains to skip for Pike Blocking - must be the beginning of the URL "To" domain
 -- Note: to specify exact subdomain, you must Lua-escape the initial hyphen (e.g. [-])
 SKIP_ANTIFLOOD_DOMAINS = {
     "robokiller[-]",
@@ -105,11 +187,18 @@ SKIP_ANTIFLOOD_DOMAINS = {
     "servicetitanstaging[-]",
     "counterpath[-]",
     "dev[-]",
-    "us-west.carriers",
-    "us-east.carriers",
+    "us.*.carriers",
     "eu.carriers",
-    "australia.carriers"
-}
+    "australia.carriers",
+    "cust.*.auth.bandwidth.com"
+};
+
+-- List of IP ranges to skip for Pike Blocking 
+-- Prevents Kamailio for denying service from internal IPs
+SKIP_ANTIFLOOD_IPS = {
+  "172.17.0.1/24",
+  "172.18.0.1/24"  
+};
 
 -- list of ip addresses that have the project id mapped statically
 PROJECTIPID = {}
@@ -157,6 +246,35 @@ function ksr_is_src_fsaddr()
     end
     return false;
 end
+
+-- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS, SKIP_ANTIFLOOD_IPS, and FSADDR lists
+function ksr_skip_antiflood_for_transaction()
+    
+    local to_domain = KSR.pv.get("$td");
+    local from_domain = KSR.pv.get("$fd");
+    for idx, val in pairs(SKIP_ANTIFLOOD_DOMAINS) do
+        if string.find(to_domain,"^" .. val) or string.find(from_domain,"^" .. val) then 
+            return true 
+        end
+    end
+
+    if ksr_is_src_fsaddr() or ksr_is_skip_antiflood_ip() then 
+        return true 
+    end
+
+    return false
+end
+
+function ksr_is_skip_antiflood_ip()
+    local srcaddr = KSR.pv.get("$si");
+    for idx, val in pairs(SKIP_ANTIFLOOD_IPS) do
+        if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
+            return true;
+        end
+    end
+    return false;
+end
+
 
 -- SIP request routing
 -- equivalent of request_route{}
@@ -311,23 +429,18 @@ end
 -- Per SIP request initial checks
 function ksr_route_reqinit()
 
-    local skip_antiflood = false
-    for idx, val in pairs(SKIP_ANTIFLOOD_DOMAINS) do
-        if string.find(KSR.pv.get("$td"),"^" .. val) then skip_antiflood = true end
-    end
-
-    if WITH_ANTIFLOOD and not skip_antiflood then
+    if WITH_ANTIFLOOD and not ksr_skip_antiflood_for_transaction() then
         if not KSR.is_myself_suri() then
             if not KSR.pv.is_null("$sht(ipban=>$si)") then
                 -- ip is already blocked
                 KSR.info("request from blocked IP - " .. KSR.pv.get("$rm")
-                        .. " from " .. KSR.pv.get("$fu") .. " (IP:"
+                        .. " from " .. KSR.pv.get("$fu") .. " and to " .. KSR.pv.get("$tu") .. " (IP:"
                         .. KSR.pv.get("$si") .. ":" .. KSR.pv.get("$sp") .. ")\n");
                 KSR.x.exit();
             end
             if KSR.pike.pike_check_req()<0 then
                 KSR.err("ALERT: pike blocking " .. KSR.pv.get("$rm")
-                        .. " from " .. KSR.pv.get("$fu") .. " (IP:"
+                        .. " from " .. KSR.pv.get("$fu") .. " and to " .. KSR.pv.get("$tu") .. " (IP:"
                         .. KSR.pv.get("$si") .. ":" .. KSR.pv.get("$sp") .. ")\n");
                 KSR.pv.seti("$sht(ipban=>$si)", 1);
                 KSR.x.exit();
@@ -527,7 +640,7 @@ function ksr_route_auth()
                 KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.get("$fU") .. "@" .. uafd .. " with project: " .. xsp .. "\n");
                 KSR.auth.auth_challenge(uafd, 0);
                 KSR.x.exit();
-            end
+            end 
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];

@@ -1,0 +1,44 @@
+# list of addresses
+
+
+# Robokiller POC addresses
+100 sip:165.227.78.206:35181;transport=tls
+100 sip:165.227.65.34:35181;transport=tls
+100 sip:165.227.65.50:35181;transport=tls
+100 sip:165.227.65.151:35181;transport=tls
+100 sip:165.227.73.44:35181;transport=tls
+100 sip:165.227.73.57:35181;transport=tls
+100 sip:165.227.73.59:35181;transport=tls
+100 sip:165.227.78.244:35181;transport=tls
+100 sip:165.227.78.216:35181;transport=tls
+100 sip:165.227.65.7:35181;transport=tls
+100 sip:157.245.94.216:35181;transport=tls
+100 sip:157.245.84.10:35181;transport=tls
+100 sip:157.245.82.69:35181;transport=tls
+100 sip:157.245.136.226:35181;transport=tls
+100 sip:157.245.134.72:35181;transport=tls
+100 sip:157.245.82.149:35181;transport=tls
+100 sip:157.245.140.227:35181;transport=tls
+100 sip:192.241.151.7:35181;transport=tls
+100 sip:157.245.141.195:35181;transport=tls
+100 sip:157.245.86.5:35181;transport=tls
+100 sip:165.227.78.88:35181;transport=tls
+100 sip:165.227.68.81:35181;transport=tls
+100 sip:165.227.77.194:35181;transport=tls
+100 sip:165.227.77.205:35181;transport=tls
+100 sip:165.227.68.86:35181;transport=tls
+100 sip:165.227.70.14:35181;transport=tls
+100 sip:165.227.77.206:35181;transport=tls
+100 sip:165.227.77.207:35181;transport=tls
+100 sip:159.203.124.36:35181;transport=tls
+100 sip:165.227.77.199:35181;transport=tls
+100 sip:178.128.228.132:35181;transport=tls
+100 sip:178.128.228.148:35181;transport=tls
+100 sip:178.128.228.34:35181;transport=tls
+100 sip:178.128.239.171:35181;transport=tls
+100 sip:159.203.21.165:35181;transport=tls
+100 sip:138.197.159.46:35181;transport=tls
+100 sip:178.128.232.167:35181;transport=tls
+100 sip:178.128.232.232:35181;transport=tls
+100 sip:138.197.155.23:35181;transport=tls
+100 sip:178.128.228.79:35181;transport=tls
