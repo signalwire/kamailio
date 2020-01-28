@@ -1075,3 +1075,8 @@ function ksr_unregister_event(evname)
         KSR.info( "Expired contact for " .. aor .. " - Missing Project ID, ignoring...\n");
     end
 end
+
+-- sipdump callback to print recv/send traffic
+function ksr_sipdump_event(evname)
+	KSR.info(KSR.sipdump.get_buf());
+end
