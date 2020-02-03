@@ -1078,5 +1078,5 @@ end
 
 -- sipdump callback to print recv/send traffic
 function ksr_sipdump_event(evname)
-	KSR.info(KSR.sipdump.get_buf());
+	KSR.info("" .. KSR.sipdump.get_src_ip() .. " - " .. KSR.sipdump.get_tag() .. "\n" .. KSR.sipdump.get_buf());
 end
