@@ -38,5 +38,5 @@ echo 65535 > /writeable-proc/sys/net/core/somaxconn
   -A KAM_IP_OTHER=$(ip addr | grep -Po '.+10.92.+\/16.+' | grep -Po 'inet \K[\d.]+') \
   -A KAM_CLUSTER_NONCE=\"$KAM_CLUSTER_NONCE\" \
   -A $KAMAILIO_LOCATION \
-  --log-engine=json:aA
+  --log-engine=json:acA
 wait_term
