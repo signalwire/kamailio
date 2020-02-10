@@ -1092,3 +1092,7 @@ function ksr_tcpops_event(evname)
         KSR.info("tcp connection closed - id: " .. conid .. " " .. KSR.htable.sht_gete("c" .. conid) .. "\n");
     end
 end
+-- sipdump callback to print recv/send traffic
+function ksr_sipdump_event(evname)
+	KSR.info("" .. KSR.sipdump.get_src_ip() .. " - " .. KSR.sipdump.get_tag() .. "\n" .. KSR.sipdump.get_buf());
+end
