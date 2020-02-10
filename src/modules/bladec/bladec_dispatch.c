@@ -97,6 +97,7 @@ typedef struct _bladec_sdata {
 	gen_lock_t slock;
 	str node_id;
 	int nversion;
+	volatile int nmode;
 } bladec_sdata_t;
 
 typedef struct _bladec_ldata {
@@ -446,6 +447,10 @@ int bladec_node_id_sync(void)
 		LM_ERR("module not initialized properly\n");
 		return -1;
 	}
+	if(_bladec_sdata_global->nmode == 1) {
+		LM_DBG("node id mode deactivated\n");
+		return -2;
+	}
 	if(_bladec_ldata_local.nversion > 0
 			&& _bladec_ldata_local.nversion == _bladec_sdata_global->nversion) {
 		/* local node_id in sync with global node_id */
@@ -495,6 +500,10 @@ int bladec_node_id_ready(void)
 	if (_bladec_mode_param==0) {
 		/* no need to wait for instance node id */
 		return 1;
+	}
+	if(_bladec_sdata_global != NULL && _bladec_sdata_global->nmode == 1) {
+		/* node id mode deactivated */
+		return 2;
 	}
 
 	if(bladec_node_id_sync() == 0) {
@@ -587,8 +596,11 @@ int bladec_run_dispatcher(char *laddr, int lport)
 		LM_DBG("preparing to set instance node id\n");
 		ret = bladec_update_node_id(1);
 		if(ret<0) {
-			LM_ERR("session is not connected - exiting\n");
-			return -1;
+			LM_WARN("session is not connected - switching to node mode 0\n");
+			_bladec_mode_param = 0;
+			if(_bladec_sdata_global != NULL) {
+				_bladec_sdata_global->nmode = 1;
+			}
 		}
 	}
 
