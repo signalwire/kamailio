@@ -1,10 +1,10 @@
 # list of addresses
 
 # Singapore
-100 sip:104.248.158.21:35181;transport=tls
+100 sip:104.248.158.21:35181;transport=tls;weight=100
 
 # Tokyo
-100 sip:45.77.183.80:35181;transport=tls
+100 sip:45.77.183.80:35181;transport=tls;weight=100
 
 # Counterpath temporary context
-200 sip:104.248.158.21:35185;transport=tls
+200 sip:104.248.158.21:35185;transport=tls;weight=100

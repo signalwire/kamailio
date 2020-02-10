@@ -1,2 +1,2 @@
 # list of addresses
-100 sip:freeswitch_1:35181;transport=tls
+100 sip:freeswitch_1:35181;transport=tls;weight=100

@@ -1,7 +1,7 @@
 # list of addresses
 
 # Sydney
-100 sip:45.76.120.98:35181;transport=tls
+100 sip:45.76.120.98:35181;transport=tls;weight=100
 
 # Counterpath temporary context
-200 sip:45.76.120.98:35185;transport=tls
+200 sip:45.76.120.98:35185;transport=tls;weight=100
