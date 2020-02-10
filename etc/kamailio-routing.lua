@@ -258,8 +258,9 @@ end
 function ksr_check_array_for_domain_match(domain_array)
     local to_domain = KSR.pv.get("$td");
     local from_domain = KSR.pv.get("$fd");
+    local request_uri = KSR.pv.get("$rd");
     for idx, val in pairs(domain_array) do
-        if string.find(to_domain,"^" .. val) or string.find(from_domain,"^" .. val) then 
+        if string.find(to_domain,"^" .. val) or string.find(from_domain,"^" .. val) or string.find(request_uri,"^" .. val) then 
             return true 
         end
     end
