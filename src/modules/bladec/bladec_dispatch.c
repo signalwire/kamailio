@@ -594,7 +594,14 @@ int bladec_run_dispatcher(char *laddr, int lport)
 	LM_DBG("starting dispatcher processing\n");
 	if (_bladec_mode_param==1) {
 		LM_DBG("preparing to set instance node id\n");
-		ret = bladec_update_node_id(1);
+		do {
+			ret = bladec_update_node_id(1);
+			if(ret<0) {
+				cr++;
+				LM_DBG("session is not connected - attempt %d\n", cr);
+				sleep_us(_bladec_cping_usleep);
+			}
+		} while((ret < 0) && (cr < _bladec_reconnect_limit));
 		if(ret<0) {
 			LM_WARN("session is not connected - switching to node mode 0\n");
 			_bladec_mode_param = 0;
@@ -604,6 +611,7 @@ int bladec_run_dispatcher(char *laddr, int lport)
 		}
 	}
 
+	cr = 0;
 	while(1) {
 		sleep_us(_bladec_cping_usleep);
 		ret = bladec_update_node_id(0);
