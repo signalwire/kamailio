@@ -155,7 +155,9 @@ FSADDR={
     "178.128.232.167/32",
     "178.128.232.232/32",
     "138.197.155.23/32",
-    "178.128.228.79/32"
+    "178.128.228.79/32",
+    "174.138.44.123/32",
+    "67.205.180.5/32"
 };
 
 -- list of user agents to block as being likely spam/attack vectors
@@ -198,6 +200,12 @@ SKIP_ANTIFLOOD_DOMAINS = {
 SKIP_ANTIFLOOD_IPS = {
   "172.17.0.1/24",
   "172.18.0.1/24"  
+};
+
+-- List of domains to use Stable Routing
+-- Note: to specify exact subdomain, you must Lua-escape the initial hyphen (e.g. [-])
+STABLE_ROUTING_DOMAINS = {
+    "servicetitanproduction[-]"
 };
 
 -- list of ip addresses that have the project id mapped statically
@@ -247,22 +255,24 @@ function ksr_is_src_fsaddr()
     return false;
 end
 
--- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS, SKIP_ANTIFLOOD_IPS, and FSADDR lists
-function ksr_skip_antiflood_for_transaction()
-    
+function ksr_check_array_for_domain_match(domain_array)
     local to_domain = KSR.pv.get("$td");
     local from_domain = KSR.pv.get("$fd");
-    for idx, val in pairs(SKIP_ANTIFLOOD_DOMAINS) do
-        if string.find(to_domain,"^" .. val) or string.find(from_domain,"^" .. val) then 
+    local request_uri = KSR.pv.get("$rd");
+    for idx, val in pairs(domain_array) do
+        if string.find(to_domain,"^" .. val) or string.find(from_domain,"^" .. val) or string.find(request_uri,"^" .. val) then 
             return true 
         end
     end
+end
 
-    if ksr_is_src_fsaddr() or ksr_is_skip_antiflood_ip() then 
+-- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS, SKIP_ANTIFLOOD_IPS, and FSADDR lists
+function ksr_skip_antiflood_for_transaction()
+    if ksr_check_array_for_domain_match(SKIP_ANTIFLOOD_DOMAINS) or ksr_is_src_fsaddr() or ksr_is_skip_antiflood_ip() then 
         return true 
+    else
+        return false
     end
-
-    return false
 end
 
 function ksr_is_skip_antiflood_ip()
@@ -952,18 +962,10 @@ function ksr_dispatch()
         KSR.ndb_redis.redis_free("r1");
     end
 
-    -- Quick redirect for specific test domain
-    if string.match(KSR.pv.get("$fu"), "softphone.com") or string.match(KSR.pv.get("$fu"), "counterpath.com") or string.match(KSR.pv.get("$fu"), "bria%-x") or string.match(KSR.pv.get("$fu"), "mobilevoiplive.com") then
-        dsgrp = 200;
-    end
+    dsgrp = ksr_choose_dispatcher_group();
 
-    -- Quick redirect for specific test domain
-    if string.match(KSR.pv.get("$fu"), "swire2020") and string.match(KSR.pv.get("$fu"), "swire.io") then
-        dsgrp = 300;
-    end
-
-    -- round robin (4) dispatching on group 'dsgrp' (default 100)
-    if KSR.dispatcher.ds_select_dst(dsgrp, 4) < 0 then
+    -- weight-based (9) dispatching on group 'dsgrp' (default 100)
+    if KSR.dispatcher.ds_select_dst(dsgrp, 11) < 0 then
         KSR.sl.send_reply(404, "No destination");
         KSR.x.exit();
     end
@@ -1094,5 +1096,19 @@ function ksr_tcpops_event(evname)
 end
 -- sipdump callback to print recv/send traffic
 function ksr_sipdump_event(evname)
-	KSR.info("" .. KSR.sipdump.get_src_ip() .. " - " .. KSR.sipdump.get_tag() .. "\n" .. KSR.sipdump.get_buf());
+	KSR.info("Source IP: " .. KSR.sipdump.get_src_ip() .. " - Tag: " .. KSR.sipdump.get_tag() .. "\n" .. KSR.sipdump.get_buf());
 end
+
+function ksr_choose_dispatcher_group()
+    -- Quick redirect for specific test domain
+    if string.match(KSR.pv.get("$fu"), "softphone.com") or string.match(KSR.pv.get("$fu"), "counterpath.com") or string.match(KSR.pv.get("$fu"), "bria%-x") or string.match(KSR.pv.get("$fu"), "mobilevoiplive.com") then
+        return 200;
+    -- Match any domains in the Stable Routing list to avoid the Canary instances
+    elseif ksr_check_array_for_domain_match(STABLE_ROUTING_DOMAINS) then
+        return 700;
+    else
+        return 100;
+    end
+end
+
+
