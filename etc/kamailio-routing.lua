@@ -794,7 +794,7 @@ function ksr_route_registrar()
             KSR.sl.send_reply(500, "Cluster registration failure");
             KSR.x.exit();
         end
-        local conid = KSR.pv.get("$conid") or -1;
+        local conid = KSR.kx.get_conid();
         if conid >= 0 then
             KSR.htable.sht_sets("tcpid", "c" .. conid, "call-id: " .. KSR.pv.gete("$ci") .. " user: " .. touri);
         end
@@ -821,7 +821,7 @@ function ksr_route_registrar()
     else
         -- else for WITH_BLADENOTIFY - just do the usual save of registration
         local touri = KSR.pv.getw("$tu");
-        local conid = KSR.pv.get("$conid") or -1;
+        local conid = KSR.kx.get_conid();
         if conid >= 0 then
             KSR.htable.sht_sets("tcpid", "c" .. conid, "call-id: " .. KSR.pv.gete("$ci") .. " user: " .. touri);
         end
@@ -1093,7 +1093,7 @@ end
 
 -- event callback function for tcp connection close
 function ksr_tcpops_event(evname)
-    local conid = KSR.pv.get("$conid") or -1;
+    local conid = KSR.kx.get_conid();
     if conid > 0 and KSR.htable.sht_is_null("tcpid", "c" .. conid) < 0 then
         KSR.info("tcp connection closed - id: " .. conid .. " " .. KSR.htable.sht_gete("tcpid", "c" .. conid) .. "\n");
     end

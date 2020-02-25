@@ -14,7 +14,7 @@ RUN cp /2.0/lib/*.so /usr/lib
 RUN mv /2.0/include/signalwire-client-c /usr/include/signalwire-client-c
 RUN mv /2.0/include/libks /usr/include/libks
 WORKDIR /usr/local/src/kamailio
-RUN make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket nathelper" cfg \
+RUN make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket nathelper kemix" cfg \
 && make -j`nproc --all` all && make install \
 && cd src/modules/tls && make install-tls-cert
 
