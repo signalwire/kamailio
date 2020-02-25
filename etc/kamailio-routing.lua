@@ -1093,7 +1093,7 @@ end
 
 -- event callback function for tcp connection close
 function ksr_tcpops_event(evname)
-    local conid = KSR.pv.gete("$conid") or -1;
+    local conid = KSR.pv.get("$conid") or -1;
     if conid > 0 and KSR.htable.sht_is_null("tcpid", "c" .. conid) < 0 then
         KSR.info("tcp connection closed - id: " .. conid .. " " .. KSR.htable.sht_gete("tcpid", "c" .. conid) .. "\n");
     end
