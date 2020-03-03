@@ -969,7 +969,7 @@ function ksr_dispatch()
     dsgrp = ksr_choose_dispatcher_group();
 
     -- weight-based (9) dispatching on group 'dsgrp' (default 100)
-    if KSR.dispatcher.ds_select_dst(dsgrp, 11) < 0 then
+    if KSR.dispatcher.ds_select_dst(dsgrp, 4) < 0 then
         KSR.sl.send_reply(404, "No destination");
         KSR.x.exit();
     end
