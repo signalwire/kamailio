@@ -10,7 +10,6 @@
 100 sip:67.205.180.5:35181;transport=tls 0 0 rweight=100
 
 # US East
-100 sip:178.128.235.231:35181;transport=tls 0 0 rweight=100
 100 sip:159.65.253.227:35181;transport=tls 0 0 rweight=100
 100 sip:149.28.103.238:35181;transport=tls 0 0 rweight=100
 
@@ -27,16 +26,6 @@
 100 sip:138.197.97.119:35181;transport=tls 0 0 rweight=100
 100 sip:138.197.110.201:35181;transport=tls 0 0 rweight=100
 100 sip:138.197.105.70:35181;transport=tls 0 0 rweight=100
-100 sip:159.89.121.181:35181;transport=tls 0 0 rweight=100
-100 sip:159.89.114.142:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.190.18:35181;transport=tls 0 0 rweight=100
-100 sip:138.197.165.71:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.189.11:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.176.163:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.189.64:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.184.255:35181;transport=tls 0 0 rweight=100
-100 sip:159.89.118.193:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.184.143:35181;transport=tls 0 0 rweight=100
 100 sip:138.68.19.197:35181;transport=tls 0 0 rweight=100
 100 sip:138.68.46.209:35181;transport=tls 0 0 rweight=100
 100 sip:138.68.47.13:35181;transport=tls 0 0 rweight=100
@@ -56,7 +45,6 @@
 700 sip:67.205.180.5:35181;transport=tls 0 0 rweight=100
 
 # US East
-700 sip:178.128.235.231:35181;transport=tls 0 0 rweight=100
 700 sip:159.65.253.227:35181;transport=tls 0 0 rweight=100
 700 sip:149.28.103.238:35181;transport=tls 0 0 rweight=100
 
@@ -73,16 +61,6 @@
 700 sip:138.197.97.119:35181;transport=tls 0 0 rweight=100
 700 sip:138.197.110.201:35181;transport=tls 0 0 rweight=100
 700 sip:138.197.105.70:35181;transport=tls 0 0 rweight=100
-700 sip:159.89.121.181:35181;transport=tls 0 0 rweight=100
-700 sip:159.89.114.142:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.190.18:35181;transport=tls 0 0 rweight=100
-700 sip:138.197.165.71:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.189.11:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.176.163:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.189.64:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.184.255:35181;transport=tls 0 0 rweight=100
-700 sip:159.89.118.193:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.184.143:35181;transport=tls 0 0 rweight=100
 700 sip:138.68.19.197:35181;transport=tls 0 0 rweight=100
 700 sip:138.68.46.209:35181;transport=tls 0 0 rweight=100
 700 sip:138.68.47.13:35181;transport=tls 0 0 rweight=100
