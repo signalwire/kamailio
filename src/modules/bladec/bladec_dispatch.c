@@ -658,7 +658,7 @@ int bladec_run_worker(int prank)
 int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 {
 	ks_status_t rcode;
-	swclt_cmd_t rcmd;
+	swclt_cmd_reply_t *reply;
 	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
 	int cmdattempt = 0;
@@ -706,26 +706,23 @@ cmdretry:
 				(evproto->len>0)?evproto->s:NULL,
 				evcmd->s,
 				&params,
-				&rcmd);
+				&reply);
 
 	LM_DBG("res code: %ld\n", (long)rcode);
 
-	swclt_cmd_result(rcmd, &result);
-
-	if (!result) {
+	if (swclt_cmd_reply_ok(reply) != KS_STATUS_SUCCESS) {
 		if(cmdattempt!=0) {
 			LM_WARN("no result to command (attempt: %d)\n", cmdattempt);
 			goto error;
 		} else {
 			LM_DBG("no result to command (attempt: %d)\n", cmdattempt);
 			cmdattempt++;
-
-			ks_handle_destroy(&rcmd);
+			swclt_cmd_reply_destroy(&reply);
 			goto cmdretry;
 		}
 	}
 
-	_bladec_globals.swres = ks_json_print(result);
+	_bladec_globals.swres = ks_json_print(reply->json);
 	if(_bladec_globals.swres) {
 		LM_DBG("json result:\n%s\n",
 				(_bladec_globals.swres)?_bladec_globals.swres:"<empty>");
@@ -734,14 +731,14 @@ cmdretry:
 	if (params) {
 		ks_json_delete(&params);
 	}
-	ks_handle_destroy(&rcmd);
+	swclt_cmd_reply_destroy(&reply);
 	return 1;
 
 error:
 	if (params) {
 		ks_json_delete(&params);
 	}
-	ks_handle_destroy(&rcmd);
+	swclt_cmd_reply_destroy(&reply);
 	return -1;
 }
 
