@@ -182,7 +182,12 @@ BAD_USER_AGENTS={
     "VaxSIPUserAgent",
     "siparmyknife",
     "Test Agent",
-    "xcv123"
+    "xcv123",
+    "pplsip",
+    "sipscan",
+    "custom",
+    "sipptk",
+    "VaxSip"
 };
 
 -- List of domains to skip for Pike Blocking - must be the beginning of the URL "To" domain
