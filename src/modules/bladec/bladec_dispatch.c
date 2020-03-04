@@ -269,7 +269,7 @@ int bladec_client_session_start(void)
 		LM_ERR("failed connecting to: %s\n", _bladec_globals.blade_bootstrap);
 		return -1;
 	}
-	swclt_sess_set_state_cb(_bladec_session,
+	swclt_sess_set_state_change_cb(_bladec_session,
 			bladec_session_state_handler, NULL);
 
 	LM_DBG("connecting to: %s\n", _bladec_globals.blade_bootstrap);
@@ -657,7 +657,6 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 {
 	ks_status_t rcode;
 	swclt_cmd_reply_t *reply;
-	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
 	int cmdattempt = 0;
 	int ret = 0;
