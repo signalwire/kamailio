@@ -467,9 +467,9 @@ function ksr_route_reqinit()
         end
     end
     if KSR.corex.has_user_agent() then
-        local uastr = KSR.pv.gete("$ua");
+        local uastr = string.lower(KSR.pv.gete("$ua"));
         for idx, val in pairs(BAD_USER_AGENTS) do
-            if string.match(uastr, val) then
+            if string.match(uastr, string.lower(val)) then
                 KSR.sl.sl_send_reply(200, "OK");
                 KSR.err("SPAM ALERT: pike blocking " .. KSR.pv.gete("$rm")
                         .. " from " .. KSR.pv.gete("$fu") .. " (IP:"
