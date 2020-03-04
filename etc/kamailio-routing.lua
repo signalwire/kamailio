@@ -182,7 +182,12 @@ BAD_USER_AGENTS={
     "VaxSIPUserAgent",
     "siparmyknife",
     "Test Agent",
-    "xcv123"
+    "xcv123",
+    "pplsip",
+    "sipscan",
+    "custom",
+    "sipptk",
+    "VaxSip"
 };
 
 -- List of domains to skip for Pike Blocking - must be the beginning of the URL "To" domain
@@ -462,9 +467,9 @@ function ksr_route_reqinit()
         end
     end
     if KSR.corex.has_user_agent() then
-        local uastr = KSR.pv.gete("$ua");
+        local uastr = string.lower(KSR.pv.gete("$ua"));
         for idx, val in pairs(BAD_USER_AGENTS) do
-            if string.match(uastr, val) then
+            if string.match(uastr, string.lower(val)) then
                 KSR.sl.sl_send_reply(200, "OK");
                 KSR.err("SPAM ALERT: pike blocking " .. KSR.pv.gete("$rm")
                         .. " from " .. KSR.pv.gete("$fu") .. " (IP:"
@@ -969,7 +974,7 @@ function ksr_dispatch()
     dsgrp = ksr_choose_dispatcher_group();
 
     -- weight-based (9) dispatching on group 'dsgrp' (default 100)
-    if KSR.dispatcher.ds_select_dst(dsgrp, 11) < 0 then
+    if KSR.dispatcher.ds_select_dst(dsgrp, 4) < 0 then
         KSR.sl.send_reply(404, "No destination");
         KSR.x.exit();
     end
