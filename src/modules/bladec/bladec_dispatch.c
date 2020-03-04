@@ -76,15 +76,14 @@ static bladec_evroutes_t _bladec_rts;
 
 extern str _bladec_config_path;
 
-swclt_sess_t _bladec_session = {0};
-swclt_hmon_t _bladec_session_monitor = {0};
+swclt_sess_t *_bladec_session = NULL;
 
 #define BLADE_BOOTSTRAP_SIZE 1024
 
 typedef struct baldec_globals {
 	swclt_config_t *swcfg;
 	ks_json_t *jcfg;
-	swclt_sess_t swses;
+	swclt_sess_t *swses;
 	char blade_bootstrap[BLADE_BOOTSTRAP_SIZE];
 	char *swres;
 	int istatus;
@@ -233,18 +232,17 @@ error:
 	return -1;
 }
 
-static void bladec_session_state_handler(swclt_sess_t sess,
-			swclt_hstate_change_t *sinfo, const char *cbdata)
+static void bladec_session_state_handler(swclt_sess_t *sess,
+			void *cbdata)
 {
-	SWCLT_HSTATE old_state = sinfo->old_state;
-	SWCLT_HSTATE new_state = sinfo->new_state;
+	LM_DBG("SignalWire Session State Change (%d): %s\n",
+			sess->state, swclt_sess_state_str(sess->state));
 
-	LM_DBG("SignalWire Session State Change (%d => %d): %s\n",
-			old_state, new_state, swclt_hstate_describe_change(sinfo));
-
-	if (new_state == SWCLT_HSTATE_ONLINE) {
+	if (sess->state == SWCLT_STATE_ONLINE) {
 		LM_DBG("Connected with NEW session\n");
-	} else if (new_state == SWCLT_HSTATE_OFFLINE) {
+	} else if (sess->state == SWCLT_STATE_RESTORED) {
+		LM_DBG("Connected with RESTORED session\n");
+	} else if (sess->state == SWCLT_STATE_OFFLINE) {
 		LM_DBG("Disconnected\n");
 	}
 }
@@ -271,7 +269,7 @@ int bladec_client_session_start(void)
 		LM_ERR("failed connecting to: %s\n", _bladec_globals.blade_bootstrap);
 		return -1;
 	}
-	swclt_hmon_register(&_bladec_session_monitor, _bladec_session,
+	swclt_sess_set_state_change_cb(_bladec_session,
 			bladec_session_state_handler, NULL);
 
 	LM_DBG("connecting to: %s\n", _bladec_globals.blade_bootstrap);
@@ -659,7 +657,6 @@ int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 {
 	ks_status_t rcode;
 	swclt_cmd_reply_t *reply;
-	ks_json_t *result = NULL;
 	ks_json_t *params = NULL;
 	int cmdattempt = 0;
 	int ret = 0;
