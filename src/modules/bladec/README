@@ -33,6 +33,7 @@ Daniel-Constantin Mierla
               3.6. cping_usleep (int)
               3.7. mode (int)
               3.8. reconnect_limit (int)
+              3.9. config_mode (int)
 
         4. Functions
 
@@ -59,11 +60,12 @@ Daniel-Constantin Mierla
    1.6. Set cping_usleep parameter
    1.7. Set mode parameter
    1.8. Set reconnect_limit parameter
-   1.9. bladec_relay usage
-   1.10. Network Message
-   1.11. bladec_async_relay usage
-   1.12. bladec_relay usage
-   1.13. bladec_node_id_ready usage
+   1.9. Set config_mode parameter
+   1.10. bladec_relay usage
+   1.11. Network Message
+   1.12. bladec_async_relay usage
+   1.13. bladec_relay usage
+   1.14. bladec_node_id_ready usage
 
 Chapter 1. Admin Guide
 
@@ -85,6 +87,7 @@ Chapter 1. Admin Guide
         3.6. cping_usleep (int)
         3.7. mode (int)
         3.8. reconnect_limit (int)
+        3.9. config_mode (int)
 
    4. Functions
 
@@ -131,6 +134,7 @@ Chapter 1. Admin Guide
    3.6. cping_usleep (int)
    3.7. mode (int)
    3.8. reconnect_limit (int)
+   3.9. config_mode (int)
 
 3.1. workers (int)
 
@@ -240,6 +244,20 @@ modparam("bladec", "mode", 1)
 modparam("bladec", "reconnect_limit", 100)
 ...
 
+3.9. config_mode (int)
+
+   If set to 0, Kamailio loads and uses the bladec config as it is in
+   plain text. If set to 1, then Kamailio is evaluating any
+   Kamailio-specific variables that are found in the bladec config file
+   before using it to connect to the blade network.
+
+   Default value is 0.
+
+   Example 1.9. Set config_mode parameter
+...
+modparam("bladec", "config_mode", 1)
+...
+
 4. Functions
 
    4.1. bladec_relay(reqnid, evproto, evcmd, evdata)
@@ -260,7 +278,7 @@ modparam("bladec", "reconnect_limit", 100)
 
    This function can be used from ANY_ROUTE.
 
-   Example 1.9. bladec_relay usage
+   Example 1.10. bladec_relay usage
 ...
 bladec_relay("here", "siprouting", "route",
         "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
@@ -268,7 +286,7 @@ bladec_relay("here", "siprouting", "route",
 
    The above exaple will send the following message over the network:
 
-   Example 1.10. Network Message
+   Example 1.11. Network Message
 ...
 {
  "event": "test",
@@ -290,7 +308,7 @@ bladec_relay("here", "siprouting", "route",
 
    This function can be used from REQUEST_ROUTE.
 
-   Example 1.11. bladec_async_relay usage
+   Example 1.12. bladec_async_relay usage
 ...
 bladec_async_relay("here", "siprouting", "route",
                 "{ \"event\": \"suspend\",\n \"data\":"
@@ -311,7 +329,7 @@ l)\" }\n}");
 
    This function can be used from ANY_ROUTE.
 
-   Example 1.12. bladec_relay usage
+   Example 1.13. bladec_relay usage
 ...
 bladec_channel_broadcast("freeswitch", "kamailio", "registration"
         "{ \"event\": \"test\",\n \"data\": { \"fU\": \"$fU\" }\n}");
@@ -323,7 +341,7 @@ bladec_channel_broadcast("freeswitch", "kamailio", "registration"
    when 'mode' parameter is set to 1. Otherwise a nevative value (false in
    Kamailio.cfg).
 
-   Example 1.13. bladec_node_id_ready usage
+   Example 1.14. bladec_node_id_ready usage
 ...
 if(!bladec_node_id_ready()) {
         sl-send-reply("500", "Instance not ready");
