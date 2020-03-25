@@ -656,7 +656,7 @@ int bladec_run_worker(int prank)
 int bladec_relay(str *reqnodeid, str *evproto, str *evcmd, str *evdata)
 {
 	ks_status_t rcode;
-	swclt_cmd_reply_t *reply;
+	swclt_cmd_reply_t *reply = NULL;
 	ks_json_t *params = NULL;
 	int cmdattempt = 0;
 	int ret = 0;
