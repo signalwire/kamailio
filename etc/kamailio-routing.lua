@@ -474,7 +474,7 @@ function ksr_route_reqinit()
                 KSR.err("SPAM ALERT: pike blocking " .. KSR.pv.gete("$rm")
                         .. " from " .. KSR.pv.gete("$fu") .. " (IP:"
                         .. KSR.pv.gete("$si") .. ":" .. KSR.pv.gete("$sp") .. ") for having "
-                        .. "a bad user agent\n");
+                        .. "a bad user agent (".. val ..")\n");
                 KSR.pv.seti("$sht(ipban=>$si)", 1);
                 KSR.x.exit();
             end
