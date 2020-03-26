@@ -234,6 +234,28 @@ modparam("bladec", "reconnect_limit", 100)
 </programlisting>
 		</example>
 	</section>
+	<section id="bladec.p.config_mode">
+		<title><varname>config_mode</varname> (int)</title>
+		<para>
+		If set to 0, &kamailio; loads and uses the bladec config as it is in
+		plain text. If set to 1, then &kamailio; is evaluating any &kamailio;-specific
+		variables that are found in the bladec config file before using it to
+		connect to the blade network.
+		</para>
+		<para>
+		<emphasis>
+			Default value is 0.
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>config_mode</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "config_mode", 1)
+...
+</programlisting>
+		</example>
+	</section>
 	</section>
 
 	<section>

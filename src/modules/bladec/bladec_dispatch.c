@@ -50,6 +50,7 @@ extern int _bladec_cwait_interval;
 extern int _bladec_cwait_usleep;
 extern int _bladec_cping_usleep;
 extern int _bladec_reconnect_limit;
+extern int _bladec_config_mode;
 
 typedef struct _bladec_env {
 	int eset;
@@ -140,6 +141,10 @@ ks_json_t *bladec_load_json_config_file(char *cfgpath)
 	char *buf = NULL;
 	ks_size_t eob = 0;
 	FILE *fp = NULL;
+	str s = STR_NULL;
+	sip_msg_t *fmsg = NULL;
+	pv_elem_t *pvm = NULL;
+	int blen = 0;
 
 	buf = ks_pool_alloc(NULL, lob);
 	if(buf==NULL) {
@@ -165,6 +170,34 @@ ks_json_t *bladec_load_json_config_file(char *cfgpath)
 	}
 	fclose(fp);
 	buf[eob] = '\0';
+
+	if(_bladec_config_mode==1) {
+		/* evaluate text for config variables */
+		s.s = buf;
+		s.len = eob;
+		if(pv_parse_format(&s, &pvm)<0) {
+			LM_ERR("failed to parse formatted text [%s]\n", s.s);
+			ks_pool_free(&buf);
+			return NULL;
+		}
+		fmsg = faked_msg_next();
+		blen = s.len + 2048;
+		buf = ks_pool_alloc(NULL, blen);
+		if(buf==NULL) {
+			LM_ERR("failure to allocate ks pool memory\n");
+			ks_pool_free(&s.s);
+			return NULL;
+		}
+		if(pv_printf(fmsg, pvm, buf, &blen) < 0) {
+			LM_ERR("failed to evaluate formatted text [%s]\n", s.s);
+			ks_pool_free(&s.s);
+			ks_pool_free(&buf);
+			return NULL;
+		}
+		buf[blen] = '\0';
+		ks_pool_free(&s.s);
+		LM_DBG("evaluated text [[%s]]\n", buf);
+	}
 
 	jcfg = ks_json_parse(buf);
 	ks_pool_free(&buf);
