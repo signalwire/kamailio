@@ -10,26 +10,26 @@
 100 sip:67.205.180.5:35181;transport=tls 0 0 rweight=100
 
 # US Full Country
-100 sip:45.55.33.154:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.37.33:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.38.117:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.34.148:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.36.169:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.32.150:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.35.152:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.34.184:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.34.137:35181;transport=tls 0 0 rweight=100
-100 sip:45.55.39.21:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.169.120:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.167.47:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.165.132:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.173.115:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.161.176:35181;transport=tls 0 0 rweight=100
-100 sip:138.68.227.199:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.173.42:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.174.241:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.165.186:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.169.103:35181;transport=tls 0 0 rweight=100
+100 sip:104.248.120.106:35181;transport=tls 0 0 rweight=100
+100 sip:104.248.112.94:35181;transport=tls 0 0 rweight=100
+100 sip:142.93.7.200:35181;transport=tls 0 0 rweight=100
+100 sip:104.248.120.241:35181;transport=tls 0 0 rweight=100
+100 sip:104.248.127.154:35181;transport=tls 0 0 rweight=100
+100 sip:104.248.116.199:35181;transport=tls 0 0 rweight=100
+100 sip:104.248.116.35:35181;transport=tls 0 0 rweight=100
+100 sip:142.93.0.98:35181;transport=tls 0 0 rweight=100
+100 sip:104.248.124.22:35181;transport=tls 0 0 rweight=100
+100 sip:104.248.120.79:35181;transport=tls 0 0 rweight=100
+100 sip:165.227.2.145:35181;transport=tls 0 0 rweight=100
+100 sip:167.99.106.124:35181;transport=tls 0 0 rweight=100
+100 sip:167.99.168.88:35181;transport=tls 0 0 rweight=100
+100 sip:167.99.160.223:35181;transport=tls 0 0 rweight=100
+100 sip:167.99.164.57:35181;transport=tls 0 0 rweight=100
+100 sip:167.99.175.14:35181;transport=tls 0 0 rweight=100
+100 sip:167.99.101.30:35181;transport=tls 0 0 rweight=100
+100 sip:167.99.160.194:35181;transport=tls 0 0 rweight=100
+100 sip:165.227.7.211:35181;transport=tls 0 0 rweight=100
+100 sip:159.89.143.139:35181;transport=tls 0 0 rweight=100
 
 
 #### Rollout Routing
@@ -39,26 +39,27 @@
 700 sip:67.205.180.5:35181;transport=tls 0 0 rweight=100
 
 # US East
-700 sip:45.55.33.154:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.37.33:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.38.117:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.34.148:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.36.169:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.32.150:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.35.152:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.34.184:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.34.137:35181;transport=tls 0 0 rweight=100
-700 sip:45.55.39.21:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.169.120:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.167.47:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.165.132:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.173.115:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.161.176:35181;transport=tls 0 0 rweight=100
-700 sip:138.68.227.199:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.173.42:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.174.241:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.165.186:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.169.103:35181;transport=tls 0 0 rweight=100
+700 sip:104.248.120.106:35181;transport=tls 0 0 rweight=100
+700 sip:104.248.112.94:35181;transport=tls 0 0 rweight=100
+700 sip:142.93.7.200:35181;transport=tls 0 0 rweight=100
+700 sip:104.248.120.241:35181;transport=tls 0 0 rweight=100
+700 sip:104.248.127.154:35181;transport=tls 0 0 rweight=100
+700 sip:104.248.116.199:35181;transport=tls 0 0 rweight=100
+700 sip:104.248.116.35:35181;transport=tls 0 0 rweight=100
+700 sip:142.93.0.98:35181;transport=tls 0 0 rweight=100
+700 sip:104.248.124.22:35181;transport=tls 0 0 rweight=100
+700 sip:104.248.120.79:35181;transport=tls 0 0 rweight=100
+700 sip:165.227.2.145:35181;transport=tls 0 0 rweight=100
+700 sip:167.99.106.124:35181;transport=tls 0 0 rweight=100
+700 sip:167.99.168.88:35181;transport=tls 0 0 rweight=100
+700 sip:167.99.160.223:35181;transport=tls 0 0 rweight=100
+700 sip:167.99.164.57:35181;transport=tls 0 0 rweight=100
+700 sip:167.99.175.14:35181;transport=tls 0 0 rweight=100
+700 sip:167.99.101.30:35181;transport=tls 0 0 rweight=100
+700 sip:167.99.160.194:35181;transport=tls 0 0 rweight=100
+700 sip:165.227.7.211:35181;transport=tls 0 0 rweight=100
+700 sip:159.89.143.139:35181;transport=tls 0 0 rweight=100
+
 
 
 # Counterpath temporary context
