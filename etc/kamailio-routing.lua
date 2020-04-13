@@ -260,7 +260,7 @@ function ksr_request_route()
     KSR.set_reply_no_connect();
 
 	if KSR.bladec.node_id_ready() < 0 then
-        KSR.sl.send_reply(500, "Instance initializing");
+        KSR.sl.send_reply("500", "Retry Request");
         KSR.x.exit();
     end
 
