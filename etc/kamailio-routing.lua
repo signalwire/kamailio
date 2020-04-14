@@ -261,6 +261,7 @@ function ksr_request_route()
 
 	if KSR.bladec.node_id_ready() < 0 then
         KSR.sl.send_reply(500, "Retry Request");
+        KSR.hdr.append("Retry-After: 5\r\n");
         KSR.x.exit();
     end
 
