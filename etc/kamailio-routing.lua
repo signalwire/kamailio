@@ -388,7 +388,7 @@ function ksr_route_relay()
         KSR.tm.t_set_disable_internal_reply(1);
         if KSR.tm.t_relay()<0 then
             if KSR.isflagset(FLT_BRANCHDROP) then
-                KSR.tm.t_reply("404", "Target not found");
+                KSR.tm.t_reply(404, "Target not found");
             else
                 KSR.sl.sl_reply_error();
             end
@@ -808,9 +808,9 @@ function ksr_route_location()
     if rc<0 then
         KSR.tm.t_newtran();
         if rc==-2 then
-            KSR.sl.send_reply("405", "Method Not Allowed");
+            KSR.sl.send_reply(405, "Method Not Allowed");
         else
-            KSR.sl.send_reply("404", "Not Found");
+            KSR.sl.send_reply(404, "Not Found");
         end
         KSR.x.exit();
     end
@@ -1021,7 +1021,7 @@ function ksr_xhttp_request(evname)
 		end
     end
     KSR.info("404 - Rejecting websocket with invalid HTTP Method:" .. KSR.pv.getw("$rm") .. ", Upgrade: " .. hupgrade .. ", Connection: " .. hconnection .."\n");
-	KSR.xhttp.xhttp_reply("404", "Not found", "", "");
+	KSR.xhttp.xhttp_reply(404, "Not found", "", "");
 end
 
 function ksr_unregister_event(evname)
