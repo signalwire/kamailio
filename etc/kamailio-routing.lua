@@ -259,9 +259,9 @@ function ksr_request_route()
     -- do not connect on tcp/tls to send reply
     KSR.set_reply_no_connect();
 
-	if KSR.bladec.node_id_ready() < 0 then
-        KSR.sl.send_reply(500, "Retry Request");
+    if KSR.bladec.node_id_ready() < 0 then
         KSR.hdr.append("Retry-After: 5\r\n");
+        KSR.sl.send_reply(500, "Retry Request");
         KSR.x.exit();
     end
 
