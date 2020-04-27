@@ -7,4 +7,4 @@
 100 sip:45.77.183.80:35181;transport=tls 0 0 rweight=100
 
 # Counterpath temporary context
-200 sip:104.248.158.21:35185;transport=tls 0 0 rweight=100
+200 sip:66.42.65.222:35185;transport=tls;weight=10
