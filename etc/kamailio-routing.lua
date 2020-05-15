@@ -927,6 +927,7 @@ end
 -- Dispatch requests
 function ksr_dispatch()
     local dsgrp = 100;
+    KSR.tm.t_set_fr(120000, 2000);
     if WITH_REDISROUTE then
         -- get routing info from redis
         KSR.ndb_redis.redis_free("r1");
