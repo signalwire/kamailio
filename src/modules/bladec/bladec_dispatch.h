@@ -62,5 +62,6 @@ int bladec_channel_broadcast(str *evproto, str *evchannel, str *evname,
 
 int bladec_sdata_global_init(void);
 int bladec_node_id_ready(void);
+int bladec_run_event_shutdown(void);
 
 #endif
