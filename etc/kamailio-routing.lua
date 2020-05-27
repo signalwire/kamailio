@@ -1103,3 +1103,14 @@ function ksr_choose_dispatcher_group()
 end
 
 
+-- event callback function on shutdown
+function ksr_bladec_event_shutdown(evname)
+    local evcmd = "purge";
+    local inodeid = KSR.pv.gete("$bladec(node_id)");
+    local evdata = "{ \"node_id\": \"" .. inodeid .. "\" }";
+
+    KSR.info("Sending direct blade.execute for shutdown: " .. evcmd .. " - " .. evdata .. "\n");
+    if KSR.bladec.relay("", "registrar", evcmd, evdata) < 0 then
+        KSR.warn("Failed sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
+    end
+end
