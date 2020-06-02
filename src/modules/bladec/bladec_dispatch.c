@@ -46,6 +46,7 @@
 
 extern int _bladec_mode_param;
 extern str _bladec_event_callback;
+extern str _bladec_kevcb_shutdown;
 extern int _bladec_cwait_interval;
 extern int _bladec_cwait_usleep;
 extern int _bladec_cping_usleep;
@@ -68,6 +69,8 @@ typedef struct _bladec_evroutes {
 	str con_closed_name;
 	int msg_received;
 	str msg_received_name;
+	int shutdown;
+	str shutdown_name;
 } bladec_evroutes_t;
 
 static bladec_evroutes_t _bladec_rts;
@@ -350,12 +353,18 @@ void bladec_init_environment(void)
 	_bladec_rts.msg_received = route_lookup(&event_rt, "bladec:message-received");
 	if (_bladec_rts.msg_received < 0 || event_rt.rlist[_bladec_rts.msg_received] == NULL)
 		_bladec_rts.msg_received = -1;
+
+	_bladec_rts.shutdown_name.s = "bladec:shutdown";
+	_bladec_rts.shutdown_name.len = strlen(_bladec_rts.shutdown_name.s);
+	_bladec_rts.shutdown = route_lookup(&event_rt, "bladec:shutdown");
+	if (_bladec_rts.shutdown < 0 || event_rt.rlist[_bladec_rts.shutdown] == NULL)
+		_bladec_rts.shutdown = -1;
 }
 
 /**
  *
  */
-int bladec_run_cfg_route(bladec_env_t *evenv, int rt, str *rtname)
+int bladec_run_cfg_route(bladec_env_t *evenv, int rt, str *kevcb, str *rtname)
 {
 	int backup_rt;
 	struct run_act_ctx ctx;
@@ -368,8 +377,10 @@ int bladec_run_cfg_route(bladec_env_t *evenv, int rt, str *rtname)
 		return -1;
 	}
 
-	if((rt<0) && (_bladec_event_callback.s==NULL || _bladec_event_callback.len<=0))
+	if((rt<0) && (kevcb==NULL || kevcb->s==NULL || kevcb->len<=0)) {
+		LM_DBG("no event route or callback function\n");
 		return 0;
+	}
 
 	fmsg = faked_msg_next();
 	memcpy(&tmsg, fmsg, sizeof(sip_msg_t));
@@ -383,15 +394,28 @@ int bladec_run_cfg_route(bladec_env_t *evenv, int rt, str *rtname)
 	} else {
 		keng = sr_kemi_eng_get();
 		if(keng!=NULL) {
-			if(keng->froute(fmsg, EVENT_ROUTE,
-						&_bladec_event_callback, rtname)<0) {
-				LM_ERR("error running event route kemi callback\n");
+			if(keng->froute(fmsg, EVENT_ROUTE, kevcb, rtname)<0) {
+				LM_ERR("error running event route kemi callback [%.*s]\n",
+						kevcb->len, kevcb->s);
 			}
 		}
 	}
 	set_route_type(backup_rt);
 	bladec_set_msg_env(fmsg, NULL);
 	return 0;
+}
+
+/**
+ *
+ */
+int bladec_run_event_shutdown(void)
+{
+	if(_bladec_kevcb_shutdown.len>0) {
+		return bladec_run_cfg_route(NULL, -1, &_bladec_kevcb_shutdown,
+				&_bladec_rts.shutdown_name);
+	} else {
+		return bladec_run_cfg_route(NULL, _bladec_rts.shutdown, NULL, NULL);
+	}
 }
 
 /**
@@ -851,7 +875,7 @@ error:
  */
 int pv_get_bladec(sip_msg_t *msg, pv_param_t *param, pv_value_t *res)
 {
-	bladec_env_t *evenv;
+	bladec_env_t *evenv = NULL;
 
 	if(param==NULL || res==NULL)
 		return -1;

@@ -111,6 +111,41 @@ end
 </programlisting>
 		</example>
 	</section>
+
+	<section id="bladec.p.kevcb_shutdown">
+		<title><varname>kevcb_shutdown</varname> (str)</title>
+		<para>
+			The name of the function in the kemi configuration file (embedded
+			scripting language such as Lua, Python, ...) to be executed when
+			Kamailio is shut down.
+		</para>
+		<para>
+			The function receives a string parameter with the name of the event,
+			the value is: 'bladec:shutdown'.
+		</para>
+		<para>
+		<emphasis>
+			Default value is 'empty' (no function is executed for shutdown event).
+		</emphasis>
+		</para>
+		<example>
+		<title>Set <varname>kevcb_shutdown</varname> parameter</title>
+		<programlisting format="linespecific">
+...
+modparam("bladec", "kevcb_shutdown", "ksr_bladec_event_shutdown")
+...
+-- event callback function implemented in Lua
+function ksr_bladec_event_shutdown(evname)
+	KSR.info("===== bladec module triggered event: " .. evname .. "\n");
+	return 1;
+end
+...
+</programlisting>
+		</example>
+	</section>
+
+
+
 	<section id="bladec.p.config">
 		<title><varname>config</varname> (str)</title>
 		<para>

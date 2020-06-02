@@ -47,6 +47,7 @@ static int   _bladec_workers = 1;
 int _bladec_mode_param = 0;
 
 str _bladec_event_callback = STR_NULL;
+str _bladec_kevcb_shutdown = STR_NULL;
 int _bladec_dispatcher_pid = -1;
 str _bladec_config_path = STR_NULL;
 int _bladec_cwait_interval = 0;
@@ -84,6 +85,7 @@ static cmd_export_t cmds[]={
 static param_export_t params[]={
 	{"workers",           PARAM_INT,   &_bladec_workers},
 	{"event_callback",    PARAM_STR,   &_bladec_event_callback},
+	{"kevcb_shutdown",    PARAM_STR,   &_bladec_kevcb_shutdown},
 	{"config",            PARAM_STR,   &_bladec_config_path},
 	{"cwait_interval",    PARAM_INT,   &_bladec_cwait_interval},
 	{"cwait_usleep",      PARAM_INT,   &_bladec_cwait_usleep},
@@ -183,15 +185,16 @@ static int child_init(int rank)
 		return 0;
 	}
 
-	if (rank!=PROC_MAIN) {
-		if(_bladec_dispatcher_pid!=getpid()) {
-			bladec_close_notify_sockets_parent();
-		}
+	if(_bladec_dispatcher_pid!=getpid()) {
+		bladec_close_notify_sockets_parent();
+	}
 
-		if(bladec_client_process_init()<0) {
-			LM_ERR("failed to init the blade connector client\n");
-			return -1;
-		}
+	if(bladec_client_process_init()<0) {
+		LM_ERR("failed to init the blade connector client\n");
+		return -1;
+	}
+
+	if (rank!=PROC_MAIN) {
 		return 0;
 	}
 
@@ -238,11 +241,13 @@ static int child_init(int rank)
 
 	return 0;
 }
+
 /**
  * destroy module function
  */
 static void mod_destroy(void)
 {
+	bladec_run_event_shutdown();
 }
 
 /**
