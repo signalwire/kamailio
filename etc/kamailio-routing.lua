@@ -45,6 +45,18 @@ DOMAINAUTH["sip.bria-x.org"] = 1
 DOMAINAUTH["sip.bria-x.net"] = 1
 DOMAINAUTH["sip.mobilevoiplive.com"] = 1
 
+-- list of carrier IPs that require us to send 600/603 to reject calls
+REJECT_600_IPS={
+    -- Bandwidth
+    "67.231.1.188/32",
+    "67.231.4.138/32",
+    "67.231.4.70/32",
+    "67.231.3.4/32",
+    -- Bandwidth TLS Trunk Group
+    "67.231.4.92/32",
+    "67.231.3.208/32"
+}
+
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
@@ -229,6 +241,17 @@ end
 function ksr_is_src_trusted()
     local srcaddr = KSR.pv.gete("$si");
     for idx, val in pairs(ALLOWADDR) do
+        if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
+            return true;
+        end
+    end
+    return false;
+end
+
+-- match source ip against REJECT_600_IPS list
+function ksr_is_src_reject_600_carrier()
+    local srcaddr = KSR.pv.gete("$si");
+    for idx, val in pairs(REJECT_600_IPS) do
         if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
             return true;
         end
@@ -982,13 +1005,17 @@ function ksr_failure_dispatch()
     if KSR.tm.t_check_status("403|404|48[0-9]|502|6[0-9][0-9]") > 0 then
         
         -- Carrier-Specific Failures
-        
-        --  ======== Flowroute ========
-        -- Flowroute upstreams don't respect 603, and will constantly retry on many other codes
-        -- They require a 180/183 (use 183 w/o SDP to prevent ringing) 
-        -- Generate a 600, which is universally most likely to reject the call
-        -- Note: Flowroute should fix this on their side. We'll handle it for now.
-        if string.match(KSR.pv.gete("$ct"), "flowroute.com") or string.match(KSR.pv.gete("$fd"), "fl.gg") then
+	if ksr_is_src_reject_600_carrier() then
+	    -- ========= Bandwidth and friends =========
+            -- Generate a 600, which is universally most likely to reject the call
+            KSR.sl.send_reply(600, "Busy Everywhere");
+            KSR.x.exit();
+	elseif string.match(KSR.pv.gete("$ct"), "flowroute.com") or string.match(KSR.pv.gete("$fd"), "fl.gg") then
+            --  ======== Flowroute ========
+            -- Flowroute upstreams don't respect 603, and will constantly retry on many other codes
+            -- They require a 180/183 (use 183 w/o SDP to prevent ringing)
+            -- Generate a 600, which is universally most likely to reject the call
+            -- Note: Flowroute should fix this on their side. We'll handle it for now.
             KSR.sl.send_reply(183, "Session Progress");
             KSR.sl.send_reply(600, "Busy Everywhere");
             KSR.x.exit();
