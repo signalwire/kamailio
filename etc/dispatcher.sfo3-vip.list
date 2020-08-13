@@ -1,0 +1,7 @@
+# SFO3 FreeSWITCH Addresses
+100 sip:164.90.157.83:35181;transport=tls 0 0 rweight=100
+100 sip:161.35.238.73:35181;transport=tls 0 0 rweight=100
+100 sip:161.35.227.65:35181;transport=tls 0 0 rweight=100
+100 sip:164.90.157.22:35181;transport=tls 0 0 rweight=100
+100 sip:164.90.149.101:35181;transport=tls 0 0 rweight=100
+100 sip:164.90.149.134:35181;transport=tls 0 0 rweight=100
