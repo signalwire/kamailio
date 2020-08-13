@@ -3,7 +3,7 @@
 # AWS Bahrain
 
 100 sip:15.185.118.52:35181;transport=tls 0 0 rweight=100
-100 sip:15.185.116.37:35181;transport=tls 0 0 rweight=100
+#100 sip:15.185.116.37:35181;transport=tls 0 0 rweight=100
 #100 sip:157.175.95.209:35181;transport=tls 0 0 rweight=100
 #100 sip:15.185.64.237:35181;transport=tls 0 0 rweight=100
 
