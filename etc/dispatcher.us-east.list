@@ -79,7 +79,6 @@
 
 # Vultr US East
 700 sip:104.207.135.82:35181;transport=tls 0 0 rweight=100
-700 sip:108.61.158.14:35181;transport=tls 0 0 rweight=100
 700 sip:45.77.203.19:35181;transport=tls 0 0 rweight=100
 700 sip:45.63.10.210:35181;transport=tls 0 0 rweight=100
 
