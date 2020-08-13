@@ -1096,7 +1096,7 @@ function ksr_unregister_event(evname)
     local evcmd = "";
     local evdata = "";
     local aor = KSR.pv.getw("$ulc(exp=>aor)");
-    local g_crt_projectid = KSR.pv.gete("$sht(project=>" .. aor .. ")");
+    local g_crt_projectid = KSR.htable.sht_gete("project", aor);
     local inodeid = KSR.pv.gete("$bladec(node_id)");
 
     if KSR.registrar.registered_uri("location", "sip:" .. aor) > 0 then
