@@ -222,7 +222,6 @@ SKIP_ANTIFLOOD_IPS = {
 -- List of domains to use Stable Routing
 -- Note: to specify exact subdomain, you must Lua-escape the initial hyphen (e.g. [-])
 STABLE_ROUTING_DOMAINS = {
-    "servicetitanproduction[-]"
 };
 
 -- list of ip addresses that have the project id mapped statically
