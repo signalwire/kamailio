@@ -72,7 +72,14 @@ ALLOWADDR={
     "190.102.98.242/32",
     -- Bandwidth TLS Trunk Group
     "67.231.4.92/32",
-    "67.231.3.208/32"
+    "67.231.3.208/32",
+    -- Inteliquent
+    "206.147.80.56/32",
+    "206.147.88.72/32",
+    "206.147.72.72/32",
+    "206.147.92.56/32",
+    "206.147.88.73/32",
+    "206.147.72.86/32"
 };
 
 -- list of freeswitch addresses to allow traffic from without user auth
