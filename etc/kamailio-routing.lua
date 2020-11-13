@@ -673,22 +673,29 @@ function ksr_route_auth()
             end
         end
         KSR.pv.sets("$var(hres)", "");
-        KSR.http_client.query_post_hdrs(AUTHURL, hbody,
-                "Content-Type: application/json", "$var(hres)");
+        local hrcode = 0;
+        local htries = 3; -- number of retries for http query
+        local hres = "";
+        repeat
+            htries = htries - 1;
+            hrcode = KSR.http_client.query_post_hdrs(AUTHURL, hbody,
+                        "Content-Type: application/json", "$var(hres)");
+            if hrcode ~= 500 then
+                hres = KSR.pv.gete("$var(hres)");
+                if string.len(hres) < 10 then
+                    -- no proper result -- try again
+                    hrcode = 500;
+                end
+            end
+        until (hrcode ~= 500 or htries > 0);
 
-        local hres = KSR.pv.gete("$var(hres)");
+        hres = KSR.pv.gete("$var(hres)");
         KSR.info("Authorization HTTP query returned: " .. hres .. "\n");
         if string.len(hres) < 10 then
-            -- no proper result -- try one more time the http api query
-            KSR.pv.sets("$var(hres)", "");
-            KSR.http_client.query_post_hdrs(AUTHURL, hbody,
-                    "Content-Type: application/json", "$var(hres)");
-            hres = KSR.pv.gete("$var(hres)");
-            if string.len(hres) < 10 then
-                KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.gete("$fU") .. "@" .. uafd .. " with project: " .. xsp .. "\n");
-                KSR.auth.auth_challenge(uafd, 0);
-                KSR.x.exit();
-            end 
+            -- no proper result -- challenge again for authentication
+            KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.gete("$fU") .. "@" .. uafd .. " with project: " .. xsp .. "\n");
+            KSR.auth.auth_challenge(uafd, 0);
+            KSR.x.exit();
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];
