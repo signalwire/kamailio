@@ -1090,7 +1090,7 @@ function ksr_xhttp_request(evname)
 
 	if KSR.is_method_in("G") and string.match(hupgrade, "websocket")
 			and string.match(hconnection, "Upgrade") then
-		local hhost = KSR.hdr.gete("Host));
+        local hhost = KSR.hdr.gete("Host");
 		if string.len(hhost) <= 0 or not KSR.is_myself("sip:" .. hhost) then
 			KSR.info("Bad host: " .. hhost .. "\n");
 			KSR.xhttp.xhttp_reply(403, "Forbidden", "", "");
