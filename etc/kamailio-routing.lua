@@ -261,7 +261,7 @@ end
 
 -- match source ip against ALLOWADDR list
 function ksr_is_src_trusted()
-    local srcaddr = KSR.pv.gete("$si");
+    local srcaddr = KSR.kx.get_srcip();
     for idx, val in pairs(ALLOWADDR) do
         if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
             return true;
@@ -272,7 +272,7 @@ end
 
 -- match source ip against REJECT_600_IPS list
 function ksr_is_src_reject_600_carrier()
-    local srcaddr = KSR.pv.gete("$si");
+    local srcaddr = KSR.kx.get_srcip();
     for idx, val in pairs(REJECT_600_IPS) do
         if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
             return true;
@@ -283,7 +283,7 @@ end
 
 -- match source ip against FSADDR list
 function ksr_is_src_fsaddr()
-    local srcaddr = KSR.pv.gete("$si");
+    local srcaddr = KSR.kx.get_srcip();
     for idx, val in pairs(FSADDR) do
         if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
             return true;
@@ -293,9 +293,9 @@ function ksr_is_src_fsaddr()
 end
 
 function ksr_check_array_for_domain_match(domain_array)
-    local turi_domain = KSR.pv.gete("$td");
-    local furi_domain = KSR.pv.gete("$fd");
-    local ruri_domain = KSR.pv.gete("$rd");
+    local turi_domain = KSR.kx.gete_thost();
+    local furi_domain = KSR.kx.gete_fhost();
+    local ruri_domain = KSR.kx.gete_rhost();
     for idx, val in pairs(domain_array) do
         if string.find(turi_domain,"^" .. val) or string.find(furi_domain,"^" .. val) or string.find(ruri_domain,"^" .. val) then
             return true 
@@ -313,7 +313,7 @@ function ksr_skip_antiflood_for_transaction()
 end
 
 function ksr_is_skip_antiflood_ip()
-    local srcaddr = KSR.pv.gete("$si");
+    local srcaddr = KSR.kx.get_srcip();
     for idx, val in pairs(SKIP_ANTIFLOOD_IPS) do
         if KSR.ipops.ip_is_in_subnet(srcaddr, val) > 0 then
             return true;
@@ -422,7 +422,7 @@ function ksr_request_route()
         ksr_route_relay();
     else
         KSR.hdr.remove("P-SRC-IP");
-        KSR.hdr.append("P-SRC-IP: " .. KSR.pv.gete("$si") .. "\r\n");
+        KSR.hdr.append("P-SRC-IP: " .. KSR.kx.get_srcip() .. "\r\n");
         ksr_dispatch();
     end
 
@@ -477,34 +477,35 @@ end
 -- Per SIP request initial checks
 function ksr_route_reqinit()
 
+    local vsrcip =  KSR.kx.get_srcip();
     if WITH_ANTIFLOOD and not ksr_skip_antiflood_for_transaction() then
         if not KSR.is_myself_suri() then
-            if not KSR.pv.is_null("$sht(ipban=>$si)") then
+            if KSR.htable.sht_is_null("ipban", vsrcip) < 0 then
                 -- ip is already blocked
-                KSR.info("request from blocked IP - " .. KSR.pv.gete("$rm")
-                        .. " from " .. KSR.pv.gete("$fu") .. " and to " .. KSR.pv.gete("$tu") .. " (IP:"
-                        .. KSR.pv.gete("$si") .. ":" .. KSR.pv.gete("$sp") .. ")\n");
+                KSR.info("request from blocked IP - " .. KSR.kx.get_method()
+                        .. " from " .. KSR.kx.get_furi() .. " and to " .. KSR.kx.get_turi() .. " (IP:"
+                        .. vsrcip .. ":" .. KSR.kx.get_srcport() .. ")\n");
                 KSR.x.exit();
             end
             if KSR.pike.pike_check_req()<0 then
-                KSR.err("ALERT: pike blocking " .. KSR.pv.gete("$rm")
-                        .. " from " .. KSR.pv.gete("$fu") .. " and to " .. KSR.pv.gete("$tu") .. " (IP:"
-                        .. KSR.pv.gete("$si") .. ":" .. KSR.pv.gete("$sp") .. ")\n");
-                KSR.pv.seti("$sht(ipban=>$si)", 1);
+                KSR.err("ALERT: pike blocking " .. KSR.kx.get_method()
+                        .. " from " .. KSR.kx.get_furi() .. " and to " .. KSR.kx.get_turi() .. " (IP:"
+                        .. vsrcip .. ":" .. KSR.kx.get_srcport() .. ")\n");
+                KSR.htable.sht_seti("ipban", vsrcip, 1);
                 KSR.x.exit();
             end
         end
     end
     if KSR.corex.has_user_agent() then
-        local uastr = string.lower(KSR.pv.gete("$ua"));
+        local uastr = string.lower(KSR.kx.gete_ua());
         for idx, val in pairs(BAD_USER_AGENTS) do
             if string.match(uastr, string.lower(val)) then
                 KSR.sl.sl_send_reply(200, "OK");
-                KSR.err("SPAM ALERT: pike blocking " .. KSR.pv.gete("$rm")
-                        .. " from " .. KSR.pv.gete("$fu") .. " (IP:"
-                        .. KSR.pv.gete("$si") .. ":" .. KSR.pv.gete("$sp") .. ") for having "
+                KSR.err("SPAM ALERT: pike blocking " .. KSR.kx.get_method()
+                        .. " from " .. KSR.kx.get_furi() .. " (IP:"
+                        .. vsrcip .. ":" .. KSR.kx.get_srcport() .. ") for having "
                         .. "a bad user agent (".. val ..")\n");
-                KSR.pv.seti("$sht(ipban=>$si)", 1);
+                KSR.htable.sht_seti("ipban", vsrcip, 1);
                 KSR.x.exit();
             end
         end
@@ -522,7 +523,7 @@ function ksr_route_reqinit()
 
     if KSR.sanity.sanity_check(1511, 7) < 0 then
         KSR.err("Malformed SIP message from "
-                .. KSR.pv.gete("$si") .. ":" .. KSR.pv.gete("$sp") .."\n");
+                .. vsrcip .. ":" .. KSR.kx.get_srcport() .."\n");
         KSR.x.exit();
     end
 
@@ -587,28 +588,28 @@ function ksr_route_auth()
     -- from nodes with auth xkeys support
     if KSR.hdr.is_present("X-SignalWire-OutboundAuthToken") > 0
             and KSR.hdr.is_present("X-SignalWire-OutboundAuthTime") > 0 then
-        local timehdr = KSR.pv.gete("$hdr(X-SignalWire-OutboundAuthTime)");
+        local timehdr = KSR.hdr.gete("X-SignalWire-OutboundAuthTime");
         local tlimit = tonumber(timehdr);
         if (tlimit ~= NILL) and (tlimit + AUTH_XKEYS_TIMEFRAME >= os.time()) then
             if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256",
-                    timehdr .. ":" .. KSR.pv.gete("$rm") .. ":" .. KSR.pv.gete("$ci") .. ":" .. KSR.pv.gete("$fU") .. ":" .. KSR.pv.gete("$rU")) > 0 then
+                    timehdr .. ":" .. KSR.kx.get_method() .. ":" .. KSR.kx.get_callid() .. ":" .. KSR.kx.gete_fuser() .. ":" .. KSR.kx.gete_ruser()) > 0 then
                 return 1;
             end
         end
     end
 
-    local uafd = KSR.pv.gete("$fd");
+    local uafd = KSR.kx.gete_fhost();
 
     -- skip authentication for pass through subdomains
     if KSR.is_INVITE() then
-        if ksr_domain_pass_thorugh(KSR.pv.gete("$rd")) then
+        if ksr_domain_pass_thorugh(KSR.kx.gete_rhost()) then
             return 1;
         end
     end
 
     -- auth only a set of domains
     if DOMAINAUTH[uafd] == nil and not string.find(uafd, 'sip.signalwire.com') and not string.find(uafd, 'sip.swire.io') then
-        KSR.info("404 Domain unavailable for " .. KSR.pv.gete("$fu") .. "\n");
+        KSR.info("404 Domain unavailable for " .. KSR.kx.gete_fuser() .. "\n");
         KSR.sl.sl_send_reply(404, "Domain unavailable");
         KSR.x.exit();
     end
@@ -625,15 +626,16 @@ function ksr_route_auth()
     end
 
     local uapasswd = "";
+    local aor = KSR.kx.gete_fuser() .. "@" .. KSR.kx.gete_fhost();
 
     if WITH_AUTHCACHE then
-        uapasswd = KSR.pv.gete("$sht(auth=>$fU@$fd)");
-        g_crt_projectid = KSR.pv.gete("$sht(project=>$fU@$fd)");
+        uapasswd = KSR.htable.sht_gete("auth", aor);
+        g_crt_projectid = KSR.htable.sht_gete("project", aor);
     end
 
     local hbody = "";
     if uapasswd == nil or string.len(uapasswd) < 8 then
-        local srcaddr = KSR.pv.gete("$si");
+        local srcaddr = KSR.kx.get_srcip();
         local xsp = "";
         if PROJECTIPID[srcaddr] ~= nil then
             if KSR.is_REGISTER() then
@@ -650,29 +652,29 @@ function ksr_route_auth()
             end
         end
         if string.len(xsp) < 4 then
-            if string.match(KSR.pv.gete("$fu"), "counterpath") then
+            if string.match(KSR.kx.get_furi(), "counterpath") then
                 xsp = "219c4f54-fa22-46b4-8c95-60edaf6cd1f8"
             end
 
-            hbody = "{ \"username\": \"" .. KSR.pv.gete("$fu")
+            hbody = "{ \"username\": \"" .. KSR.kx.get_furi()
                 .. "\", \"domain\": \"" .. uafd
                 .. "\", \"project\": \"" .. xsp
                 .. "\"}";
         else
             if string.sub(xsp, 1, 1) == "\"" and string.sub(xsp, -1, -1) == "\"" then
                 -- value is already quoted
-                hbody = "{ \"username\": \"" .. KSR.pv.gete("$fu")
+                hbody = "{ \"username\": \"" .. KSR.kx.get_furi()
                     .. "\", \"domain\": \"" .. uafd
                     .. "\", \"project\": \"" .. xsp
                     .. "\"}";
             else
-                hbody = "{ \"username\": \"" .. KSR.pv.gete("$fu")
+                hbody = "{ \"username\": \"" .. KSR.kx.get_furi()
                     .. "\", \"domain\": \"" .. uafd
                     .. "\", \"project\": \"" .. xsp
                     .. "\"}";
             end
         end
-        KSR.pv.sets("$var(hres)", "");
+        KSR.pvx.var_sets("hres", "");
         local hrcode = 0;
         local htries = 3; -- number of retries for http query
         local hres = "";
@@ -681,7 +683,7 @@ function ksr_route_auth()
             hrcode = KSR.http_client.query_post_hdrs(AUTHURL, hbody,
                         "Content-Type: application/json", "$var(hres)");
             if hrcode ~= 500 then
-                hres = KSR.pv.gete("$var(hres)");
+                hres = KSR.pvx.var_get("hres");
                 if string.len(hres) < 10 then
                     -- no proper result -- try again
                     hrcode = 500;
@@ -689,25 +691,25 @@ function ksr_route_auth()
             end
         until (hrcode ~= 500 or htries > 0);
 
-        hres = KSR.pv.gete("$var(hres)");
+        hres = KSR.pvx.var_get("hres");
         KSR.info("Authorization HTTP query returned: " .. hres .. "\n");
         if string.len(hres) < 10 then
             -- no proper result -- challenge again for authentication
-            KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.pv.gete("$fU") .. "@" .. uafd .. " with project: " .. xsp .. "\n");
+            KSR.info("401/407 Unauthorized: HTTP Authorization error - " .. hres .." - on " .. KSR.kx.gete_fuser() .. "@" .. uafd .. " with project: " .. xsp .. "\n");
             KSR.auth.auth_challenge(uafd, 0);
             KSR.x.exit();
         end
         local jsres = cjson.decode(hres);
         g_crt_projectid = jsres["project_id"];
         if jsres["ha1"] == nil or string.len(jsres["ha1"]) < 10 then
-            KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.pv.gete("$fU") .. "@" .. uafd .. "with project: " .. xsp .. "\n");
+            KSR.info("500 Profile unavailable: jsres error - " .. jsres["ha1"] .." - on " .. KSR.kx.gete_fuser() .. "@" .. uafd .. "with project: " .. xsp .. "\n");
             KSR.sl.sl_send_reply(500, "Authentication unavailable");
             KSR.x.exit();
         end
         uapasswd = jsres["ha1"];
         if WITH_AUTHCACHE then
-            KSR.pv.sets("$sht(auth=>$fU@$fd)", uapasswd);
-            KSR.pv.sets("$sht(project=>$fU@$fd)", g_crt_projectid);
+            KSR.htable.sht_sets("auth", aor, uapasswd);
+            KSR.htable.sht_sets("project", aor, g_crt_projectid);
         end
     end
 
@@ -791,18 +793,18 @@ function ksr_route_registrar()
         -- do SIP NAT pinging
         KSR.setbflag(FLB_NATSIPPING);
     end
-    if KSR.pv.getw("$proto") == "wss" then
+    if KSR.is_WSS() then
         KSR.setbflag(FLB_WEBRTC);
     else
         KSR.setbflag(FLB_CLASSIC);
     end
 
     if WITH_BLADENOTIFY then
-        local touri = KSR.pv.getw("$tu");
-        local touser = KSR.pv.getw("$tU");
-        local todomain = KSR.pv.getw("$td");
+        local touri = KSR.kx.get_turi();
+        local touser = KSR.kx.getw_tuser();
+        local todomain = KSR.kx.getw_thost();
         -- local address = localip:localport
-        local localaddr = KSR.pv.getw("$RAi") .. ":5061";
+        local localaddr = KSR.kx.get_rcvadvip() .. ":5061";
         local evcmd = "";
         local evdata = "";
         local requested_media_webrtc = "false";
@@ -814,7 +816,7 @@ function ksr_route_registrar()
         evcmd = "register";
 
         -- If the inbound protocol is WSS, assume we need webrtc media
-        if KSR.pv.getw("$proto") == "wss" then
+        if KSR.is_WSS() then
             requested_media_webrtc = "true";
         end
 
@@ -837,7 +839,7 @@ function ksr_route_registrar()
         end
         local conid = KSR.kx.get_conid();
         if conid >= 0 then
-            KSR.htable.sht_sets("tcpid", "c" .. conid, "call-id: " .. KSR.pv.gete("$ci") .. " user: " .. touri);
+            KSR.htable.sht_sets("tcpid", "c" .. conid, "call-id: " .. KSR.kx.get_callid() .. " user: " .. touri);
         end
         if KSR.registrar.save("location", 0)<0 then
             KSR.sl.sl_reply_error();
@@ -861,10 +863,10 @@ function ksr_route_registrar()
         KSR.x.exit();
     else
         -- else for WITH_BLADENOTIFY - just do the usual save of registration
-        local touri = KSR.pv.getw("$tu");
+        local touri = KSR.kx.get_turi();
         local conid = KSR.kx.get_conid();
         if conid >= 0 then
-            KSR.htable.sht_sets("tcpid", "c" .. conid, "call-id: " .. KSR.pv.gete("$ci") .. " user: " .. touri);
+            KSR.htable.sht_sets("tcpid", "c" .. conid, "call-id: " .. KSR.kx.get_callid() .. " user: " .. touri);
         end
         if KSR.registrar.save("location", 0)<0 then
             KSR.sl.sl_reply_error();
@@ -877,7 +879,7 @@ end
 -- User location service
 function ksr_route_location()
     -- only for a set of domains
-    local uard = KSR.pv.gete("$rd");
+    local uard = KSR.kx.gete_rhost();
     if DOMAINAUTH[uard] == nil and not string.find(uard, 'sip.signalwire.com') and not string.find(uard, 'sip.swire.io') then
         KSR.info("======> UARD: " .. uard .. "\n");
         return 1;
@@ -907,7 +909,7 @@ function ksr_route_swoutbound()
 	if KSR.hdr.is_present("X-SignalWire-Outbound") < 0 then
 		return 1;
 	end
-	local obproxy = KSR.pv.gete("$hdr(X-SignalWire-Outbound-Proxy)");
+	local obproxy = KSR.hdr.gete("X-SignalWire-Outbound-Proxy");
 	if string.len(obproxy) > 4 then
 		KSR.setdsturi(obproxy);
 		KSR.hdr.remove("X-SignalWire-Outbound-Proxy");
@@ -921,9 +923,9 @@ end
 -- equivalent of branch_route[...]{}
 function ksr_branch_manage()
     KSR.info("new branch [".. KSR.pv.gete("$T_branch_idx")
-                .. "] to ".. KSR.pv.gete("$ru") .. "\n");
+                .. "] to ".. KSR.kx.get_ruri() .. "\n");
     if KSR.is_INVITE() and KSR.siputils.has_totag()<0 then
-        local ttype = KSR.pv.gete("$hdr(X-Target-Type)");
+        local ttype = KSR.hdr.gete("X-Target-Type");
         if ttype == "classic" then
             if not KSR.isbflagset(FLB_CLASSIC) then
                 KSR.setflag(FLT_BRANCHDROP);
@@ -944,7 +946,7 @@ function ksr_branch_manage()
         local timehdr = tostring(os.time());
         KSR.hdr.append("X-SignalWire-OutboundAuthTime: " .. timehdr .. "\r\n");
         KSR.auth_xkeys.auth_xkeys_add("X-SignalWire-OutboundAuthToken", "swk", "sha256",
-                timehdr .. ":" .. KSR.pv.gete("$rm") .. ":" .. KSR.pv.gete("$ci") .. ":" .. KSR.pv.gete("$fU") .. ":" .. KSR.pv.gete("$rU"));
+                timehdr .. ":" .. KSR.kx.get_method() .. ":" .. KSR.kx.get_callid() .. ":" .. KSR.kx.gete_fuser() .. ":" .. KSR.kx.gete_ruser());
     end
 
     return 1;
@@ -954,7 +956,7 @@ end
 -- equivalent of onreply_route[...]{}
 function ksr_onreply_manage()
     KSR.info("===== incoming response (tm)\n");
-    local scode = KSR.pv.get("$rs") or 0;
+    local scode = KSR.kx.get_status() or 0;
     if scode>100 and scode<299 then
         ksr_route_natmanage();
     end
@@ -986,7 +988,7 @@ function ksr_dispatch()
     if WITH_REDISROUTE then
         -- get routing info from redis
         KSR.ndb_redis.redis_free("r1");
-        KSR.ndb_redis.redis_cmd_p1("srv1", "GET %s", "routeto:" .. KSR.pv.gete("$fU") .. "@".. KSR.pv.gete("$fd"), "r1");
+        KSR.ndb_redis.redis_cmd_p1("srv1", "GET %s", "routeto:" .. KSR.kx.gete_fuser() .. "@".. KSR.kx.gete_fhost(), "r1");
         local r1type = KSR.pv.get("$redis(r1=>type)");
         if r1type == KSR.pv.get("$redisd(rpl_int)") then
             dsgrp = KSR.pv.get("$redis(r1=>value)");
@@ -1017,8 +1019,8 @@ function ksr_dispatch()
     end
 
     KSR.setflag(FLT_AUTH_XKEYS);
-    KSR.info("--- SCRIPT: going to <" .. KSR.pv.gete("$ru") .. "> via <"
-            .. KSR.pv.gete("$du") .. ">\n");
+    KSR.info("--- SCRIPT: going to <" .. KSR.kx.gete_ruser() .. "> via <"
+            .. KSR.kx.gete_duri() .. ">\n");
     KSR.tm.t_on_failure("ksr_failure_dispatch");
     ksr_route_relay();
     KSR.x.exit();
@@ -1039,7 +1041,7 @@ function ksr_failure_dispatch()
             -- Generate a 600, which is universally most likely to reject the call
             KSR.sl.send_reply(600, "Busy Everywhere");
             KSR.x.exit();
-	elseif string.match(KSR.pv.gete("$ct"), "flowroute.com") or string.match(KSR.pv.gete("$fd"), "fl.gg") then
+	elseif string.match(KSR.pv.gete("$ct"), "flowroute.com") or string.match(KSR.kx.gete_fhost(), "fl.gg") then
             --  ======== Flowroute ========
             -- Flowroute upstreams don't respect 603, and will constantly retry on many other codes
             -- They require a 180/183 (use 183 w/o SDP to prevent ringing)
@@ -1083,12 +1085,12 @@ function ksr_xhttp_request(evname)
 	KSR.set_reply_no_connect();
 	KSR.dbg("HTTP Request Received\n");
 
-	local hupgrade = KSR.pv.gete("$hdr(Upgrade)");
-	local hconnection = KSR.pv.gete("$hdr(Connection)");
+	local hupgrade = KSR.hdr.gete("Upgrade");
+	local hconnection = KSR.hdr.gete("Connection");
 
 	if KSR.is_method_in("G") and string.match(hupgrade, "websocket")
 			and string.match(hconnection, "Upgrade") then
-		local hhost = KSR.pv.gete("$hdr(Host)");
+        local hhost = KSR.hdr.gete("Host");
 		if string.len(hhost) <= 0 or not KSR.is_myself("sip:" .. hhost) then
 			KSR.info("Bad host: " .. hhost .. "\n");
 			KSR.xhttp.xhttp_reply(403, "Forbidden", "", "");
@@ -1104,7 +1106,7 @@ function ksr_xhttp_request(evname)
 			KSR.x.exit();
 		end
     end
-    KSR.info("404 - Rejecting websocket with invalid HTTP Method:" .. KSR.pv.getw("$rm") .. ", Upgrade: " .. hupgrade .. ", Connection: " .. hconnection .."\n");
+    KSR.info("404 - Rejecting websocket with invalid HTTP Method:" .. KSR.kx.get_method() .. ", Upgrade: " .. hupgrade .. ", Connection: " .. hconnection .."\n");
 	KSR.xhttp.xhttp_reply(404, "Not found", "", "");
 end
 
@@ -1151,7 +1153,8 @@ end
 
 function ksr_choose_dispatcher_group()
     -- Quick redirect for specific test domain
-    if string.match(KSR.pv.gete("$fu"), "softphone.com") or string.match(KSR.pv.gete("$fu"), "counterpath.com") or string.match(KSR.pv.gete("$fu"), "bria%-x") or string.match(KSR.pv.gete("$fu"), "mobilevoiplive.com") then
+    local fromuri = KSR.kx.get_furi();
+    if string.match(fromuri, "softphone.com") or string.match(fromuri, "counterpath.com") or string.match(fromuri, "bria%-x") or string.match(fromuri, "mobilevoiplive.com") then
         return 200;
     -- Match any domains in the Stable Routing list to avoid the Canary instances
     elseif ksr_check_array_for_domain_match(STABLE_ROUTING_DOMAINS) then
