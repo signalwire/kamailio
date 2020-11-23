@@ -804,7 +804,7 @@ function ksr_route_registrar()
         local touser = KSR.kx.getw_tuser();
         local todomain = KSR.kx.getw_thost();
         -- local address = localip:localport
-        local localaddr = KSR.kx.get_rcvip() .. ":5061";
+        local localaddr = KSR.kx.get_rcvadvip() .. ":5061";
         local evcmd = "";
         local evdata = "";
         local requested_media_webrtc = "false";
