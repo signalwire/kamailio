@@ -212,6 +212,7 @@ SKIP_ANTIFLOOD_DOMAINS = {
     "servicetitanproduction[-]",
     "servicetitanstaging[-]",
     "counterpath[-]",
+    "soundofdata-loadtest-[-]",
     "dev[-]",
     "us.*.carriers",
     "eu.carriers",
