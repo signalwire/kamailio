@@ -2,12 +2,19 @@
 
 # Amsterdam
 100 sip:167.99.42.191:35181;transport=tls 0 0 rweight=100
+100 sip:188.166.71.201:35181;transport=tls 0 0 rweight=100
+100 sip:188.166.52.36:35181;transport=tls 0 0 rweight=100
 
 # UK
 100 sip:159.65.80.152:35181;transport=tls 0 0 rweight=100
+100 sip:206.189.17.189:35181;transport=tls 0 0 rweight=100
+100 sip:159.65.95.129:35181;transport=tls 0 0 rweight=100
+100 sip:167.99.85.8:35181;transport=tls 0 0 rweight=100
 
-# France
-100 sip:46.101.163.124:35181;transport=tls 0 0 rweight=100
-
-# Counterpath temporary context
-200 sip:66.42.65.222:35185;transport=tls;weight=10
+# Frankfurt
+100 sip:139.59.151.247:35181;transport=tls 0 0 rweight=100
+100 sip:46.101.199.96:35181;transport=tls 0 0 rweight=100
+100 sip:46.101.178.240:35181;transport=tls 0 0 rweight=100
+100 sip:206.189.55.195:35181;transport=tls 0 0 rweight=100
+100 sip:206.81.21.74:35181;transport=tls 0 0 rweight=100
+100 sip:139.59.151.247:35181;transport=tls 0 0 rweight=100
