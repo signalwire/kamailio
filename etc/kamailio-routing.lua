@@ -221,12 +221,12 @@ SKIP_ANTIFLOOD_DOMAINS = {
     "servicetitanproduction[-]",
     "servicetitanstaging[-]",
     "counterpath[-]",
-    "soundofdata-loadtest-[-]",
+    "soundofdata[-]loadtest[-]",
     "dev[-]",
-    "us.*.carriers",
-    "eu.carriers",
-    "australia.carriers",
-    "cust.*.auth.bandwidth.com"
+    "us%..+%.carriers",
+    "eu%.carriers",
+    "australia%.carriers",
+    "cust%.%w+%.auth%.bandwidth%.com$"
 };
 
 -- List of IP ranges to skip for Pike Blocking 
