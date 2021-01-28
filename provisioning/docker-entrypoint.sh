@@ -31,7 +31,7 @@ if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
 fi
 
 if [[ ! -v CONFD_DISABLED ]]; then
-  confd --backend vault --auth-type token --auth-token ${CONFD_AUTH_TOKEN} --node https://vault.signalwire.cloud --prefix="/kv/data" &
+  confd --backend vault --auth-type token --auth-token ${CONFD_AUTH_TOKEN} --node https://vault.signalwire.cloud --prefix="/kv" &
 fi
 
 prep_term

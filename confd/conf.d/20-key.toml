@@ -2,8 +2,7 @@
 src = "key.tmpl"
 dest = "/etc/ssl/private/signalwire.key"
 mode = "0600"
-reload_cmd = "kamcmd tls.reload"
 
 keys = [
-  "certificates/signalwire.com"
+  "data/certificates/signalwire.com"
 ]

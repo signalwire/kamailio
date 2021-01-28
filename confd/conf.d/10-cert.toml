@@ -4,5 +4,5 @@ dest = "/etc/ssl/certs/signalwire.pem"
 mode = "0644"
 
 keys = [
-  "certificates/signalwire.com"
+  "data/certificates/signalwire.com"
 ]

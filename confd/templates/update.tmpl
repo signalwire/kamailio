@@ -1,0 +1,4 @@
+# This template is only needed to trigger a reload when certificates are updated
+# NOTE: deleting the destination file for this template will trigger a reload
+#       at the next etcd update interval
+{{ getv "/metadata/certificates/signalwire.com/updated_time" }}
