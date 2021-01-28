@@ -1,0 +1,5 @@
+TOML files in this directory are processed lexicographically.
+
+https://github.com/kelseyhightower/confd/blob/v0.16.0/util/util.go#L112 is where the files are looked up. filepath.Walk walks a specified file tree lexicographically according to the documentation at https://golang.org/pkg/path/filepath/#Walk.
+
+With this in mind, we can prevent potential race conditions when cert/key pairs are updated by only configuring a reload_cmd to execute as the final step. Each toml file must be prefixed with a two digit number to control processing order.
