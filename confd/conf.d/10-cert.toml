@@ -2,7 +2,6 @@
 src = "cert.tmpl"
 dest = "/etc/ssl/certs/signalwire.pem"
 mode = "0644"
-reload_cmd = "kamcmd tls.reload"
 
 keys = [
   "certificates/signalwire.com"
