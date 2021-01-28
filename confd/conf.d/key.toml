@@ -1,7 +1,6 @@
 [template]
 src = "key.tmpl"
 dest = "/etc/ssl/private/signalwire.key"
-owner = "nginx"
 mode = "0600"
 reload_cmd = "kamcmd tls.reload"
 

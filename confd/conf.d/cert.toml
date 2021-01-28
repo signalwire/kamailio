@@ -1,7 +1,6 @@
 [template]
 src = "cert.tmpl"
 dest = "/etc/ssl/certs/signalwire.pem"
-owner = "nginx"
 mode = "0644"
 reload_cmd = "kamcmd tls.reload"
 
