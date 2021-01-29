@@ -30,6 +30,10 @@ if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
   KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com)
 fi
 
+if [[ ! -v CONFD_DISABLED ]]; then
+  confd --backend vault --auth-type token --auth-token ${CONFD_AUTH_TOKEN} --node https://vault.signalwire.cloud --prefix="/kv" &
+fi
+
 prep_term
 echo 65535 > /writeable-proc/sys/net/core/somaxconn
 /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 \

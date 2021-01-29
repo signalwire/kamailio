@@ -1,0 +1,8 @@
+[template]
+src = "key.tmpl"
+dest = "/etc/ssl/private/signalwire.key"
+mode = "0600"
+
+keys = [
+  "data/certificates/signalwire.com"
+]

@@ -1,0 +1,8 @@
+[template]
+src = "cert.tmpl"
+dest = "/etc/ssl/certs/signalwire.pem"
+mode = "0644"
+
+keys = [
+  "data/certificates/signalwire.com"
+]
