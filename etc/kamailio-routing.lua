@@ -1039,16 +1039,20 @@ function ksr_failure_dispatch()
 		return 1;
     end
 
+    if KSR.is_INVITE() then
+        KSR.info("--- SCRIPT: INVITE failure routing - ruri: " .. KSR.kx.get_ruri()
+                .. " - code:" .. KSR.pv.gete("$T_reply_code") .. "\n");
+    end
 
     if KSR.tm.t_check_status("403|404|48[0-9]|502|6[0-9][0-9]") > 0 then
-        
+
         -- Carrier-Specific Failures
-	if ksr_is_src_reject_600_carrier() then
-	    -- ========= Bandwidth and friends =========
+        if ksr_is_src_reject_600_carrier() then
+            -- ========= Bandwidth and friends =========
             -- Generate a 600, which is universally most likely to reject the call
             KSR.sl.send_reply(600, "Busy Everywhere");
             KSR.x.exit();
-	elseif string.match(KSR.pv.gete("$ct"), "flowroute.com") or string.match(KSR.kx.gete_fhost(), "fl.gg") then
+        elseif string.match(KSR.pv.gete("$ct"), "flowroute.com") or string.match(KSR.kx.gete_fhost(), "fl.gg") then
             --  ======== Flowroute ========
             -- Flowroute upstreams don't respect 603, and will constantly retry on many other codes
             -- They require a 180/183 (use 183 w/o SDP to prevent ringing)
@@ -1066,10 +1070,17 @@ function ksr_failure_dispatch()
 	-- next DST - only for the rest of 4xx, 5xx and 6xx
 	if KSR.tm.t_check_status("[4-6][0-9][0-9]") > 0 then
 		if KSR.dispatcher.ds_next_dst() > 0 then
+            if KSR.is_INVITE() then
+                KSR.info("--- SCRIPT: INVITE failure routing - new duri: " .. KSR.kx.gete_duri()
+                        .. " - ruri:" .. KSR.kx.gete_ruri() .. "\n");
+            end
 			KSR.tm.t_on_failure("ksr_failure_dispatch");
 			ksr_route_relay();
 			KSR.x.exit();
-		end
+		else
+            KSR.info("--- SCRIPT: INVITE failure routing - no new duri - ruri: "
+                        .. KSR.kx.get_ruri() .. "\n");
+        end
 	end
 end
 
