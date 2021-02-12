@@ -27,7 +27,8 @@ WORKDIR /usr/local/src
 # Add Tini
 ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod +x /tini
+RUN chmod +x /tini \
+    && chmod 500 /bin/confd
 ENTRYPOINT ["/tini", "--"]
 
 CMD ["/docker-entrypoint.sh"]

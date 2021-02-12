@@ -15,17 +15,25 @@ RUN make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops
 FROM debian:stretch-slim
 MAINTAINER Evan McGee <evan@signalwire.com>
 
+ENV \
+  CONFD_VERSION=0.16.0 \
+  CONFD_SHA256=255d2559f3824dd64df059bdc533fd6b697c070db603c76aaf8d1d5e6b0cc334 \
+  LC_ALL=en_US.utf-8 \
+  TINI_VERSION=v0.18.0
+
 # Add Tini
-ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
 
+
 RUN apt-get update && apt-get -y install --no-install-recommends --no-install-suggests \
   dnsutils iproute2 curl locales apt-transport-https ca-certificates nano \
-  && locale-gen en_US en_US.UTF-8 && rm -rf /var/lib/apt/lists/* 
-
-ENV LC_ALL en_US.utf-8
+  && locale-gen en_US en_US.UTF-8 && rm -rf /var/lib/apt/lists/* \
+  && curl -L https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64 -o /bin/confd \
+  && sha256sum /bin/confd | grep ${CONFD_SHA256} \
+  && chmod +x /tini \
+  && chmod 500 /bin/confd
 
 COPY --from=intermediate /lib/x86_64-linux-gnu /lib/x86_64-linux-gnu
 COPY --from=intermediate /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
@@ -42,6 +50,7 @@ COPY --from=intermediate /usr/local/sbin /usr/local/sbin
 COPY tls/ /usr/local/etc/kamailio/tls
 COPY ca/ /usr/local/etc/kamailio/blade/ca
 COPY etc/ /usr/local/etc/kamailio
+COPY confd/ /etc/confd
 COPY provisioning/docker-entrypoint.sh /docker-entrypoint.sh
 
 CMD ["/docker-entrypoint.sh"]
