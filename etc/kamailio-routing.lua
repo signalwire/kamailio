@@ -1183,3 +1183,9 @@ function ksr_bladec_event_shutdown(evname)
         KSR.warn("Failed sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
     end
 end
+
+-- event callback function on dispatcher dst state change
+function ksr_dispatcher_event(evname)
+	KSR.info("event: " .. evname .. " - addr: " .. KSR.kx.get_ruri() .. "\n");
+	return 1;
+end
