@@ -1072,7 +1072,7 @@ function ksr_failure_dispatch()
 		if KSR.dispatcher.ds_next_dst() > 0 then
             if KSR.is_INVITE() then
                 KSR.info("--- SCRIPT: INVITE failure routing - new duri: " .. KSR.kx.gete_duri()
-                        .. " - ruri:" .. KSR.kx.gete_ruri() .. "\n");
+                        .. " - ruri:" .. KSR.kx.get_ruri() .. "\n");
             end
 			KSR.tm.t_on_failure("ksr_failure_dispatch");
 			ksr_route_relay();
