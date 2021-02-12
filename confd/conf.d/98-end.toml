@@ -1,0 +1,7 @@
+[template]
+src = "updated_at.tmpl"
+dest = "/root/endrun"
+
+keys = [
+  "metadata/certificates/signalwire.com"
+]

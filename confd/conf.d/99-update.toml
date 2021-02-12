@@ -1,8 +1,4 @@
 [template]
-src = "update.tmpl"
-dest = "/root/version"
-reload_cmd = "kamcmd tls.reload"
-
-keys = [
-  "metadata/certificates/signalwire.com"
-]
+src = "run_update.tmpl"
+dest = "/root/run_update"
+reload_cmd = "/etc/confd/scripts/update.sh"
