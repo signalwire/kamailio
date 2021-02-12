@@ -1,0 +1,8 @@
+[template]
+src = "updated_at.tmpl"
+dest = "/root/startrun"
+reload_cmd = "rm -f /root/run_update"
+
+keys = [
+  "metadata/certificates/signalwire.com"
+]

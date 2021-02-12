@@ -31,6 +31,12 @@ if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
 fi
 
 if [[ ! -v CONFD_DISABLED ]]; then
+  # Ensure secrets are pulled and present before starting
+  until confd --onetime --backend vault --auth-type token --auth-token ${CONFD_AUTH_TOKEN} --node https://vault.signalwire.cloud --prefix="/kv"; do
+    echo "Waiting for confd to pull initial secrets"
+    sleep 5
+  done
+
   confd --backend vault --auth-type token --auth-token ${CONFD_AUTH_TOKEN} --node https://vault.signalwire.cloud --prefix="/kv" &
 fi
 
