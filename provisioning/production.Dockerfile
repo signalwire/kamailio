@@ -19,13 +19,12 @@ ENV \
   CONFD_VERSION=0.16.0 \
   CONFD_SHA256=255d2559f3824dd64df059bdc533fd6b697c070db603c76aaf8d1d5e6b0cc334 \
   LC_ALL=en_US.utf-8 \
-  TINI_VERSION=v0.18.0
+  TINI_VERSION=v0.19.0
 
 # Add Tini
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
-
 
 RUN apt-get update && apt-get -y install --no-install-recommends --no-install-suggests \
   dnsutils iproute2 curl locales apt-transport-https ca-certificates nano \

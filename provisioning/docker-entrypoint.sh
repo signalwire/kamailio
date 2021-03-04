@@ -1,30 +1,4 @@
 #!/bin/bash
-prep_term()
-{
-    unset term_child_pid
-    unset term_kill_needed
-    trap 'handle_term' TERM INT
-}
-
-handle_term()
-{
-    if [ "${term_child_pid}" ]; then
-        kill -TERM "${term_child_pid}" 2>/dev/null
-    else
-        term_kill_needed="yes"
-    fi
-}
-
-wait_term()
-{
-    term_child_pid=$!
-    if [ "${term_kill_needed}" ]; then
-        kill -TERM "${term_child_pid}" 2>/dev/null 
-    fi
-    wait ${term_child_pid}
-    trap - TERM INT
-    wait ${term_child_pid}
-}
 
 if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
   KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com)
@@ -40,7 +14,6 @@ if [[ ! -v CONFD_DISABLED ]]; then
   confd --backend vault --auth-type token --auth-token ${CONFD_AUTH_TOKEN} --node https://vault.signalwire.cloud --prefix="/kv" &
 fi
 
-prep_term
 echo 65535 > /writeable-proc/sys/net/core/somaxconn
 /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 \
   -A KAM_IP_LOCAL=$(ip route get 1.1.1.1 | awk 'NR==1 {print $NF}') \
@@ -49,4 +22,3 @@ echo 65535 > /writeable-proc/sys/net/core/somaxconn
   -A KAM_CLUSTER_NONCE=\"$KAM_CLUSTER_NONCE\" \
   -A $KAMAILIO_LOCATION \
   --log-engine=json:acA
-wait_term
