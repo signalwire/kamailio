@@ -1,7 +1,0 @@
-# NYC3 FreeSWITCH Addresses
-100 sip:167.71.83.250:35181;transport=tls 0 0 rweight=100
-100 sip:165.22.36.91:35181;transport=tls 0 0 rweight=100
-100 sip:167.71.183.18:35181;transport=tls 0 0 rweight=100
-100 sip:167.71.93.85:35181;transport=tls 0 0 rweight=100
-100 sip:167.71.83.108:35181;transport=tls 0 0 rweight=100
-100 sip:167.71.93.229:35181;transport=tls 0 0 rweight=100
