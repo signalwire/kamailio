@@ -248,9 +248,9 @@ function ksr_parse_sdomain(sdomain)
     local rest = ''
     local port = ''
     local options = ''
-    domain, rest=sdomain:match("([^;:]*)[:;]?(.*)")
+    domain, rest = sdomain:match("([^;:]*)[:;]?(.*)")
     if not(rest == '') then
-      port, options=rest:match("(%d*);?(.*)")
+      port, options = rest:match("(%d*);?(.*)")
     end
 
     return domain, port, options
