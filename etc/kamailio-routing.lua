@@ -241,8 +241,26 @@ SUBDOMAIN_PASSTHROUGH = {
     ".dapp.swire.io"
 }
 
+-- parse out domain, port, and options from supplied subdomain
+-- expects sdomain[:port][;options]
+function ksr_parse_sdomain(sdomain)
+    local domain = ''
+    local rest = ''
+    local port = ''
+    local options = ''
+    domain, rest = sdomain:match("([^;:]*)[:;]?(.*)")
+    if not(rest == '') then
+      port, options = rest:match("(%d*);?(.*)")
+    end
+
+    return domain, port, options
+end
+
 -- match (ends-with) the parameter against SUBDOMAIN_PASSTHROUGH list
 function ksr_domain_pass_thorugh(sdomain)
+    local port = ''
+    local options = ''
+    sdomain, port, options = ksr_parse_sdomain(sdomain)
     local sdlen = string.len(sdomain);
     for idx, val in pairs(SUBDOMAIN_PASSTHROUGH) do
         local vallen = string.len(val);
