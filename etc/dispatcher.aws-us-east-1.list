@@ -6,7 +6,3 @@
 # AWS us-east-1
 100 sip:172.17.194.144:35181;transport=tls 0 0 rweight=100
 100 sip:172.17.194.247:35181;transport=tls 0 0 rweight=100
-
-# AWS us-east-2
-100 sip:172.17.193.40:35181;transport=tls 0 0 rweight=100
-100 sip:172.17.193.131:35181;transport=tls 0 0 rweight=100
