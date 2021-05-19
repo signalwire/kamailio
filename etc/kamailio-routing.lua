@@ -602,7 +602,7 @@ function ksr_route_auth()
             and KSR.hdr.is_present("X-SignalWire-OutboundAuthTime") > 0 then
         local timehdr = KSR.hdr.gete("X-SignalWire-OutboundAuthTime");
         local tlimit = tonumber(timehdr);
-        if (tlimit ~= NILL) and (tlimit + AUTH_XKEYS_TIMEFRAME >= os.time()) then
+        if (tlimit ~= nil) and (tlimit + AUTH_XKEYS_TIMEFRAME >= os.time()) then
             if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256",
                     timehdr .. ":" .. KSR.kx.get_method() .. ":" .. KSR.kx.get_callid() .. ":" .. KSR.kx.gete_fuser() .. ":" .. KSR.kx.gete_ruser()) > 0 then
                 return 1;
