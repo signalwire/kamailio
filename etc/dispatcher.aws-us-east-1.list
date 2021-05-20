@@ -1,0 +1,8 @@
+# list of addresses
+
+#### Default Routing
+## By default, all domains hit all endpoints, including Canary, Rollout, and Stable
+
+# AWS us-east-1
+100 sip:172.17.194.144:35181;transport=tls 0 0 rweight=100
+100 sip:172.17.194.247:35181;transport=tls 0 0 rweight=100
