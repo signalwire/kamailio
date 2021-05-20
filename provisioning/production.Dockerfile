@@ -1,4 +1,4 @@
-FROM signalwire/freeswitch-libs as intermediate
+FROM signalwire/freeswitch-libs:debian-10 as intermediate
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
   flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc \
@@ -12,7 +12,7 @@ RUN make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops
 && cd src/modules/tls && make install-tls-cert
 
 
-FROM debian:stretch-slim
+FROM debian:10-slim
 MAINTAINER Evan McGee <evan@signalwire.com>
 
 ENV \
