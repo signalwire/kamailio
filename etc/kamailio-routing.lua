@@ -1101,6 +1101,12 @@ function ksr_failure_prouteto()
     if KSR.tm.t_is_canceled() > 0 then
         return 1;
     end
+    local rplcode = KSR.tm.t_get_status_code();
+    if rplcode==486 or rplcode==487 or rplcode>=600 then
+        -- no re-routing for these reply codes
+        return 1;
+    end
+
     local nexturi = KSR.pvx.xavp_child_gete("prouteto", "v");
     if string.len(nexturi) > 4 then
         KSR.seturi(nexturi);
