@@ -27,7 +27,7 @@ RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
 
 RUN apt-get update && apt-get -y install --no-install-recommends --no-install-suggests \
-  dnsutils iproute2 curl locales apt-transport-https ca-certificates nano \
+  dnsutils iproute2 curl locales apt-transport-https ca-certificates nano libgoogle-perftools-dev \
   && locale-gen en_US en_US.UTF-8 && rm -rf /var/lib/apt/lists/* \
   && curl -L https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64 -o /bin/confd \
   && sha256sum /bin/confd | grep ${CONFD_SHA256} \
