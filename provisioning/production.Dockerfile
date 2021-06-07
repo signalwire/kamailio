@@ -12,7 +12,7 @@ RUN make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops
 && cd src/modules/tls && make install-tls-cert
 
 
-FROM debian:stretch-slim
+FROM debian:10-slim
 MAINTAINER Evan McGee <evan@signalwire.com>
 
 ENV \

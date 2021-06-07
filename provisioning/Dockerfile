@@ -1,4 +1,4 @@
-FROM signalwire/freeswitch-libs as intermediate
+FROM signalwire/freeswitch-libs:debian-10 as intermediate
 
 ENV \
   CONFD_VERSION=0.16.0 \
