@@ -1,4 +1,4 @@
-FROM signalwire/freeswitch-libs:debian-10 as intermediate
+FROM signalwire/freeswitch-libs as intermediate
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
   flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc \
