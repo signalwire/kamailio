@@ -1,4 +1,4 @@
-FROM signalwire/freeswitch-libs as intermediate
+FROM signalwire/freeswitch-libs:debian-10 as intermediate
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
   flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc \
@@ -11,8 +11,7 @@ RUN make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops
 && make -j`nproc --all` all && make install \
 && cd src/modules/tls && make install-tls-cert
 
-
-FROM debian:10-slim
+FROM signalwire/freeswitch-base:debian-10
 MAINTAINER Evan McGee <evan@signalwire.com>
 
 ENV \
@@ -27,7 +26,7 @@ RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
 
 RUN apt-get update && apt-get -y install --no-install-recommends --no-install-suggests \
-  dnsutils iproute2 curl locales apt-transport-https ca-certificates nano libgoogle-perftools-dev \
+  dnsutils iproute2 curl locales apt-transport-https ca-certificates nano lua-cjson \
   && locale-gen en_US en_US.UTF-8 && rm -rf /var/lib/apt/lists/* \
   && curl -L https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64 -o /bin/confd \
   && sha256sum /bin/confd | grep ${CONFD_SHA256} \
