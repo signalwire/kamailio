@@ -15,7 +15,9 @@ if [[ ! -v CONFD_DISABLED ]]; then
 fi
 
 echo 65535 > /writeable-proc/sys/net/core/somaxconn
-LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so HEAPPROFILE=/tmp/heapprof /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 \
+export LD_PRELOAD=/usr/local/lib/libtcmalloc.so
+export HEAPPROFILE=/tmp/heapprof
+/usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 \
   -A KAM_IP_LOCAL=$(ip route get 1.1.1.1 | awk 'NR==1 {print $NF}') \
   -A KAM_IP_PUBLIC=${KAM_IP_PUBLIC} \
   -A KAM_IP_OTHER=$(ip addr | grep -Po '.+10.92.+\/16.+' | grep -Po 'inet \K[\d.]+') \
