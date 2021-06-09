@@ -26,6 +26,11 @@ wait_term()
     wait ${term_child_pid}
 }
 
+if [ ! -z "${KAMAILIO_PROFILING}" ]; then
+  export LD_PRELOAD=/usr/local/lib/libtcmalloc.so
+  export HEAPPROFILE=/tmp/heapprof
+fi
+
 if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
   KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com)
 fi
