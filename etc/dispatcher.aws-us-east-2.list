@@ -4,5 +4,5 @@
 ## By default, all domains hit all endpoints, including Canary, Rollout, and Stable
 
 # AWS us-east-2
-100 sip:3.131.29.168:35181;transport=tls 0 0 rweight=100
-100 sip:3.128.50.44:35181;transport=tls 0 0 rweight=100
+100 sip:172.20.193.24:35161;transport=tls 0 0 rweight=100
+100 sip:172.20.193.86:35161;transport=tls 0 0 rweight=100
