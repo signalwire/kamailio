@@ -931,6 +931,7 @@ function ksr_route_swoutbound()
         if string.len(prouteto) > 4 then
             KSR.pvx.xavp_slist_explode(prouteto, ",", "t", "prouteto");
             KSR.tm.t_on_failure("ksr_failure_prouteto");
+            KSR.tm.t_set_fr(120000, 4000);
             KSR.hdr.remove("P-Route-To");
         end
 	end
@@ -1112,6 +1113,7 @@ function ksr_failure_prouteto()
         KSR.seturi(nexturi);
         KSR.pvx.xavp_child_rm("prouteto", "v");
         KSR.tm.t_on_failure("ksr_failure_prouteto");
+        KSR.tm.t_set_fr(120000, 4000);
         ksr_route_relay();
         KSR.x.exit();
     end
