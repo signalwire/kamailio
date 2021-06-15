@@ -5,7 +5,7 @@ ENV \
   CONFD_SHA256=255d2559f3824dd64df059bdc533fd6b697c070db603c76aaf8d1d5e6b0cc334
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
-  flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc dnsutils \
+  flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc dnsutils libgoogle-perftools-dev \
   && rm -rf /var/lib/apt/lists/* \
   && curl -L https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64 -o /bin/confd \
   && sha256sum /bin/confd | grep ${CONFD_SHA256}
