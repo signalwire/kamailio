@@ -27,6 +27,7 @@ FLT_ACCFAILED=3
 FLT_NATS=5
 FLT_BRANCHDROP=15
 FLT_AUTH_XKEYS=16
+FLT_PROUTETO=17
 
 FLB_NATB=6
 FLB_NATSIPPING=7
@@ -933,6 +934,7 @@ function ksr_route_swoutbound()
             KSR.tm.t_on_failure("ksr_failure_prouteto");
             KSR.tm.t_set_fr(120000, 4000);
             KSR.hdr.remove("P-Route-To");
+            KSR.setflag(FLT_PROUTETO);
         end
 	end
 	ksr_route_relay();
@@ -967,6 +969,16 @@ function ksr_branch_manage()
         KSR.hdr.append("X-SignalWire-OutboundAuthTime: " .. timehdr .. "\r\n");
         KSR.auth_xkeys.auth_xkeys_add("X-SignalWire-OutboundAuthToken", "swk", "sha256",
                 timehdr .. ":" .. KSR.kx.get_method() .. ":" .. KSR.kx.get_callid() .. ":" .. KSR.kx.gete_fuser() .. ":" .. KSR.kx.gete_ruser());
+    end
+
+    if KSR.isflagset(FLT_PROUTETO) then
+        if KSR.kx.get_ruri() ~= KSR.kx.get_turi() then
+            if KSR.pv.is_null("$tn") then
+                KSR.uac.uac_replace_to_uri(KSR.kx.get_ruri());
+            else
+                KSR.uac.uac_replace_to("\"" .. KSR.kx.gete_ruser() .. "\"", KSR.kx.get_ruri());
+            end
+        end
     end
 
     return 1;
