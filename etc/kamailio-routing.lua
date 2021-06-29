@@ -27,6 +27,7 @@ FLT_ACCFAILED=3
 FLT_NATS=5
 FLT_BRANCHDROP=15
 FLT_AUTH_XKEYS=16
+FLT_PROUTETO=17
 
 FLB_NATB=6
 FLB_NATSIPPING=7
@@ -932,12 +933,21 @@ function ksr_route_swoutbound()
 	if KSR.hdr.is_present("X-SignalWire-Outbound") < 0 then
 		return 1;
 	end
+	KSR.hdr.remove("X-SignalWire-Outbound");
 	local obproxy = KSR.hdr.gete("X-SignalWire-Outbound-Proxy");
 	if string.len(obproxy) > 4 then
 		KSR.setdsturi(obproxy);
 		KSR.hdr.remove("X-SignalWire-Outbound-Proxy");
+    else
+        local prouteto = KSR.hdr.gete("P-Route-To");
+        if string.len(prouteto) > 4 then
+            KSR.pvx.xavp_slist_explode(prouteto, ",", "t", "prouteto");
+            KSR.tm.t_on_failure("ksr_failure_prouteto");
+            KSR.tm.t_set_fr(120000, 4000);
+            KSR.hdr.remove("P-Route-To");
+            KSR.setflag(FLT_PROUTETO);
+        end
 	end
-	KSR.hdr.remove("X-SignalWire-Outbound");
 	ksr_route_relay();
 	KSR.x.exit();
 end
@@ -970,6 +980,16 @@ function ksr_branch_manage()
         KSR.hdr.append("X-SignalWire-OutboundAuthTime: " .. timehdr .. "\r\n");
         KSR.auth_xkeys.auth_xkeys_add("X-SignalWire-OutboundAuthToken", "swk", "sha256",
                 timehdr .. ":" .. KSR.kx.get_method() .. ":" .. KSR.kx.get_callid() .. ":" .. KSR.kx.gete_fuser() .. ":" .. KSR.kx.gete_ruser());
+    end
+
+    if KSR.isflagset(FLT_PROUTETO) then
+        if KSR.kx.get_ruri() ~= KSR.kx.get_turi() then
+            if KSR.pv.is_null("$tn") then
+                KSR.uac.uac_replace_to_uri(KSR.kx.get_ruri());
+            else
+                KSR.uac.uac_replace_to("\"" .. KSR.kx.gete_ruser() .. "\"", KSR.kx.get_ruri());
+            end
+        end
     end
 
     return 1;
@@ -1098,6 +1118,28 @@ function ksr_failure_dispatch()
                         .. KSR.kx.get_ruri() .. "\n");
         end
 	end
+end
+
+-- Try next destionations for outbound routing using P-Route-To
+function ksr_failure_prouteto()
+    if KSR.tm.t_is_canceled() > 0 then
+        return 1;
+    end
+    local rplcode = KSR.tm.t_get_status_code();
+    if rplcode==486 or rplcode==487 or rplcode>=600 then
+        -- no re-routing for these reply codes
+        return 1;
+    end
+
+    local nexturi = KSR.pvx.xavp_child_gete("prouteto", "v");
+    if string.len(nexturi) > 4 then
+        KSR.seturi(nexturi);
+        KSR.pvx.xavp_child_rm("prouteto", "v");
+        KSR.tm.t_on_failure("ksr_failure_prouteto");
+        KSR.tm.t_set_fr(120000, 4000);
+        ksr_route_relay();
+        KSR.x.exit();
+    end
 end
 
 -- RTimer callback to retrieve message from mqueue and push to blade network
