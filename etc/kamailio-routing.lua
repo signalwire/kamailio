@@ -703,8 +703,10 @@ function ksr_route_auth()
         local hres = "";
         repeat
             htries = htries - 1;
-            hrcode = KSR.http_client.query_post_hdrs(AUTHURL, hbody,
-                        "Content-Type: application/json", "$var(hres)");
+            -- hrcode = KSR.http_client.query_post_hdrs(AUTHURL, hbody,
+            --             "Content-Type: application/json", "$var(hres)");
+            hrcode = KSR.ruxc.http_post(AUTHURL, hbody,
+                        "Content-Type: application/json\r\n", "$var(hres)");
             if hrcode ~= 500 then
                 hres = KSR.pvx.var_get("hres");
                 if string.len(hres) < 10 then
