@@ -1,3 +1,6 @@
 [submodule "kamailio"]
 	path = kamailio
 	url = git@github.com:kamailio/kamailio.git
+[submodule "ruxc"]
+	path = ruxc
+	url = https://github.com/miconda/ruxc

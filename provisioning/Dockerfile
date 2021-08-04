@@ -6,14 +6,31 @@ ENV \
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
   flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc dnsutils libgoogle-perftools-dev \
+  liblua5.1-0-dev libunistring-dev libxml2-dev \
   && rm -rf /var/lib/apt/lists/* \
   && curl -L https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64 -o /bin/confd \
   && sha256sum /bin/confd | grep ${CONFD_SHA256}
 
+# Build Rust ruxc
+#--------
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+
+RUN curl https://sh.rustup.rs -sSf | \
+   sh -s -- --default-toolchain stable -y
+
+COPY ruxc /usr/local/src/ruxc
+WORKDIR /usr/local/src/ruxc
+RUN cargo build --release
+#--------
+
+# Build Kamailio
 COPY kamailio /usr/local/src/kamailio
 COPY src/modules/bladec /usr/local/src/kamailio/src/modules/bladec
 WORKDIR /usr/local/src/kamailio
-RUN make -j`nproc -all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket nathelper kemix" cfg
+RUN cp /usr/local/src/ruxc/include/ruxc.h /usr/local/src/ruxc/target/release/libruxc.a /usr/local/src/kamailio/src/modules/ruxc/ 
+RUN make -j`nproc -all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket nathelper kemix ruxc" cfg
 RUN make -j`nproc -all` all
 RUN make install
 WORKDIR src/modules/tls
