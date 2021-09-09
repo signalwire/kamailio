@@ -3,6 +3,7 @@
 # Bangalore
 100 sip:159.65.144.130:35181;transport=tls 0 0 rweight=100
 100 sip:139.59.18.199:35181;transport=tls 0 0 rweight=100
+100 sip:143.110.191.44:35181;transport=tls 0 0 rweight=100
 
 # Counterpath temporary context
 200 sip:66.42.65.222:35185;transport=tls;weight=10
