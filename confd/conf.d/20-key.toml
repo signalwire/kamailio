@@ -4,5 +4,5 @@ dest = "/etc/ssl/private/signalwire.key"
 mode = "0600"
 
 keys = [
-  "data/certificates/signalwire.com"
+  "data/certificates/VAULT_CERT_NAME"
 ]

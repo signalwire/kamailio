@@ -4,5 +4,5 @@ dest = "/root/startrun"
 reload_cmd = "rm -f /root/run_update"
 
 keys = [
-  "metadata/certificates/signalwire.com"
+  "metadata/certificates/VAULT_CERT_NAME"
 ]
