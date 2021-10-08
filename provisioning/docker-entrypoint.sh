@@ -35,6 +35,9 @@ if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
   KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com)
 fi
 
+VAULT_CERT_NAME=${VAULT_CERT_NAME:-signalwire.com}
+find /etc/confd/ -type f -exec sed -i "s|VAULT_CERT_NAME|$VAULT_CERT_NAME|g" {} \;
+
 if [[ ! -v CONFD_DISABLED ]]; then
   # Ensure secrets are pulled and present before starting
   until confd --onetime --backend vault --auth-type token --auth-token ${CONFD_AUTH_TOKEN} --node https://vault.signalwire.cloud --prefix="/kv"; do

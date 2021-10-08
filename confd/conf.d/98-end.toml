@@ -3,5 +3,5 @@ src = "updated_at.tmpl"
 dest = "/root/endrun"
 
 keys = [
-  "metadata/certificates/signalwire.com"
+  "metadata/certificates/VAULT_CERT_NAME"
 ]
