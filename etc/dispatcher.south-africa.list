@@ -1,7 +1,6 @@
-# list of addresses
-
 # Cape Town
-100 sip:13.244.75.249:35181;transport=tls 0 0 rweight=100
+100 sip:13.244.216.167:35181;transport=tls 0 0 rweight=100
 
 # Counterpath temporary context
-200 sip:66.42.65.222:35185;transport=tls;weight=10
+200 sip:45.76.241.61:35185;transport=tls;weight=10
+

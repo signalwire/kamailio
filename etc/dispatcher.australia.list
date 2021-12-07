@@ -1,7 +1,6 @@
-# list of addresses
-
-# Sydney
-100 sip:45.76.120.98:35181;transport=tls 0 0 rweight=100
+# Vultr Australia
+100 sip:45.77.49.196:35181;transport=tls 0 0 rweight=100
 
 # Counterpath temporary context
-200 sip:66.42.65.222:35185;transport=tls;weight=10
+200 sip:45.76.241.61:35185;transport=tls;weight=10
+
