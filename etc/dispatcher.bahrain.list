@@ -1,6 +1,3 @@
-# list of addresses
-
 # AWS Bahrain
-
-100 sip:157.175.96.60:35181;transport=tls 0 0 rweight=100
+100 sip:157.175.88.214:35181;transport=tls 0 0 rweight=100
 

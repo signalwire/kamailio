@@ -1,95 +1,93 @@
-# list of addresses
-
-#### Default Routing
-## By default, all domains hit all endpoints, including Canary, Rollout, and Stable
-
 # Canary
-100 sip:174.138.44.123:35181;transport=tls 0 0 rweight=20
+100 sip:134.122.112.240:35181;transport=tls 0 0 rweight=20
 
 # Rollout
-100 sip:67.205.180.5:35181;transport=tls 0 0 rweight=100
-
-# Vultr US East
-100 sip:104.207.135.82:35181;transport=tls 0 0 rweight=100
-100 sip:45.77.203.19:35181;transport=tls 0 0 rweight=100
-100 sip:45.63.10.210:35181;transport=tls 0 0 rweight=100
-
-# Vultr US West
-100 sip:45.32.135.71:35181;transport=tls 0 0 rweight=100
-100 sip:45.32.138.44:35181;transport=tls 0 0 rweight=100
-100 sip:45.32.133.89:35181;transport=tls 0 0 rweight=100
-100 sip:45.63.90.91:35181;transport=tls 0 0 rweight=100
-100 sip:149.28.201.113:35181;transport=tls 0 0 rweight=100
-100 sip:45.77.191.225:35181;transport=tls 0 0 rweight=100
-
-# US West DO
-100 sip:165.227.2.145:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.106.124:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.168.88:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.160.223:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.164.57:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.175.14:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.101.30:35181;transport=tls 0 0 rweight=100
-100 sip:167.99.160.194:35181;transport=tls 0 0 rweight=100
-100 sip:165.227.7.211:35181;transport=tls 0 0 rweight=100
-100 sip:159.89.143.139:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.19.241:35181;transport=tls 0 0 rweight=100
 
 # US East DO
-100 sip:104.248.120.106:35181;transport=tls 0 0 rweight=100
-100 sip:104.248.112.94:35181;transport=tls 0 0 rweight=100
-100 sip:142.93.7.200:35181;transport=tls 0 0 rweight=100
-100 sip:104.248.120.241:35181;transport=tls 0 0 rweight=100
-100 sip:104.248.127.154:35181;transport=tls 0 0 rweight=100
-100 sip:104.248.116.199:35181;transport=tls 0 0 rweight=100
-100 sip:104.248.116.35:35181;transport=tls 0 0 rweight=100
-100 sip:142.93.0.98:35181;transport=tls 0 0 rweight=100
-100 sip:104.248.124.22:35181;transport=tls 0 0 rweight=100
-100 sip:104.248.120.79:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.143.59:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.132.194:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.138.102:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.143.130:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.154.125:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.144.120:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.153.113:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.153.255:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.157.8:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.147.95:35181;transport=tls 0 0 rweight=100
+
+# US East Vultr
+100 sip:45.77.93.222:35181;transport=tls 0 0 rweight=100
+100 sip:104.238.134.173:35181;transport=tls 0 0 rweight=100
+100 sip:104.156.226.71:35181;transport=tls 0 0 rweight=100
+100 sip:63.209.33.53:35181;transport=tls 0 0 rweight=100
+
+# US West DO
+100 sip:138.197.216.120:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.220.145:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.198.13:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.53.45:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.44.106:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.198.10:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.231.173:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.218.215:35181;transport=tls 0 0 rweight=100
+100 sip:165.227.1.153:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.217.232:35181;transport=tls 0 0 rweight=100
+
+# US West Vultr
+100 sip:45.76.241.61:35181;transport=tls 0 0 rweight=100
+100 sip:45.63.82.176:35181;transport=tls 0 0 rweight=100
+100 sip:149.28.206.209:35181;transport=tls 0 0 rweight=100
+100 sip:144.202.107.147:35181;transport=tls 0 0 rweight=100
+100 sip:45.63.92.149:35181;transport=tls 0 0 rweight=100
+100 sip:45.77.186.169:35181;transport=tls 0 0 rweight=100
+100 sip:45.63.85.177:35181;transport=tls 0 0 rweight=100
 
 #### Rollout Routing
 ## This will be the routing for sensitive clients - a little traffic to rollout servers, primarily to stable
 
 # Rollout
-700 sip:67.205.180.5:35181;transport=tls 0 0 rweight=100
-
-# US West DO
-700 sip:165.227.2.145:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.106.124:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.168.88:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.160.223:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.164.57:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.175.14:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.101.30:35181;transport=tls 0 0 rweight=100
-700 sip:167.99.160.194:35181;transport=tls 0 0 rweight=100
-700 sip:165.227.7.211:35181;transport=tls 0 0 rweight=100
-700 sip:159.89.143.139:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.19.241:35181;transport=tls 0 0 rweight=100
 
 # US East DO
-700 sip:104.248.120.106:35181;transport=tls 0 0 rweight=100
-700 sip:104.248.112.94:35181;transport=tls 0 0 rweight=100
-700 sip:142.93.7.200:35181;transport=tls 0 0 rweight=100
-700 sip:104.248.120.241:35181;transport=tls 0 0 rweight=100
-700 sip:104.248.127.154:35181;transport=tls 0 0 rweight=100
-700 sip:104.248.116.199:35181;transport=tls 0 0 rweight=100
-700 sip:104.248.116.35:35181;transport=tls 0 0 rweight=100
-700 sip:142.93.0.98:35181;transport=tls 0 0 rweight=100
-700 sip:104.248.124.22:35181;transport=tls 0 0 rweight=100
-700 sip:104.248.120.79:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.143.59:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.132.194:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.138.102:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.143.130:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.154.125:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.144.120:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.153.113:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.153.255:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.157.8:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.147.95:35181;transport=tls 0 0 rweight=100
 
-# Vultr US East
-700 sip:104.207.135.82:35181;transport=tls 0 0 rweight=100
-700 sip:108.61.158.14:35181;transport=tls 0 0 rweight=100
-700 sip:45.77.203.19:35181;transport=tls 0 0 rweight=100
-700 sip:45.63.10.210:35181;transport=tls 0 0 rweight=100
+# US East Vultr
+700 sip:45.77.93.222:35181;transport=tls 0 0 rweight=100
+700 sip:104.238.134.173:35181;transport=tls 0 0 rweight=100
+700 sip:104.156.226.71:35181;transport=tls 0 0 rweight=100
+700 sip:63.209.33.53:35181;transport=tls 0 0 rweight=100
 
-# Vultr US West
-700 sip:45.32.135.71:35181;transport=tls 0 0 rweight=100
-700 sip:45.32.138.44:35181;transport=tls 0 0 rweight=100
-700 sip:45.32.133.89:35181;transport=tls 0 0 rweight=100
-700 sip:45.63.90.91:35181;transport=tls 0 0 rweight=100
-700 sip:149.28.201.113:35181;transport=tls 0 0 rweight=100
-700 sip:45.77.191.225:35181;transport=tls 0 0 rweight=100
+# US West DO
+700 sip:138.197.216.120:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.220.145:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.198.13:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.53.45:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.44.106:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.198.10:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.231.173:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.218.215:35181;transport=tls 0 0 rweight=100
+700 sip:165.227.1.153:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.217.232:35181;transport=tls 0 0 rweight=100
+
+# US West Vultr
+700 sip:45.76.241.61:35181;transport=tls 0 0 rweight=100
+700 sip:45.63.82.176:35181;transport=tls 0 0 rweight=100
+700 sip:149.28.206.209:35181;transport=tls 0 0 rweight=100
+700 sip:144.202.107.147:35181;transport=tls 0 0 rweight=100
+700 sip:45.63.92.149:35181;transport=tls 0 0 rweight=100
+700 sip:45.77.186.169:35181;transport=tls 0 0 rweight=100
+700 sip:45.63.85.177:35181;transport=tls 0 0 rweight=100
 
 # Counterpath temporary context
-200 sip:66.42.65.222:35185;transport=tls;weight=10
+200 sip:45.76.241.61:35185;transport=tls;weight=10
 
