@@ -80,7 +80,10 @@ ALLOWADDR={
     "206.147.72.72/32",
     "206.147.92.56/32",
     "206.147.88.73/32",
-    "206.147.72.86/32"
+    "206.147.72.86/32",
+    -- Ziron
+    "185.43.128.28/32",
+    "185.43.129.28/32"
 };
 
 -- list of freeswitch addresses to allow traffic from without user auth
