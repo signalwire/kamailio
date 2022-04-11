@@ -823,19 +823,14 @@ end
 
 -- URI update for dialog requests
 function ksr_route_dlguri()
-    if not ksr_is_src_fsaddr() then
-        -- workaround for partner SIP proxies that add alias and do not remove it
-        -- SW Kamailio <-> SW FreeSwitch is routable link (no NAT), skip alias handling
-        KSR.siputils.uri_param_rm("alias");
-        KSR.siputils.uri_param_rm("alias");
-        return 1;
-    end
     if not KSR.isdsturiset() then
         KSR.nathelper.handle_ruri_alias();
         if KSR.isdsturiset() then
             -- alias parameter was used - target behind nat
             -- do not connect on tcp/tls to send out if connection does not exist
-            KSR.set_forward_no_connect();
+            if ksr_is_src_fsaddr() then
+                KSR.set_forward_no_connect();
+            end
         end
     end
     return 1;
