@@ -33,6 +33,11 @@
 100 sip:138.197.218.215:35181;transport=tls 0 0 rweight=100
 100 sip:165.227.1.153:35181;transport=tls 0 0 rweight=100
 100 sip:138.197.217.232:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.45.70:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.28.164:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.222.251:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.21.178:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.221.72:35181;transport=tls 0 0 rweight=100
 
 # US West DO sfo3
 100 sip:137.184.87.1:35181;transport=tls 0 0 rweight=100
@@ -45,6 +50,11 @@
 100 sip:137.184.87.5:35181;transport=tls 0 0 rweight=100
 100 sip:137.184.87.7:35181;transport=tls 0 0 rweight=100
 100 sip:137.184.87.13:35181;transport=tls 0 0 rweight=100
+100 sip:128.199.8.125:35181;transport=tls 0 0 rweight=100
+100 sip:143.198.136.243:35181;transport=tls 0 0 rweight=100
+100 sip:137.184.6.18:35181;transport=tls 0 0 rweight=100
+100 sip:164.92.126.184:35181;transport=tls 0 0 rweight=100
+100 sip:164.92.126.187:35181;transport=tls 0 0 rweight=100
 
 # US West Vultr
 100 sip:45.76.241.61:35181;transport=tls 0 0 rweight=100
@@ -90,6 +100,11 @@
 700 sip:138.197.218.215:35181;transport=tls 0 0 rweight=100
 700 sip:165.227.1.153:35181;transport=tls 0 0 rweight=100
 700 sip:138.197.217.232:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.45.70:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.28.164:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.222.251:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.21.178:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.221.72:35181;transport=tls 0 0 rweight=100
 
 # US West DO sfo3
 700 sip:137.184.87.1:35181;transport=tls 0 0 rweight=100
@@ -102,6 +117,11 @@
 700 sip:137.184.87.5:35181;transport=tls 0 0 rweight=100
 700 sip:137.184.87.7:35181;transport=tls 0 0 rweight=100
 700 sip:137.184.87.13:35181;transport=tls 0 0 rweight=100
+700 sip:128.199.8.125:35181;transport=tls 0 0 rweight=100
+700 sip:143.198.136.243:35181;transport=tls 0 0 rweight=100
+700 sip:137.184.6.18:35181;transport=tls 0 0 rweight=100
+700 sip:164.92.126.184:35181;transport=tls 0 0 rweight=100
+700 sip:164.92.126.187:35181;transport=tls 0 0 rweight=100
 
 # US West Vultr
 700 sip:45.76.241.61:35181;transport=tls 0 0 rweight=100
