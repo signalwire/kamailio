@@ -41,6 +41,11 @@
 100 sip:159.65.68.199:35181;transport=tls 0 0 rweight=100
 100 sip:159.65.68.62:35181;transport=tls 0 0 rweight=100
 100 sip:159.65.68.75:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.202.4:35181;transport=tls 0 0 rweight=100
+100 sip:138.197.202.199:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.41.228:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.41.150:35181;transport=tls 0 0 rweight=100
+100 sip:138.68.58.3:35181;transport=tls 0 0 rweight=100
 
 # US West DO sfo3
 100 sip:137.184.87.1:35181;transport=tls 0 0 rweight=100
@@ -62,6 +67,11 @@
 100 sip:164.92.114.173:35181;transport=tls 0 0 rweight=100
 100 sip:164.92.114.158:35181;transport=tls 0 0 rweight=100
 100 sip:137.184.191.31:35181;transport=tls 0 0 rweight=100
+100 sip:143.244.178.87:35181;transport=tls 0 0 rweight=100
+100 sip:143.244.176.11:35181;transport=tls 0 0 rweight=100
+100 sip:143.198.153.69:35181;transport=tls 0 0 rweight=100
+100 sip:143.198.155.129:35181;transport=tls 0 0 rweight=100
+100 sip:143.198.153.6:35181;transport=tls 0 0 rweight=100
 
 #### Rollout Routing
 ## This will be the routing for sensitive clients - a little traffic to rollout servers, primarily to stable
@@ -106,6 +116,11 @@
 700 sip:159.65.68.199:35181;transport=tls 0 0 rweight=100
 700 sip:159.65.68.62:35181;transport=tls 0 0 rweight=100
 700 sip:159.65.68.75:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.202.4:35181;transport=tls 0 0 rweight=100
+700 sip:138.197.202.199:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.41.228:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.41.150:35181;transport=tls 0 0 rweight=100
+700 sip:138.68.58.3:35181;transport=tls 0 0 rweight=100
 
 # US West DO sfo3
 700 sip:137.184.87.1:35181;transport=tls 0 0 rweight=100
@@ -127,6 +142,11 @@
 700 sip:164.92.114.173:35181;transport=tls 0 0 rweight=100
 700 sip:164.92.114.158:35181;transport=tls 0 0 rweight=100
 700 sip:137.184.191.31:35181;transport=tls 0 0 rweight=100
+700 sip:143.244.178.87:35181;transport=tls 0 0 rweight=100
+700 sip:143.244.176.11:35181;transport=tls 0 0 rweight=100
+700 sip:143.198.153.69:35181;transport=tls 0 0 rweight=100
+700 sip:143.198.155.129:35181;transport=tls 0 0 rweight=100
+700 sip:143.198.153.6:35181;transport=tls 0 0 rweight=100
 
 # Counterpath temporary context
 200 sip:159.65.68.199:35185;transport=tls;weight=10
