@@ -17,7 +17,7 @@ local cjson = require "cjson"
 -- global variables to enable/disable some features
 WITH_ANTIFLOOD=true
 WITH_AUTHCACHE=true
-WITH_BLADENOTIFY = os.getenv "KAM_WITH_BLADENOTIFY" or true
+WITH_BLADENOTIFY = os.getenv "KAMAILIO_WITH_BLADENOTIFY" or true
 WITH_REDISROUTE=false
 
 -- global variables corresponding to defined values (e.g., flags) in kamailio.cfg
