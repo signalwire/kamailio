@@ -61,7 +61,6 @@ REJECT_600_IPS={
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
-    "147.75.65.192/28",
     "34.226.36.32/28",
     "34.210.91.112/28",
     "147.75.60.160/28",
