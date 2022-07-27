@@ -53,7 +53,7 @@ prep_term
   /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 \
     -A KAM_IP_LOCAL=$(ip route get 1.1.1.1 | sed 's/^.*src \([^ ]*\).*$/\1/;q') \
     -A KAM_IP_PUBLIC=${KAM_IP_PUBLIC} \
-    ${KAMAILIO_SIPTRACE_URI:+-A $KAMAILIO_SIPTRACE_URI} \
+    ${KAMAILIO_SIPTRACE_URI:+-A KAMAILIO_SIPTRACE_URI=\"$KAMAILIO_SIPTRACE_URI\"} \
     -A KAM_IP_OTHER=$(ip addr | grep -Po '.+10.92.+\/16.+' | grep -Po 'inet \K[\d.]+') \
     -A KAM_CLUSTER_NONCE=\"$KAM_CLUSTER_NONCE\" \
     -A $KAMAILIO_LOCATION \
