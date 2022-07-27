@@ -27,6 +27,14 @@ Build and run docker container.
 docker run -ti -p 60605:60605/udp signalwire/kamailio
 ```
 
+### HEP Tracing ###
+
+To enable HEP tracing set the KAMAILIO_SIPTRACE_URI environment variable
+
+For example:
+
+```KAMAILIO_SIPTRACE_URI = "sip:heplify-server:9060"```
+
 ## User Authentication And Location Services ##
 
 User authentication and location services are enabled for the domains set in
