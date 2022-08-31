@@ -49,7 +49,7 @@ if [[ ! -v CONFD_DISABLED ]]; then
 fi
 
 #Set the source ip for HEP packets
-if [[ ! -v KAMAILIO_SIPTRACE_URI ]]; then
+if [[ ! -z "${KAMAILIO_SIPTRACE_URI}" ]]; then
    KAMAILIO_SIPTRACE_SOURCE_URI="sip:$(ip route get $(dig +short $(echo ${KAMAILIO_SIPTRACE_URI} | cut -d: -f2)) | sed 's/^.*src \([^ ]*\).*$/\1/;q'):9060"
 fi
 
