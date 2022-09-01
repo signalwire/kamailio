@@ -50,7 +50,8 @@ fi
 
 #Set the source ip for HEP packets
 if [[ ! -z "${KAMAILIO_SIPTRACE_URI}" ]]; then
-   KAMAILIO_SIPTRACE_SOURCE_URI="sip:$(ip route get $(dig +short $(echo ${KAMAILIO_SIPTRACE_URI} | cut -d: -f2)) | sed 's/^.*src \([^ ]*\).*$/\1/;q'):9060"
+   KAMAILIO_SIPTRACE_SOURCE_IP=$(ip route get $(dig +short $(echo ${KAMAILIO_SIPTRACE_URI} | cut -d: -f2)) | sed 's/^.*src \([^ ]*\).*$/\1/;q')
+   KAMAILIO_SIPTRACE_SOURCE_URI="sip:${KAMAILIO_SIPTRACE_SOURCE_IP}:9060"
 fi
 
 echo 65535 > /writeable-proc/sys/net/core/somaxconn
@@ -59,6 +60,7 @@ prep_term
     -A KAM_IP_LOCAL=$(ip route get 1.1.1.1 | sed 's/^.*src \([^ ]*\).*$/\1/;q') \
     -A KAM_IP_PUBLIC=${KAM_IP_PUBLIC} \
     ${KAMAILIO_SIPTRACE_URI:+-A KAMAILIO_SIPTRACE_URI=\"$KAMAILIO_SIPTRACE_URI\"} \
+    ${KAMAILIO_SIPTRACE_SOURCE_IP:+-A KAMAILIO_SIPTRACE_SOURCE_IP=$KAMAILIO_SIPTRACE_SOURCE_IP} \
     ${KAMAILIO_SIPTRACE_SOURCE_URI:+-A KAMAILIO_SIPTRACE_SOURCE_URI=\"$KAMAILIO_SIPTRACE_SOURCE_URI\"} \
     -A KAM_IP_OTHER=$(ip addr | grep -Po '.+10.92.+\/16.+' | grep -Po 'inet \K[\d.]+') \
     -A KAM_CLUSTER_NONCE=\"$KAM_CLUSTER_NONCE\" \
