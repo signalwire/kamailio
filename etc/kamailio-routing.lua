@@ -61,7 +61,6 @@ REJECT_600_IPS={
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
-    "147.75.65.192/28",
     "34.226.36.32/28",
     "34.210.91.112/28",
     "147.75.60.160/28",
@@ -160,6 +159,8 @@ FSADDR={
 "165.22.83.239/32",
 --  AWS Bahrain
 "157.175.88.214/32",
+"157.175.190.167/32",
+"157.175.82.183/32",
 --  Vultr Australia
 "45.77.49.196/32",
 --  AWS Cape Town
