@@ -32,7 +32,7 @@ if [ ! -z "${KAMAILIO_PROFILING}" ]; then
 fi
 
 if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
-  KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com)
+  export KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com)
 fi
 
 VAULT_CERT_NAME=${VAULT_CERT_NAME:-signalwire.com}
@@ -50,7 +50,7 @@ fi
 
 #Set the source ip for HEP packets
 if [[ ! -z "${KAMAILIO_SIPTRACE_URI}" ]]; then
-   KAMAILIO_SIPTRACE_SOURCE_IP=$(ip route get $(dig +short $(echo ${KAMAILIO_SIPTRACE_URI} | cut -d: -f2)) | sed 's/^.*src \([^ ]*\).*$/\1/;q')
+   export KAMAILIO_SIPTRACE_SOURCE_IP=$(ip route get $(dig +short $(echo ${KAMAILIO_SIPTRACE_URI} | cut -d: -f2)) | sed 's/^.*src \([^ ]*\).*$/\1/;q')
 fi
 
 echo 65535 > /writeable-proc/sys/net/core/somaxconn
