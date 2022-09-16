@@ -19,7 +19,7 @@ wait_term()
 {
     term_child_pid=$!
     if [ "${term_kill_needed}" ]; then
-        kill -TERM "${term_child_pid}" 2>/dev/null 
+        kill -TERM "${term_child_pid}" 2>/dev/null
     fi
     wait ${term_child_pid}
     trap - TERM INT
@@ -34,6 +34,7 @@ fi
 if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
   export KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com)
 fi
+echo $KAM_IP_PUBLIC > /proc/.heathcheck_public_ip
 
 VAULT_CERT_NAME=${VAULT_CERT_NAME:-signalwire.com}
 find /etc/confd/ -type f -exec sed -i "s|VAULT_CERT_NAME|$VAULT_CERT_NAME|g" {} \;
