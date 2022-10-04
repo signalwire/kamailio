@@ -1,0 +1,63 @@
+---
+kind: pipeline
+name: default
+
+steps:
+- name: validate lua
+  image: alpine
+  commands:
+    - set +e
+    - apk add luacheck
+    - luacheck etc/kamailio-routing.lua
+    - if [ $? -gt 1 ]; then exit 1; else exit 0; fi
+
+- name: setup build
+  image: alpine/git
+  environment:
+    DEPLOY_KEY:
+      from_secret: deploy_key
+  commands:
+    - git config --global --add safe.directory /drone/src
+    - git submodule update --init --recursive
+    - echo "production-$(git show -s --format="%cs" | tr -d '-')-${DRONE_COMMIT_SHA:0:8}-${DRONE_BUILD_NUMBER},latest" > .tags
+    - echo $DEPLOY_KEY | gpg -dq --batch --passphrase-fd 0 tls.zip.asc > tls.zip
+    - unzip tls.zip
+  depends_on:
+    - validate lua
+
+- name: build, tag, and push kamailio
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: dockerhub_user
+    password:
+      from_secret: dockerhub_password
+    repo: signalwire/kamailio
+    dockerfile: provisioning/production.Dockerfile
+  depends_on:
+    - setup build
+
+trigger:
+  event: push
+  branch: master
+
+---
+kind: secret
+name: deploy_key
+get:
+  path: kv/data/ci/kamailio/production
+  name: deploy_key
+
+---
+kind: secret
+name: dockerhub_password
+get:
+  path: kv/data/credentials/dockerhub
+  name: password
+
+---
+kind: secret
+name: dockerhub_user
+get:
+  path: kv/data/credentials/dockerhub
+  name: username
