@@ -15,7 +15,7 @@ steps:
     - echo $DEPLOY_KEY | gpg -dq --batch --passphrase-fd 0 tls.zip.asc > tls.zip
     - unzip tls.zip
 
-- name: Validate Lua
+- name: validate lua
   image: alpine
   commands:
     - apk add luacheck
@@ -34,6 +34,7 @@ steps:
     dockerfile: provisioning/production.Dockerfile
   depends_on:
     - setup build
+    - validate lua
 
 trigger:
   event: push
