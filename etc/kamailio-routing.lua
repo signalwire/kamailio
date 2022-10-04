@@ -486,7 +486,7 @@ function ksr_request_route()
 
     -- routing inbound and outbound
     if ksr_is_src_fsaddr()
-            or KSR.isflagset(FLT_GOT_AUTH_XKEYS);
+            or KSR.isflagset(FLT_GOT_AUTH_XKEYS)
             or KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
             -- or KSR.permissions.allow_source_address(100) > 0 then
         ksr_route_swoutbound();
