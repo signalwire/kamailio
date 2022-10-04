@@ -3,6 +3,13 @@ kind: pipeline
 name: default
 
 steps:
+- name: validate lua
+  image: alpine
+  commands:
+    - apk add luacheck
+    - luacheck etc/kamailio-routing.lua
+    - if [ $? -gt 1 ]; then exit 1; else exit 0; fi
+
 - name: setup build
   image: alpine/git
   environment:
@@ -14,13 +21,8 @@ steps:
     - echo "production-$(git show -s --format="%cs" | tr -d '-')-${DRONE_COMMIT_SHA:0:8}-${DRONE_BUILD_NUMBER},latest" > .tags
     - echo $DEPLOY_KEY | gpg -dq --batch --passphrase-fd 0 tls.zip.asc > tls.zip
     - unzip tls.zip
-
-- name: validate lua
-  image: alpine
-  commands:
-    - apk add luacheck
-    - luacheck etc/kamailio-routing.lua
-    - if [ $? -gt 1 ]; then exit 1; else exit 0; fi
+  depends_on:
+    - validate lua
 
 - name: build, tag, and push kamailio
   image: plugins/docker
@@ -34,7 +36,6 @@ steps:
     dockerfile: provisioning/production.Dockerfile
   depends_on:
     - setup build
-    - validate lua
 
 trigger:
   event: push
