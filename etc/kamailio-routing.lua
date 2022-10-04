@@ -28,6 +28,7 @@ FLT_NATS=5
 FLT_BRANCHDROP=15
 FLT_AUTH_XKEYS=16
 FLT_PROUTETO=17
+FLT_GOT_AUTH_XKEYS=18
 
 FLB_NATB=6
 FLB_NATSIPPING=7
@@ -374,7 +375,7 @@ end
 
 -- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS, SKIP_ANTIFLOOD_IPS, and FSADDR lists
 function ksr_skip_antiflood_for_transaction()
-    if ksr_check_array_for_domain_match(SKIP_ANTIFLOOD_DOMAINS) or ksr_is_src_fsaddr() or ksr_is_skip_antiflood_ip() then
+    if KSR.isflagset(FLT_GOT_AUTH_XKEYS) or ksr_check_array_for_domain_match(SKIP_ANTIFLOOD_DOMAINS) or ksr_is_src_fsaddr() or ksr_is_skip_antiflood_ip() then
         return true 
     else
         return false
@@ -403,6 +404,19 @@ function ksr_request_route()
         KSR.hdr.append("Retry-After: 5\r\n");
         KSR.sl.send_reply(500, "Retry Request");
         KSR.x.exit();
+    end
+
+    -- from nodes with auth xkeys support
+    if KSR.hdr.is_present("X-SignalWire-OutboundAuthToken") > 0
+            and KSR.hdr.is_present("X-SignalWire-OutboundAuthTime") > 0 then
+        local timehdr = KSR.hdr.gete("X-SignalWire-OutboundAuthTime");
+        local tlimit = tonumber(timehdr);
+        if (tlimit ~= nil) and (tlimit + AUTH_XKEYS_TIMEFRAME >= os.time()) then
+            if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256",
+                    timehdr .. ":" .. KSR.kx.get_method() .. ":" .. KSR.kx.get_callid() .. ":" .. KSR.kx.gete_fuser() .. ":" .. KSR.kx.gete_ruser()) > 0 then
+                KSR.setflag(FLT_GOT_AUTH_XKEYS); -- got request that has valid auth xkeys signature
+            end
+        end
     end
 
     -- remove headers that should not be propagated
@@ -472,6 +486,7 @@ function ksr_request_route()
 
     -- routing inbound and outbound
     if ksr_is_src_fsaddr()
+            or KSR.isflagset(FLT_GOT_AUTH_XKEYS);
             or KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
             -- or KSR.permissions.allow_source_address(100) > 0 then
         ksr_route_swoutbound();
@@ -644,6 +659,7 @@ function ksr_route_auth()
 
     -- skip auth for traffic from media servers
     if ksr_is_src_fsaddr()
+            or KSR.isflagset(FLT_GOT_AUTH_XKEYS)
             or KSR.dispatcher.ds_is_from_list_mode(100, 3) > 0 then
         -- or KSR.permissions.allow_source_address(100) > 0 then
         return 1;
@@ -654,19 +670,6 @@ function ksr_route_auth()
     -- from trusted list of addresses
     if ksr_is_src_trusted() then
         return 1;
-    end
-
-    -- from nodes with auth xkeys support
-    if KSR.hdr.is_present("X-SignalWire-OutboundAuthToken") > 0
-            and KSR.hdr.is_present("X-SignalWire-OutboundAuthTime") > 0 then
-        local timehdr = KSR.hdr.gete("X-SignalWire-OutboundAuthTime");
-        local tlimit = tonumber(timehdr);
-        if (tlimit ~= nil) and (tlimit + AUTH_XKEYS_TIMEFRAME >= os.time()) then
-            if KSR.auth_xkeys.auth_xkeys_check("X-SignalWire-OutboundAuthToken", "swk", "sha256",
-                    timehdr .. ":" .. KSR.kx.get_method() .. ":" .. KSR.kx.get_callid() .. ":" .. KSR.kx.gete_fuser() .. ":" .. KSR.kx.gete_ruser()) > 0 then
-                return 1;
-            end
-        end
     end
 
     local uafd = KSR.kx.gete_fhost();
@@ -852,7 +855,7 @@ function ksr_route_dlguri()
         if KSR.isdsturiset() then
             -- alias parameter was used - target behind nat
             -- do not connect on tcp/tls to send out if connection does not exist
-            if ksr_is_src_fsaddr() then
+            if ksr_is_src_fsaddr() or KSR.isflagset(FLT_GOT_AUTH_XKEYS) then
                 KSR.set_forward_no_connect();
             end
         end
