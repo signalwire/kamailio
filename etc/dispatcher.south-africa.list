@@ -1,5 +1,6 @@
 # AWS Cape Town
 100 sip:13.244.144.240:35181;transport=tls 0 0 rweight=100
+100 sip:13.246.58.95:35181;transport=tls 0 0 rweight=100
 
 # Counterpath temporary context
 200 sip:159.65.68.199:35185;transport=tls;weight=10
