@@ -34,7 +34,7 @@ fi
 if [ "x${KAM_IP_PUBLIC}" == "x" ]; then
   export KAM_IP_PUBLIC=$(dig +short myip.opendns.com @resolver1.opendns.com)
 fi
-echo $KAM_IP_PUBLIC > /etc/.heathcheck_public_ip
+echo $KAM_IP_PUBLIC > /etc/.healthcheck_public_ip
 
 VAULT_CERT_NAME=${VAULT_CERT_NAME:-signalwire.com}
 find /etc/confd/ -type f -exec sed -i "s|VAULT_CERT_NAME|$VAULT_CERT_NAME|g" {} \;
