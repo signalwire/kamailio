@@ -375,9 +375,9 @@ function ksr_check_array_for_domain_match(domain_array)
     end
 end
 
--- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS, SKIP_ANTIFLOOD_IPS, and FSADDR lists
+-- skip antiflood protection on SKIP_ANTIFLOOD_DOMAINS, SKIP_ANTIFLOOD_IPS, ALLOWADDR, and FSADDR lists
 function ksr_skip_antiflood_for_transaction()
-    if KSR.isflagset(FLT_GOT_AUTH_XKEYS) or ksr_check_array_for_domain_match(SKIP_ANTIFLOOD_DOMAINS) or ksr_is_src_fsaddr() or ksr_is_skip_antiflood_ip() then
+    if KSR.isflagset(FLT_GOT_AUTH_XKEYS) or ksr_check_array_for_domain_match(SKIP_ANTIFLOOD_DOMAINS) or ksr_is_src_trusted() or ksr_is_src_fsaddr() or ksr_is_skip_antiflood_ip() then
         return true 
     else
         return false
