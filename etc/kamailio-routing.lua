@@ -40,6 +40,11 @@ AUTH_XKEYS_TIMEFRAME=300
 AUTHURL=os.getenv('KAMAILIO_AUTHORIZATION_URL')
 -- AUTHURL="https://api.swire.io/api/provider_callback/kamailio/authorize"
 
+-- Base URI for the registrar HTTP methods
+REGISTRAR_URI=os.getenv('REGISTRAR_URI')
+-- Node ID used in the registrar
+REGISTRAR_NODEID=os.getenv('REGISTRAR_NODEID') or math.random(1000000000)..os.time()
+
 -- Special domain authorization for CNAME'd domains
 DOMAINAUTH= {}
 DOMAINAUTH["sip.softphone.com"] = 1
@@ -895,7 +900,7 @@ function ksr_route_registrar()
         evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
 		.. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\"";
 
-        inodeid = KSR.pv.gete("$bladec(node_id)");
+        inodeid = REGISTRAR_NODEID;
         if string.len(inodeid) > 0 then
             evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
         end
@@ -1239,7 +1244,7 @@ function ksr_unregister_event(evname)
     local evdata = "";
     local aor = KSR.pv.getw("$ulc(exp=>aor)");
     local g_crt_projectid = KSR.htable.sht_gete("project", aor);
-    local inodeid = KSR.pv.gete("$bladec(node_id)");
+    local inodeid = REGISTRAR_NODEID;
 
     if KSR.registrar.registered_uri("location", "sip:" .. aor) > 0 then
         -- user still has valid contacts on the this node - don't remove all entries from registrar
@@ -1292,7 +1297,7 @@ end
 -- event callback function on shutdown
 function ksr_bladec_event_shutdown(evname)
     local evcmd = "purge";
-    local inodeid = KSR.pv.gete("$bladec(node_id)");
+    local inodeid = REGISTRAR_NODEID;
     local evdata = "{ \"node_id\": \"" .. inodeid .. "\" }";
 
     KSR.info("Sending direct blade.execute for shutdown: " .. evcmd .. " - " .. evdata .. "\n");
