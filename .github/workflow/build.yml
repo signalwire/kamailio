@@ -1,0 +1,65 @@
+name: build and test kamailio
+
+on:
+  push:
+    branches: [ master, sa/3962-remove-blade ]
+
+  workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+      GH_BOT_DEPLOY_KEY:
+        required: true
+
+jobs:
+
+  production:
+    needs: base
+    runs-on:
+    - ubuntu-latest
+
+    outputs:
+      imagetag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: |
+          signalwire/kamailio
+        tags: |
+          type=raw,value=production-pre
+
+    - uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+        submodules: true
+
+    - name: Build and export to Docker
+      uses: docker/build-push-action@v3
+      with:
+        # `context` is required to re-use the outcome of `actions/checkout`
+        context: .
+        push: true
+        file: provisioning/production.Dockerfile
+        ssh: ${{ env.SSH_AUTH_SOCK }}
+        tags: ${{ steps.meta.outputs.tags }}
+
+  production-test:
+    needs: production
+    runs-on: ubuntu-latest
+    container:
+      image: signalwire/kamailio:production-pre
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    steps:
