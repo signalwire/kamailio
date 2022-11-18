@@ -14,7 +14,6 @@ services:
     volumes:
       - ../etc:/usr/local/etc/kamailio
       - ../kamailio:/usr/src/kamailio
-      - ../src:/usr/src/bladec
       - ../provisioning/docker-entrypoint.sh:/docker-entrypoint.sh
     networks:
       - signalwire_development
@@ -24,7 +23,7 @@ services:
     image: redis:4-alpine
     networks:
       - signalwire_development
-    
+
   registrar:
     image: signalwire/registrar
     networks:
@@ -32,22 +31,6 @@ services:
     env_file: ../.env
     stdin_open: true
     tty: true
-
-  switchblade:
-    image: signalwire/switchblade:latest
-    env_file: ../.env
-    environment:
-      - SWITCHBLADE_MODE=Master
-    stdin_open: true
-    tty: true
-    networks:
-      - signalwire_development
-
-  switchblade-redis:
-    command: redis-server --appendonly no --maxmemory-policy allkeys-lru
-    image: redis:4-alpine 
-    networks:
-      - signalwire_development
 
 networks:
   signalwire_development:

@@ -402,12 +402,6 @@ function ksr_request_route()
     -- do not connect on tcp/tls to send reply
     KSR.set_reply_no_connect();
 
-    if KSR.bladec.node_id_ready() < 0 then
-        KSR.hdr.append("Retry-After: 5\r\n");
-        KSR.sl.send_reply(500, "Retry Request");
-        KSR.x.exit();
-    end
-
     -- from nodes with auth xkeys support
     if KSR.hdr.is_present("X-SignalWire-OutboundAuthToken") > 0
             and KSR.hdr.is_present("X-SignalWire-OutboundAuthTime") > 0 then
@@ -756,8 +750,6 @@ function ksr_route_auth()
         local hres = "";
         repeat
             htries = htries - 1;
-            -- hrcode = KSR.http_client.query_post_hdrs(AUTHURL, hbody,
-            --             "Content-Type: application/json", "$var(hres)");
             hrcode = KSR.ruxc.http_post(AUTHURL, hbody,
                         "Content-Type: application/json\r\n", "$var(hres)");
             if hrcode ~= 500 then
@@ -1199,7 +1191,7 @@ function ksr_failure_prouteto()
 end
 
 -- RTimer callback to retrieve message from mqueue and push to blade network
-function ksr_rtimer_bladec(evname)
+function ksr_rtimer(evname)
 	while KSR.mqueue.mq_fetch("mqregister") > 0 do
 		local bevcmd = KSR.pv.gete("$mqk(mqregister)");
 		local bevdata = KSR.pv.gete("$mqv(mqregister)");
