@@ -17,6 +17,21 @@ on:
 
 jobs:
 
+  build:
+    name: 'Staging GCP'
+    uses: signalwire/actions-template/.github/workflows/ci-build.yml@dev
+    with:
+      PROJECT_NAME: "kamailio"
+      FILE: ./provisioning/production.Dockerfile
+      ENABLE_GPG: true
+      SUBMODULES_RECURSIVE: true
+    secrets:
+      GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+
   production-pre:
     name: 'production-pre'
     uses: signalwire/actions-template/.github/workflows/ci-build.yml@main
