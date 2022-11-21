@@ -7,7 +7,6 @@ ENV \
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
   flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc dnsutils libgoogle-perftools-dev \
   liblua5.1-0-dev libunistring-dev libxml2-dev gdb \
-  netbase \
   && rm -rf /var/lib/apt/lists/* \
   && curl -L https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64 -o /bin/confd \
   && sha256sum /bin/confd | grep ${CONFD_SHA256}
