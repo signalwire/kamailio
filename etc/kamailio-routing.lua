@@ -920,7 +920,7 @@ function ksr_route_registrar()
         local uri = build_registrar_uri(g_crt_projectid, touser)
         KSR.info("Sending Registration HTTP query: POST " .. uri .. " " .. evdata .. "\n");
         local hrcode = 0;
-        hrcode = KSR.ruxc.http_post(, evdata, application_json_header, var_hres);
+        hrcode = KSR.ruxc.http_post(uri, evdata, application_json_header, var_hres);
         local hres = KSR.pvx.var_get("hres");
         KSR.info("Registration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
 
@@ -1214,21 +1214,20 @@ end
 
 -- RTimer callback to retrieve message from mqueue and push to blade network
 function ksr_rtimer(evname)
-	while KSR.mqueue.mq_fetch("mqregister") > 0 do
-		local uri = KSR.pv.gete("$mqk(mqregister)");
-		local evdata = KSR.pv.gete("$mqv(mqregister)");
-		if string.len(uri) > 0 and string.len(evdata) > 0 then
-        local hrcode = 0;
-        KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
-        hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
-        local hres = KSR.pvx.var_get("hres");
-        KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
-        if hrcode > 299 then
-          KSR.warn("Failed unregister: " .. uri .. " - " .. evdata .. "\n");
+    while KSR.mqueue.mq_fetch("mqregister") > 0 do
+        local uri = KSR.pv.gete("$mqk(mqregister)");
+        local evdata = KSR.pv.gete("$mqv(mqregister)");
+        if string.len(uri) > 0 and string.len(evdata) > 0 then
+            local hrcode = 0;
+            KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
+            hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
+            local hres = KSR.pvx.var_get("hres");
+            KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
+            if hrcode > 299 then
+              KSR.warn("Failed unregister: " .. uri .. " - " .. evdata .. "\n");
+            end
         end
-			end
-		end
-	end
+    end
 end
 
 -- xhttp request callback

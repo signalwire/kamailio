@@ -74,7 +74,8 @@ jobs:
       run: apt update && apt install -yq procps
 
     - name: Start Kamailio
-      run: /docker-entrypoint.sh
+      # docker-entrypoint.sh is really cute but relies on confd
+      run:   /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 -A 'KAM_CLUSTER_NONCE="boo!"' -A 'KAM_IP_LOCAL=0.0.0.0' -A 'KAM_IP_PUBLIC=0.0.0.0' -A 'KAMAILIO_SIPTRACE_SOURCE_IP=0.0.0.0' -A 'KAMAILIO_DEVELOPMENT=true' --log-engine=json:acA &
 
     - name: Stop Kamailio
       run: pkill kamailio
