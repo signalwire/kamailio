@@ -28,13 +28,13 @@ jobs:
       TAG: |
         type=raw,value=production-pre
       SUBMODULES_RECURSIVE: true
+      SUBMODULES_PRIVATE: false
     secrets:
       GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
-      
   production-pre-test:
     needs: production-pre
     runs-on: ubuntu-latest
