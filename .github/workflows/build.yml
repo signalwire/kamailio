@@ -84,7 +84,7 @@ jobs:
       run: curl -v http://127.0.0.1:5060/
 
     - name: Add entry to registrar
-      run: |
+      run: >-
         echo -e
           'REGISTER bob@example.com SIP/2.0\r\n'
           | nc -v localhost 5060
