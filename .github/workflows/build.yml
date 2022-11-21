@@ -58,7 +58,7 @@ jobs:
           SWITCHBLADE_DAEMON: 'true'
           ELASTIC_APM_ENABLED: 'false'
       registrar:
-        image: signalwire/registrar:production-pre
+        image: signalwire/registrar:unstable
         env:
           REGISTRAR_REDIS: registrar-redis:6379
           REGISTRAR_WEB_HOST_PORT: 8080
