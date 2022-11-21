@@ -70,31 +70,5 @@ jobs:
     env:
       REGISTRAR_URI: http://registrar:8080/sip/
     steps:
-    - name: Tools
-      run: apt update && apt install -yq procps curl netcat-openbsd net-tools redis-tools
-
-    - name: Start Kamailio
-      # docker-entrypoint.sh is really cute but relies on confd
-      run: /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 -A 'KAM_CLUSTER_NONCE="boo!"' -A 'KAM_IP_LOCAL=0.0.0.0' -A 'KAM_IP_PUBLIC=0.0.0.0' -A 'KAMAILIO_SIPTRACE_SOURCE_IP=0.0.0.0' -A 'KAMAILIO_DEVELOPMENT=true' --log-engine=json:acA &
-
-    - name: Netstat
-      run: netstat -tunap
-
-    - name: Ensure Kamailio is running
-      run: curl -v http://127.0.0.1:5060/
-
-    - name: Add entry to registrar
-      run: 'printf "%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n\r\n"
-          "REGISTER bob@example.com SIP/2.0/tcp"
-          "Via SIP/2.0/tcp 127.0.0.1:5080;branch=one"
-          "From: bob@example.com;tag=foo"
-          "To: bob@example.com"
-          "Call-ID: 123"
-          "CSeq: 1 REGISTER"
-          "Contact: sip:bob@127.0.0.1:5080"
-          "Content-Length: 0"
-          "Expires: 300"
-          | nc -v -p 5080 localhost 5060'
-
-    - name: Stop Kamailio
-      run: pkill kamailio
+    - name: Simple
+      run: ./test/simple.sh
