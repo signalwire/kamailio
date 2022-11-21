@@ -23,7 +23,7 @@ jobs:
     with:
       PROJECT_NAME: 'kamailio'
       FILE: ./provisioning/production.Dockerfile
-      PUSH: true
+      PUSH: 'true'
       ENABLE_GPG: true
       TAG: |
         type=raw,value=production-pre
