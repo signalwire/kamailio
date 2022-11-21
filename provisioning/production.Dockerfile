@@ -64,5 +64,6 @@ COPY tls/ /usr/local/etc/kamailio/tls
 COPY etc/ /usr/local/etc/kamailio
 COPY confd/ /etc/confd
 COPY provisioning/docker-entrypoint.sh /docker-entrypoint.sh
+COPY test/simple.sh /simple-test.sh
 
 CMD ["/docker-entrypoint.sh"]

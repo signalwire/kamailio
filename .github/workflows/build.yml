@@ -71,4 +71,4 @@ jobs:
       REGISTRAR_URI: http://registrar:8080/sip/
     steps:
     - name: Simple
-      run: ./test/simple.sh
+      run: /simple-test.sh
