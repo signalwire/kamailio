@@ -19,8 +19,7 @@ jobs:
 
   production-pre:
     name: 'production-pre'
-    # FIXME: use @main once this gets merged
-    uses: signalwire/actions-template/.github/workflows/ci-build.yml@dev
+    uses: signalwire/actions-template/.github/workflows/ci-build.yml@main
     with:
       PROJECT_NAME: 'kamailio'
       FILE: ./provisioning/production.Dockerfile
