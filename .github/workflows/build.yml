@@ -14,46 +14,26 @@ on:
         required: true
       GH_BOT_DEPLOY_KEY:
         required: true
+      GITHUBTOKEN:
+        required: true
 
 jobs:
 
   production-pre:
-    runs-on:
-    - ubuntu-latest
-
-    outputs:
-      imagetag: ${{ steps.meta.outputs.tags }}
-
-    steps:
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Docker meta
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: |
-          signalwire/kamailio
-        tags: |
-          type=raw,value=production-pre
-
-    - uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
-        submodules: 'recursive'
-
-    - name: Build and export to Docker
-      uses: docker/build-push-action@v3
-      with:
-        # `context` is required to re-use the outcome of `actions/checkout`
-        context: .
-        push: true
-        file: provisioning/production.Dockerfile
-        ssh: ${{ env.SSH_AUTH_SOCK }}
-        tags: ${{ steps.meta.outputs.tags }}
+    name: 'production-pre'
+    uses: signalwire/actions-template/.github/workflows/ci-build.yml@main
+    with:
+      PROJECT_NAME: 'kamailio'
+      FILE: provisioning/production.Dockerfile
+      PUSH: true
+      TAG: |
+        type=raw,value=production-pre
+      SUBMODULES_RECURSIVE: true
+    secrets:
+      GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
 
   production-pre-test:
     needs: production-pre
