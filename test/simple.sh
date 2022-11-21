@@ -21,10 +21,10 @@ until curl -v http://127.0.0.1:5060/; do sleep 1; done
 echo Add entry to registrar
 
 nc -C -v -p 5080 localhost 5060 <<'EOT'
-REGISTER bob@example.com SIP/2.0/tcp
-Via SIP/2.0/tcp 127.0.0.1:5080;branch=one
-From: bob@example.com;tag=foo
-To: bob@example.com
+REGISTER bob@sip.swire.io SIP/2.0/tcp
+Via: SIP/2.0/tcp 127.0.0.1:5080;branch=one
+From: bob@sip.swire.io;tag=foo
+To: bob@sip.swire.io
 Call-ID: 123
 CSeq: 1 REGISTER
 Contact: sip:bob@127.0.0.1:5080
