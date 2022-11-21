@@ -71,7 +71,7 @@ jobs:
       REGISTRAR_URI: http://registrar:8080/sip/
     steps:
     - name: Tools
-      run: apt update && apt install -yq procps curl netcat-openbsd net-tools
+      run: apt update && apt install -yq procps curl netcat-openbsd net-tools redis-tools
 
     - name: Start Kamailio
       # docker-entrypoint.sh is really cute but relies on confd
@@ -82,6 +82,12 @@ jobs:
 
     - name: Ensure Kamailio is running
       run: curl -v http://127.0.0.1:5060/
+
+    - name: Add entry to registrar
+      run: |
+        echo -e
+          'REGISTER bob@example.com SIP/2.0\r\n'
+          | nc -v localhost 5060
 
     - name: Stop Kamailio
       run: pkill kamailio
