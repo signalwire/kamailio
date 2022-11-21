@@ -16,7 +16,7 @@ echo Netstat
 netstat -tunap
 
 echo Ensure Kamailio is running
-curl -v http://127.0.0.1:5060/ || exit 1
+until curl -v http://127.0.0.1:5060/; do sleep 1; done
 
 echo Add entry to registrar
 
