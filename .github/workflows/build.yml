@@ -71,11 +71,17 @@ jobs:
       REGISTRAR_URI: http://registrar:8080/sip/
     steps:
     - name: Tools
-      run: apt update && apt install -yq procps
+      run: apt update && apt install -yq procps curl netcat-openbsd net-tools
 
     - name: Start Kamailio
       # docker-entrypoint.sh is really cute but relies on confd
-      run:   /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 -A 'KAM_CLUSTER_NONCE="boo!"' -A 'KAM_IP_LOCAL=0.0.0.0' -A 'KAM_IP_PUBLIC=0.0.0.0' -A 'KAMAILIO_SIPTRACE_SOURCE_IP=0.0.0.0' -A 'KAMAILIO_DEVELOPMENT=true' --log-engine=json:acA &
+      run: /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 -A 'KAM_CLUSTER_NONCE="boo!"' -A 'KAM_IP_LOCAL=0.0.0.0' -A 'KAM_IP_PUBLIC=0.0.0.0' -A 'KAMAILIO_SIPTRACE_SOURCE_IP=0.0.0.0' -A 'KAMAILIO_DEVELOPMENT=true' --log-engine=json:acA &
+
+    - name: Netstat
+      run: netstat -tunap
+
+    - name: Ensure Kamailio is running
+      run: curl -v http://127.0.0.1:5060/
 
     - name: Stop Kamailio
       run: pkill kamailio
