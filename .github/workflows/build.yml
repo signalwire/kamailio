@@ -14,8 +14,6 @@ on:
         required: true
       GH_BOT_DEPLOY_KEY:
         required: true
-      GITHUBTOKEN:
-        required: true
 
 jobs:
 
