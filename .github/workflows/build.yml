@@ -58,7 +58,7 @@ jobs:
           SWITCHBLADE_DAEMON: 'true'
           ELASTIC_APM_ENABLED: 'false'
       registrar:
-        image: signalwire/registrar:unstable
+        image: signalwire/registrar:staging
         credentials:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
