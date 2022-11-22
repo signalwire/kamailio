@@ -65,6 +65,7 @@ jobs:
         env:
           REGISTRAR_REDIS: registrar-redis:6379
           REGISTRAR_WEB_HOST_PORT: 8080
+          REGISTRAR_WEB_HOST_LOGGING_LEVEL: Debug
           REGISTRAR_DAEMON: true
 
     env:
