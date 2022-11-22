@@ -4,21 +4,15 @@
 # docker run -it -v $PWD/test/simple.sh:/simple-test.sh  signalwire/kamailio:production-pre /simple-test.sh
 
 echo Tools
-apt update && apt install -yq procps curl netcat-openbsd net-tools redis-tools
+apt update && apt install -yq procps curl netcat-openbsd net-tools redis-tools jq
 
 function onexit {
   pkill kamailio
 }
 trap onexit exit
 
-# Must be 32 characters, Kamailio doesn't check the length
+# Must be 32 characters, Kamailio doesn't check the length and assumes 32
 HA1="verygoodverygoodverygoodverygood"
-
-## Dummy: test registrar access
-# curl -f -v -X POST http://registrar:8080/sip/projid/bob \
-#   -H 'Content-type: application/json' \
-#   --data-raw '{ "type": "sip", "domain": "sip.swire.io", "host": "127.0.0.1:5061", "requested_media_webrtc": "false", "node_id": "9537223181669119475" }' \
-#   -H 'Accept: */*'
 
 # echo Start authorization agent
 function http_response {
@@ -106,5 +100,12 @@ EOT
 
 sleep 1
 cat /tmp/response
+
+echo Check on Redis
+redis-cli -h registrar-redis GET bob@projid || exit 1
+
+echo Confirm with registrar access
+curl -f -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob |\
+  jq -e '.routes | length == 1' || exit 1
 
 sleep 2
