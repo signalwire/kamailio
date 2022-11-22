@@ -14,6 +14,16 @@ trap onexit exit
 # Must be 32 characters, Kamailio doesn't check the length
 HA1="verygoodverygoodverygoodverygood"
 
+
+# Dummy: test registrar access
+
+curl -f -v -X POST http://registrar:8080/sip/projid/bob \
+  -H 'Content-type: application/json' \
+  --data-raw '{ "type": "sip", "domain": "sip.swire.io", "host": "127.0.0.1:5061", "requested_media_webrtc": "false", "node_id": "9537223181669119475" }' \
+  -H 'Accept: */*'
+
+exit
+
 # echo Start authorization agent
 function http_response {
   cat <<TEXT
