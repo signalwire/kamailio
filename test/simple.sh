@@ -22,7 +22,7 @@ Date: $(date -R)
 Content-Type: application/json
 Connection: close
 Server: nc
-Content-Length: 46
+Content-Length: 66
 
 {"project_id":"projid","ha1":"$HA1"}
 TEXT
