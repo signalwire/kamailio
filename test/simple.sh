@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Hint: to test locally try
-# docker run -it -p 5060:5060 -v $PWD/test/simple.sh:/simple-test.sh  signalwire/kamailio:production-pre /simple-test.sh
+# docker run -it -v $PWD/test/simple.sh:/simple-test.sh  signalwire/kamailio:production-pre /simple-test.sh
 
 echo Tools
 apt update && apt install -yq procps curl netcat-openbsd net-tools redis-tools
@@ -11,7 +11,8 @@ function onexit {
 }
 trap onexit exit
 
-HA1="goodgoodgood"
+# Must be 32 characters, Kamailio doesn't check the length
+HA1="verygoodverygoodverygoodverygood"
 
 # echo Start authorization agent
 function http_response {
@@ -74,8 +75,14 @@ TO=$(grep To: /tmp/response)
 
 curl -v --fail http://127.0.0.1:8080/authorize --data '{}' || exit 1
 
-HA2=$( echo -n "REGISTER:$URI" | md5sum | cut -b -32 )
-KD=$( echo -n "$HA1:$NONCE:$HA2" | md5sum | cut -b -32 )
+A2="REGISTER:$URI"
+HA2=$( echo -n "${A2}" | md5sum | cut -b -32 )
+A3="$HA1:$NONCE:$HA2"
+KD=$( echo -n "${A3}" | md5sum | cut -b -32 )
+
+echo
+echo "HA1=${HA1} A2=${A2} HA2=${HA2} A3=${A3} KD=${KD} NONCE=${NONCE} URI=${URI}"
+echo
 
 nc -C -v -q 1 -p 5081 127.0.0.1 5060 >/tmp/response <<EOT
 REGISTER $URI SIP/2.0
@@ -87,7 +94,7 @@ CSeq: 1 REGISTER
 Contact: sip:bob@127.0.0.1:5080
 Content-Length: 0
 Expires: 300
-Authorization: Digest realm="sip.swire.io", nonce="$NONCE", uri="$URI", qop=auth, response="${KD}"
+Authorization: Digest username="bob", realm="sip.swire.io", nonce="${NONCE}", uri="${URI}", response="${KD}", algorithm=md5
 
 EOT
 
