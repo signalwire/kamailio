@@ -88,7 +88,7 @@ echo
 
 nc -C -v -q 1 -p 5081 127.0.0.1 5060 >/tmp/response <<EOT
 REGISTER $URI SIP/2.0
-Via: SIP/2.0/TCP 127.0.0.1:5080;branch=two
+Via: SIP/2.0/TCP 127.0.0.1:5081;branch=two
 From: <sip:bob@sip.swire.io>;tag=foo1
 To: <sip:bob@sip.swire.io>
 Call-ID: 124
@@ -112,9 +112,9 @@ curl -f -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob |\
 
 echo '------------ un-REGISTER -----------'
 
-nc -C -v -q 1 -p 5080 127.0.0.1 5060 >/tmp/response <<EOT
+nc -C -v -q 1 -p 5082 127.0.0.1 5060 >/tmp/response <<EOT
 REGISTER $URI SIP/2.0
-Via: SIP/2.0/TCP 127.0.0.1:5080;branch=three
+Via: SIP/2.0/TCP 127.0.0.1:5082;branch=three
 From: <sip:bob@sip.swire.io>;tag=foo2
 To: <sip:bob@sip.swire.io>
 Call-ID: 993
@@ -132,9 +132,9 @@ NONCE=$(grep nonce /tmp/response | sed -e 's/^.*nonce="//' | sed -e 's/".*$//')
 A3="$HA1:$NONCE:$HA2"
 KD=$( echo -n "${A3}" | md5sum | cut -b -32 )
 
-nc -C -v -q 1 -p 5081 127.0.0.1 5060 >/tmp/response <<EOT
+nc -C -v -q 1 -p 5083 127.0.0.1 5060 >/tmp/response <<EOT
 REGISTER $URI SIP/2.0
-Via: SIP/2.0/TCP 127.0.0.1:5080;branch=four
+Via: SIP/2.0/TCP 127.0.0.1:5083;branch=four
 From: <sip:bob@sip.swire.io>;tag=foo2
 To: <sip:bob@sip.swire.io>
 Call-ID: 994
