@@ -14,7 +14,7 @@ trap onexit exit
 # Must be 32 characters, Kamailio doesn't check the length and assumes 32
 HA1="verygoodverygoodverygoodverygood"
 
-# echo Start authorization agent
+echo Start authorization mock agent
 function http_response {
   cat <<TEXT
 HTTP/1.1 200 OK
@@ -28,6 +28,7 @@ Content-Length: 66
 TEXT
 }
 
+# Fake webserver
 while true; do http_response | nc -l -q 0 -C 127.0.0.1 8080; echo; done &
 curl -v --fail http://127.0.0.1:8080/authorize --data '{}' || exit 1
 curl -v --fail http://127.0.0.1:8080/authorize --data '{}' || exit 1
@@ -50,13 +51,17 @@ until curl -v http://127.0.0.1:5060/; do sleep 1; done
 echo Netstat
 netstat -tunap
 
+echo '------------ REGISTER -----------'
+
 echo Add entry to registrar
 URI="sip:bob@sip.swire.io"
+A2="REGISTER:$URI"
+HA2=$( echo -n "${A2}" | md5sum | cut -b -32 )
 
 nc -C -v -q 1 -p 5080 127.0.0.1 5060 >/tmp/response <<EOT
 REGISTER $URI SIP/2.0
 Via: SIP/2.0/TCP 127.0.0.1:5080;branch=one
-From: <sip:bob@sip.swire.io>;tag=foo
+From: <sip:bob@sip.swire.io>;tag=foo1
 To: <sip:bob@sip.swire.io>
 Call-ID: 123
 CSeq: 1 REGISTER
@@ -70,13 +75,10 @@ sleep 1
 cat /tmp/response
 
 NONCE=$(grep nonce /tmp/response | sed -e 's/^.*nonce="//' | sed -e 's/".*$//')
-echo " ---------    NONCE = $NONCE  ----------      "
-TO=$(grep To: /tmp/response)
 
-curl -v --fail http://127.0.0.1:8080/authorize --data '{}' || exit 1
+## Verify our webserver is still running
+# curl -v --fail http://127.0.0.1:8080/authorize --data '{}' || exit 1
 
-A2="REGISTER:$URI"
-HA2=$( echo -n "${A2}" | md5sum | cut -b -32 )
 A3="$HA1:$NONCE:$HA2"
 KD=$( echo -n "${A3}" | md5sum | cut -b -32 )
 
@@ -86,8 +88,8 @@ echo
 
 nc -C -v -q 1 -p 5081 127.0.0.1 5060 >/tmp/response <<EOT
 REGISTER $URI SIP/2.0
-Via: SIP/2.0/TCP 127.0.0.1:5080;branch=one
-From: <sip:bob@sip.swire.io>;tag=foo
+Via: SIP/2.0/TCP 127.0.0.1:5080;branch=two
+From: <sip:bob@sip.swire.io>;tag=foo1
 To: <sip:bob@sip.swire.io>
 Call-ID: 124
 CSeq: 1 REGISTER
@@ -107,5 +109,49 @@ redis-cli -h registrar-redis GET bob@projid || exit 1
 echo Confirm with registrar access
 curl -f -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob |\
   jq -e '.routes | length == 1' || exit 1
+
+echo '------------ un-REGISTER -----------'
+
+nc -C -v -q 1 -p 5080 127.0.0.1 5060 >/tmp/response <<EOT
+REGISTER $URI SIP/2.0
+Via: SIP/2.0/TCP 127.0.0.1:5080;branch=three
+From: <sip:bob@sip.swire.io>;tag=foo2
+To: <sip:bob@sip.swire.io>
+Call-ID: 993
+CSeq: 1 REGISTER
+Contact: sip:bob@127.0.0.1:5080
+Content-Length: 0
+Expires: 0
+
+EOT
+
+sleep 1
+cat /tmp/response
+
+NONCE=$(grep nonce /tmp/response | sed -e 's/^.*nonce="//' | sed -e 's/".*$//')
+A3="$HA1:$NONCE:$HA2"
+KD=$( echo -n "${A3}" | md5sum | cut -b -32 )
+
+nc -C -v -q 1 -p 5081 127.0.0.1 5060 >/tmp/response <<EOT
+REGISTER $URI SIP/2.0
+Via: SIP/2.0/TCP 127.0.0.1:5080;branch=four
+From: <sip:bob@sip.swire.io>;tag=foo2
+To: <sip:bob@sip.swire.io>
+Call-ID: 994
+CSeq: 1 REGISTER
+Contact: sip:bob@127.0.0.1:5080
+Content-Length: 0
+Expires: 0
+Authorization: Digest username="bob", realm="sip.swire.io", nonce="${NONCE}", uri="${URI}", response="${KD}", algorithm=md5
+
+EOT
+
+sleep 1
+cat /tmp/response
+
+redis-cli -h registrar-redis GET bob@projid
+
+curl -f -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob |\
+  jq -e '.routes | length == 0' || exit 1
 
 sleep 2
