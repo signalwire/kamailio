@@ -939,17 +939,15 @@ function ksr_route_registrar()
         end
         if KSR.registrar.registered_uri("location", touri) < 0 then
             -- UA has no valid registration record - it was unregister - push it as a new event
-            evdata = "{ \"type\": \"sip\"";
             if string.len(inodeid) > 0 then
-                evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
-            end
-            evdata = evdata .. " }";
-            KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
-            hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
-            local hres = KSR.pvx.var_get("hres");
-            KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
-            if hrcode > 299 then
-                KSR.warn("Failed unregister - " .. uri .. " " .. evdata .. "\n");
+                KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
+                uri = uri .. "/" .. node_id .. "/null"
+                hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
+                local hres = KSR.pvx.var_get("hres");
+                KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
+                if hrcode > 299 then
+                    KSR.warn("Failed unregister - " .. uri .. " " .. evdata .. "\n");
+                end
             end
             -- sending unregister in non-blocking mode via mqueue + rtimer
             -- KSR.mqueue.mq_add("mqregister", evcmd, evdata);
