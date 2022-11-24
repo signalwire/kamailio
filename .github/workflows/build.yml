@@ -4,7 +4,9 @@ on:
   push:
     branches:
     - master
-    - sa/3962-remove-blade
+  pull_request:
+    branches:
+    - master
 
   workflow_call:
     secrets:
