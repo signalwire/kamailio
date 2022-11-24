@@ -941,7 +941,7 @@ function ksr_route_registrar()
             -- UA has no valid registration record - it was unregister - push it as a new event
             if string.len(inodeid) > 0 then
                 KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
-                uri = uri .. "/" .. node_id .. "/null"
+                uri = uri .. "/" .. inodeid .. "/null"
                 hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
                 local hres = KSR.pvx.var_get("hres");
                 KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
