@@ -154,4 +154,54 @@ redis-cli -h registrar-redis GET bob@projid
 curl -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob 2>&1 |\
   grep '404 Not Found' || exit 1
 
+
+echo '--------- automatic un-REGISTER ------'
+
+nc -C -v -q 1 -p 5084 127.0.0.1 5060 >/tmp/response <<EOT
+REGISTER $URI SIP/2.0
+Via: SIP/2.0/TCP 127.0.0.1:5084;branch=five
+From: <sip:bob@sip.swire.io>;tag=foo3
+To: <sip:bob@sip.swire.io>
+Call-ID: 773
+CSeq: 1 REGISTER
+Contact: sip:bob@127.0.0.1:5084
+Content-Length: 0
+Expires: 7
+
+EOT
+
+sleep 1
+cat /tmp/response
+
+NONCE=$(grep nonce /tmp/response | sed -e 's/^.*nonce="//' | sed -e 's/".*$//')
+
+A3="$HA1:$NONCE:$HA2"
+KD=$( echo -n "${A3}" | md5sum | cut -b -32 )
+
+nc -C -v -q 1 -p 5085 127.0.0.1 5060 >/tmp/response <<EOT
+REGISTER $URI SIP/2.0
+Via: SIP/2.0/TCP 127.0.0.1:5081;branch=six
+From: <sip:bob@sip.swire.io>;tag=foo3
+To: <sip:bob@sip.swire.io>
+Call-ID: 774
+CSeq: 1 REGISTER
+Contact: sip:bob@127.0.0.1:5085
+Content-Length: 0
+Expires: 300
+Authorization: Digest username="bob", realm="sip.swire.io", nonce="${NONCE}", uri="${URI}", response="${KD}", algorithm=md5
+
+EOT
+
+sleep 1
+cat /tmp/response
+
+echo Confirm with registrar access
+curl -f -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob |\
+  jq -e '.routes | length == 1' || exit 1
+
+# Should automatically unregister
+sleep 10
+curl -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob 2>&1 |\
+  grep '404 Not Found' || exit 1
+
 sleep 2
