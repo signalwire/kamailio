@@ -93,7 +93,7 @@ From: <sip:bob@sip.swire.io>;tag=foo1
 To: <sip:bob@sip.swire.io>
 Call-ID: 124
 CSeq: 1 REGISTER
-Contact: sip:bob@127.0.0.1:5080
+Contact: sip:bob@127.0.0.1:5081
 Content-Length: 0
 Expires: 300
 Authorization: Digest username="bob", realm="sip.swire.io", nonce="${NONCE}", uri="${URI}", response="${KD}", algorithm=md5
@@ -119,7 +119,7 @@ From: <sip:bob@sip.swire.io>;tag=foo2
 To: <sip:bob@sip.swire.io>
 Call-ID: 993
 CSeq: 1 REGISTER
-Contact: sip:bob@127.0.0.1:5080
+Contact: *
 Content-Length: 0
 Expires: 0
 
@@ -139,7 +139,7 @@ From: <sip:bob@sip.swire.io>;tag=foo2
 To: <sip:bob@sip.swire.io>
 Call-ID: 994
 CSeq: 1 REGISTER
-Contact: sip:bob@127.0.0.1:5080
+Contact: *
 Content-Length: 0
 Expires: 0
 Authorization: Digest username="bob", realm="sip.swire.io", nonce="${NONCE}", uri="${URI}", response="${KD}", algorithm=md5

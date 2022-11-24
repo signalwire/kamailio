@@ -58,7 +58,8 @@ jobs:
           SWITCHBLADE_DAEMON: 'true'
           ELASTIC_APM_ENABLED: 'false'
       registrar:
-        image: signalwire/registrar:staging
+        # FIXME should use :staging, testing until PR #185 is merged
+        image: signalwire/registrar:unstable
         credentials:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
