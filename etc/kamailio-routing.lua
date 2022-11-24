@@ -938,7 +938,7 @@ function ksr_route_registrar()
             KSR.sl.sl_reply_error();
         end
         if KSR.registrar.registered_uri("location", touri) < 0 then
-            -- UA has no valid registration record - it was unregister - push it as a new event
+            -- UA has no valid registration record - it was unregister
             if string.len(inodeid) > 0 then
                 KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
                 uri = uri .. "/" .. encode_uri_component(inodeid) .. "/null"
