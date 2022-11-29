@@ -1213,9 +1213,10 @@ end
 -- RTimer callback to retrieve message from mqueue and push to blade network
 function ksr_rtimer(evname)
     while KSR.mqueue.mq_fetch("mqregister") > 0 do
-        local uri = KSR.pv.gete("$mqk(mqregister)");
-        local evdata = KSR.pv.gete("$mqv(mqregister)");
-        if string.len(uri) > 0 and string.len(evdata) > 0 then
+        local method = KSR.pv.gete("$mqk(mqregister)");
+        local uri = KSR.pv.gete("$mqv(mqregister)");
+        local evdata = "";
+        if method == "delete" and string.len(uri) > 0 then
             local hrcode = 0;
             KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
             hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
@@ -1271,16 +1272,12 @@ function ksr_unregister_event(evname)
 
     user, domain = string.match(aor, "(.*)%@(.*)")
     local uri = build_registrar_uri(g_crt_projectid, user)
-    evdata = "{ \"type\": \"sip\"";
-    if string.len(inodeid) > 0 then
-        evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
-    end
-    evdata = evdata .. " }";
+    uri = uri .. "/" .. encode_uri_component(inodeid) .. "/null"
 
     -- sending unregister in non-blocking mode via mqueue + rtimer
     if string.len(g_crt_projectid) > 0 then
         KSR.info( "Expired contact for " .. aor .. " - Unregistering...\n");
-        KSR.mqueue.mq_add("mqregister", uri, evdata);
+        KSR.mqueue.mq_add("mqregister", "delete", uri);
     else
         KSR.info( "Expired contact for " .. aor .. " - Missing Project ID, ignoring...\n");
     end
