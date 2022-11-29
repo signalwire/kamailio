@@ -187,7 +187,7 @@ Call-ID: 774
 CSeq: 1 REGISTER
 Contact: sip:bob@127.0.0.1:5085
 Content-Length: 0
-Expires: 300
+Expires: 7
 Authorization: Digest username="bob", realm="sip.swire.io", nonce="${NONCE}", uri="${URI}", response="${KD}", algorithm=md5
 
 EOT
@@ -200,7 +200,7 @@ curl -f -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob |\
   jq -e '.routes | length == 1' || exit 1
 
 # Should automatically unregister
-sleep 10
+sleep 20
 curl -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob 2>&1 |\
   grep '404 Not Found' || exit 1
 
