@@ -918,11 +918,11 @@ function ksr_route_registrar()
         evdata = evdata .. " }";
 
         local uri = build_registrar_uri(g_crt_projectid, touser)
-        KSR.info("Sending Registration HTTP query: POST " .. uri .. " " .. evdata .. "\n");
+        KSR.info("ksr_route_registrar: Sending Registration HTTP query: POST " .. uri .. " " .. evdata .. "\n");
         local hrcode = 0;
         hrcode = KSR.ruxc.http_post(uri, evdata, application_json_header, var_hres);
         local hres = KSR.pvx.var_get("hres");
-        KSR.info("Registration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
+        KSR.info("ksr_route_registrar: Registration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
 
         if hrcode > 299 then
             KSR.cfgutils.unlock(touri);
@@ -940,11 +940,11 @@ function ksr_route_registrar()
         if KSR.registrar.registered_uri("location", touri) < 0 then
             -- UA has no valid registration record - it was unregister - push it as a new event
             if string.len(inodeid) > 0 then
-                KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
                 uri = uri .. "/" .. encode_uri_component(inodeid) .. "/null"
-                hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
+                KSR.info("ksr_route_registrar: Sending Unregistration HTTP query: DELETE " .. uri .. "\n");
+                hrcode = KSR.ruxc.http_delete(uri, "", application_json_header, var_hres);
                 local hres = KSR.pvx.var_get("hres");
-                KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
+                KSR.info("ksr_route_registrar: Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
                 if hrcode > 299 then
                     KSR.warn("Failed unregister - " .. uri .. " " .. evdata .. "\n");
                 end
@@ -1215,11 +1215,10 @@ function ksr_rtimer(evname)
     while KSR.mqueue.mq_fetch("mqregister") > 0 do
         local method = KSR.pv.gete("$mqk(mqregister)");
         local uri = KSR.pv.gete("$mqv(mqregister)");
-        local evdata = "";
         if method == "delete" and string.len(uri) > 0 then
             local hrcode = 0;
-            KSR.info("ksr_rtimer: Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
-            hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
+            KSR.info("ksr_rtimer: Sending Unregistration HTTP query: DELETE " .. uri .. "\n");
+            hrcode = KSR.ruxc.http_delete(uri, "", application_json_header, var_hres);
             local hres = KSR.pvx.var_get("hres");
             KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
             if hrcode > 299 then
@@ -1260,7 +1259,6 @@ function ksr_xhttp_request(evname)
 end
 
 function ksr_unregister_event(evname)
-    local evdata = "";
     local aor = KSR.pv.getw("$ulc(exp=>aor)");
     local g_crt_projectid = KSR.htable.sht_gete("project", aor);
     local inodeid = REGISTRAR_NODEID;
