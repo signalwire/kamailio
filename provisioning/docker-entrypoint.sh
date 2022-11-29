@@ -54,6 +54,13 @@ if [[ ! -z "${KAMAILIO_SIPTRACE_URI}" ]]; then
    export KAMAILIO_SIPTRACE_SOURCE_IP=$(ip route get $(dig +short $(echo ${KAMAILIO_SIPTRACE_URI} | cut -d: -f2)) | sed 's/^.*src \([^ ]*\).*$/\1/;q')
 fi
 
+# NodeId used in the registrar
+# This cannot be computed inside kamailio-routing.lua because the script is
+# executed multiple times (in different threads) for the same instance.
+if [ "x${REGISTRAR_NODEID}" == "x" ]; then
+  export REGISTRAR_NODEID="kam-${HOSTNAME}-$(date '+%Y%m%dT%H%M%S%N')"
+fi
+
 echo 65535 > /writeable-proc/sys/net/core/somaxconn
 prep_term
   /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 \

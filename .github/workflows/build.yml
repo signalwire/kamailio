@@ -73,6 +73,7 @@ jobs:
 
     env:
       REGISTRAR_URI: http://registrar:8080/sip/
+      REGISTRAR_NODEID: kam-4592907615f5-20221129T115656938188775
     steps:
     - name: Simple
       run: /simple-test.sh

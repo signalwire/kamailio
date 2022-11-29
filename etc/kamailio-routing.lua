@@ -60,7 +60,7 @@ var_hres = "$var(hres)";
 
 
 -- Node ID used in the registrar
-REGISTRAR_NODEID=os.getenv('REGISTRAR_NODEID') or math.random(1000000000)..os.time()
+REGISTRAR_NODEID=os.getenv('REGISTRAR_NODEID')
 
 -- Special domain authorization for CNAME'd domains
 DOMAINAUTH= {}
