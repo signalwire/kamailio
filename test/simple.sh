@@ -11,6 +11,8 @@ function onexit {
 }
 trap onexit exit
 
+QUERY_URI=$(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')
+
 # Must be 32 characters, Kamailio doesn't check the length and assumes 32
 HA1="verygoodverygoodverygoodverygood"
 
@@ -107,7 +109,7 @@ echo Check on Redis
 redis-cli -h registrar-redis GET bob@projid || exit 1
 
 echo Confirm with registrar access
-curl -f -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob |\
+curl -f -v "${QUERY_URI}projid/bob" |\
   jq -e '.routes | length == 1' || exit 1
 
 echo '------------ un-REGISTER -----------'
@@ -151,7 +153,7 @@ cat /tmp/response
 
 redis-cli -h registrar-redis GET bob@projid
 
-curl -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob 2>&1 |\
+curl -v "${QUERY_URI}projid/bob" 2>&1 |\
   grep '404 Not Found' || exit 1
 
 
@@ -195,13 +197,14 @@ EOT
 sleep 1
 cat /tmp/response
 
-echo Confirm with registrar access
-curl -f -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob |\
+echo Confirm addition with registrar access
+curl -f -v "${QUERY_URI}projid/bob" |\
   jq -e '.routes | length == 1' || exit 1
 
 # Should automatically unregister
 sleep 20
-curl -v $(echo "${REGISTRAR_URI}" | sed -e 's/sip/query/')projid/bob 2>&1 |\
+echo Confirm automatic removal with registrar access
+curl -v "${QUERY_URI}projid/bob 2>&1 |\
   grep '404 Not Found' || exit 1
 
 sleep 2

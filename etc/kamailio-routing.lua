@@ -1218,7 +1218,7 @@ function ksr_rtimer(evname)
         local evdata = "";
         if method == "delete" and string.len(uri) > 0 then
             local hrcode = 0;
-            KSR.info("Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
+            KSR.info("ksr_rtimer: Sending Unregistration HTTP query: DELETE " .. uri .. " " .. evdata .. "\n");
             hrcode = KSR.ruxc.http_delete(uri, evdata, application_json_header, var_hres);
             local hres = KSR.pvx.var_get("hres");
             KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
@@ -1276,7 +1276,7 @@ function ksr_unregister_event(evname)
 
     -- sending unregister in non-blocking mode via mqueue + rtimer
     if string.len(g_crt_projectid) > 0 then
-        KSR.info( "Expired contact for " .. aor .. " - Unregistering...\n");
+        KSR.info( "Expired contact for " .. aor .. ", " .. uri .. " - Unregistering...\n");
         KSR.mqueue.mq_add("mqregister", "delete", uri);
     else
         KSR.info( "Expired contact for " .. aor .. " - Missing Project ID, ignoring...\n");
