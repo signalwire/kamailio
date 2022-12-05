@@ -40,6 +40,28 @@ AUTH_XKEYS_TIMEFRAME=300
 AUTHURL=os.getenv('KAMAILIO_AUTHORIZATION_URL')
 -- AUTHURL="https://api.swire.io/api/provider_callback/kamailio/authorize"
 
+-- Base URI for the registrar HTTP methods; make sure it finishes with `/sip/`
+-- typically `http://registrar:port/sip/`
+REGISTRAR_URI=os.getenv('REGISTRAR_URI')
+
+function char_to_hex(c)
+  return string.format("%%%02X", string.byte(c))
+end
+-- this is https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
+function encode_uri_component(component)
+  return string.gsub(component, "([^A-Za-z0-9_.!~*'()-])", char_to_hex)
+end
+function build_registrar_uri(projedId,resourceId)
+  return REGISTRAR_URI..encode_uri_component(projedId).."/"..encode_uri_component(resourceId)
+end
+
+application_json_header = "Content-Type: application/json\r\n"
+var_hres = "$var(hres)";
+
+
+-- Node ID used in the registrar
+REGISTRAR_NODEID=os.getenv('REGISTRAR_NODEID')
+
 -- Special domain authorization for CNAME'd domains
 DOMAINAUTH= {}
 DOMAINAUTH["sip.softphone.com"] = 1
@@ -402,12 +424,6 @@ function ksr_request_route()
     -- do not connect on tcp/tls to send reply
     KSR.set_reply_no_connect();
 
-    if KSR.bladec.node_id_ready() < 0 then
-        KSR.hdr.append("Retry-After: 5\r\n");
-        KSR.sl.send_reply(500, "Retry Request");
-        KSR.x.exit();
-    end
-
     -- from nodes with auth xkeys support
     if KSR.hdr.is_present("X-SignalWire-OutboundAuthToken") > 0
             and KSR.hdr.is_present("X-SignalWire-OutboundAuthTime") > 0 then
@@ -756,12 +772,9 @@ function ksr_route_auth()
         local hres = "";
         repeat
             htries = htries - 1;
-            -- hrcode = KSR.http_client.query_post_hdrs(AUTHURL, hbody,
-            --             "Content-Type: application/json", "$var(hres)");
-            hrcode = KSR.ruxc.http_post(AUTHURL, hbody,
-                        "Content-Type: application/json\r\n", "$var(hres)");
+            hrcode = KSR.ruxc.http_post(AUTHURL, hbody, application_json_header, var_hres);
+            hres = KSR.pvx.var_get("hres");
             if hrcode ~= 500 then
-                hres = KSR.pvx.var_get("hres");
                 if string.len(hres) < 10 then
                     -- no proper result -- try again
                     hrcode = 500;
@@ -769,7 +782,6 @@ function ksr_route_auth()
             end
         until (hrcode ~= 500 or htries > 0);
 
-        hres = KSR.pvx.var_get("hres");
         KSR.info("Authorization HTTP query returned: " .. hres .. "\n");
         if string.len(hres) < 10 then
             -- no proper result -- challenge again for authentication
@@ -879,41 +891,42 @@ function ksr_route_registrar()
         KSR.setbflag(FLB_CLASSIC);
     end
 
+    local touri = KSR.kx.get_turi();
     if WITH_BLADENOTIFY then
-        local touri = KSR.kx.get_turi();
         local touser = KSR.kx.getw_tuser();
         local todomain = KSR.kx.getw_thost();
         -- local address = localip:localport
         local localaddr = KSR.kx.get_rcvadvip() .. ":5061";
-        local evcmd = "";
         local evdata = "";
         local requested_media_webrtc = "false";
         local inodeid = "";
 
         KSR.cfgutils.lock(touri);
 
-        -- push first a register event
-        evcmd = "register";
-
         -- If the inbound protocol is WSS, assume we need webrtc media
         if KSR.is_WSS() then
             requested_media_webrtc = "true";
         end
 
-        evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" ..  g_crt_projectid ..  "\", \"type\": \"sip\", \"domain\": \""
-		.. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\"";
+        evdata = "{ \"type\": \"sip\", \"domain\": \"" .. todomain .. "\", \"host\": \"" .. localaddr .. "\", \"requested_media_webrtc\": \"" .. requested_media_webrtc .. "\"";
 
-        inodeid = KSR.pv.gete("$bladec(node_id)");
+        inodeid = REGISTRAR_NODEID;
         if string.len(inodeid) > 0 then
             evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
         end
 
         evdata = evdata .. " }";
 
-        KSR.info("Sending direct blade.execute for register: " .. evcmd .. " - " .. evdata .. "\n");
-        if KSR.bladec.relay("", "registrar", evcmd, evdata) < 0 then
+        local uri = build_registrar_uri(g_crt_projectid, touser)
+        KSR.info("ksr_route_registrar: Sending Registration HTTP query: POST " .. uri .. " " .. evdata .. "\n");
+        local hrcode = 0;
+        hrcode = KSR.ruxc.http_post(uri, evdata, application_json_header, var_hres);
+        local hres = KSR.pvx.var_get("hres");
+        KSR.info("ksr_route_registrar: Registration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
+
+        if hrcode > 299 then
             KSR.cfgutils.unlock(touri);
-            KSR.warn("Failed sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
+            KSR.warn("Failed register - " .. uri .. " " .. evdata .. "\n");
             KSR.sl.send_reply(500, "Cluster registration failure");
             KSR.x.exit();
         end
@@ -926,15 +939,15 @@ function ksr_route_registrar()
         end
         if KSR.registrar.registered_uri("location", touri) < 0 then
             -- UA has no valid registration record - it was unregister - push it as a new event
-            evcmd = "unregister";
-            evdata = "{ \"resource\": \"" .. touser .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\"";
             if string.len(inodeid) > 0 then
-                evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
-            end
-            evdata = evdata .. " }";
-            KSR.info("Sending direct blade.execute for unregister: " .. evcmd .. " - " .. evdata .. "\n");
-            if KSR.bladec.relay("", "registrar", evcmd, evdata) < 0 then
-                KSR.warn("Failed sending direct blade.execute: " .. evcmd .. " - " .. evdata .. "\n");
+                uri = uri .. "/" .. encode_uri_component(inodeid) .. "/null"
+                KSR.info("ksr_route_registrar: Sending Unregistration HTTP query: DELETE " .. uri .. "\n");
+                hrcode = KSR.ruxc.http_delete(uri, "", application_json_header, var_hres);
+                local hres = KSR.pvx.var_get("hres");
+                KSR.info("ksr_route_registrar: Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
+                if hrcode > 299 then
+                    KSR.warn("Failed unregister - " .. uri .. " " .. evdata .. "\n");
+                end
             end
             -- sending unregister in non-blocking mode via mqueue + rtimer
             -- KSR.mqueue.mq_add("mqregister", evcmd, evdata);
@@ -943,7 +956,6 @@ function ksr_route_registrar()
         KSR.x.exit();
     else
         -- else for WITH_BLADENOTIFY - just do the usual save of registration
-        local touri = KSR.kx.get_turi();
         local conid = KSR.kx.get_conid();
         if conid >= 0 then
             KSR.htable.sht_sets("tcpid", "c" .. conid, "call-id: " .. KSR.kx.get_callid() .. " user: " .. touri);
@@ -1199,17 +1211,21 @@ function ksr_failure_prouteto()
 end
 
 -- RTimer callback to retrieve message from mqueue and push to blade network
-function ksr_rtimer_bladec(evname)
-	while KSR.mqueue.mq_fetch("mqregister") > 0 do
-		local bevcmd = KSR.pv.gete("$mqk(mqregister)");
-		local bevdata = KSR.pv.gete("$mqv(mqregister)");
-		if string.len(bevcmd) > 0 and string.len(bevdata) > 0 then
-			KSR.info("Sending queued blade.execute: " .. bevcmd .. " - " .. bevdata .. "\n");
-			if KSR.bladec.relay("", "registrar", bevcmd, bevdata) < 0 then
-				KSR.warn("Failed sending queued blade.execute: " .. bevcmd .. " - " .. bevdata .. "\n");
-			end
-		end
-	end
+function ksr_rtimer(evname)
+    while KSR.mqueue.mq_fetch("mqregister") > 0 do
+        local method = KSR.pv.gete("$mqk(mqregister)");
+        local uri = KSR.pv.gete("$mqv(mqregister)");
+        if method == "delete" and string.len(uri) > 0 then
+            local hrcode = 0;
+            KSR.info("ksr_rtimer: Sending Unregistration HTTP query: DELETE " .. uri .. "\n");
+            hrcode = KSR.ruxc.http_delete(uri, "", application_json_header, var_hres);
+            local hres = KSR.pvx.var_get("hres");
+            KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
+            if hrcode > 299 then
+              KSR.warn("Failed unregister: " .. uri .. " - " .. evdata .. "\n");
+            end
+        end
+    end
 end
 
 -- xhttp request callback
@@ -1243,11 +1259,9 @@ function ksr_xhttp_request(evname)
 end
 
 function ksr_unregister_event(evname)
-    local evcmd = "";
-    local evdata = "";
     local aor = KSR.pv.getw("$ulc(exp=>aor)");
     local g_crt_projectid = KSR.htable.sht_gete("project", aor);
-    local inodeid = KSR.pv.gete("$bladec(node_id)");
+    local inodeid = REGISTRAR_NODEID;
 
     if KSR.registrar.registered_uri("location", "sip:" .. aor) > 0 then
         -- user still has valid contacts on the this node - don't remove all entries from registrar
@@ -1255,17 +1269,13 @@ function ksr_unregister_event(evname)
     end
 
     user, domain = string.match(aor, "(.*)%@(.*)")
-    evcmd = "unregister";
-    evdata = "{ \"resource\": \"" .. user .. "\", \"project\": \"" .. g_crt_projectid .. "\", \"type\": \"sip\"";
-    if string.len(inodeid) > 0 then
-        evdata = evdata .. ", \"node_id\": \"" .. inodeid .. "\"";
-    end
-    evdata = evdata .. " }";
+    local uri = build_registrar_uri(g_crt_projectid, user)
+    uri = uri .. "/" .. encode_uri_component(inodeid) .. "/null"
 
     -- sending unregister in non-blocking mode via mqueue + rtimer
     if string.len(g_crt_projectid) > 0 then
-        KSR.info( "Expired contact for " .. aor .. " - Unregistering...\n");
-        KSR.mqueue.mq_add("mqregister", evcmd, evdata);
+        KSR.info( "Expired contact for " .. aor .. ", " .. uri .. " - Unregistering...\n");
+        KSR.mqueue.mq_add("mqregister", "delete", uri);
     else
         KSR.info( "Expired contact for " .. aor .. " - Missing Project ID, ignoring...\n");
     end
@@ -1300,7 +1310,7 @@ end
 -- event callback function on shutdown
 function ksr_bladec_event_shutdown(evname)
     local evcmd = "purge";
-    local inodeid = KSR.pv.gete("$bladec(node_id)");
+    local inodeid = REGISTRAR_NODEID;
     local evdata = "{ \"node_id\": \"" .. inodeid .. "\" }";
 
     KSR.info("Sending direct blade.execute for shutdown: " .. evcmd .. " - " .. evdata .. "\n");

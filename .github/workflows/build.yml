@@ -1,0 +1,79 @@
+name: build and test kamailio
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+  workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+      GH_BOT_DEPLOY_KEY:
+        required: true
+
+jobs:
+
+  production-pre:
+    name: 'production-pre'
+    uses: signalwire/actions-template/.github/workflows/ci-build.yml@main
+    with:
+      PROJECT_NAME: 'kamailio'
+      FILE: ./provisioning/production.Dockerfile
+      PUSH: 'true'
+      ENABLE_GPG: true
+      TAG: |
+        type=raw,value=production-pre
+      SUBMODULES_RECURSIVE: true
+      SUBMODULES_PRIVATE: false
+    secrets:
+      GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+
+  production-pre-test:
+    needs: production-pre
+    runs-on: ubuntu-latest
+    container:
+      image: signalwire/kamailio:production-pre
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    services:
+      registrar-redis:
+        image: redis:4-alpine
+      switchblade:
+        image: signalwire/switchblade:staging
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          SWITCHBLADE_MODE: Master
+          SWITCHBLADE_HOST: switchblade
+          SWITCHBLADE_DAEMON: 'true'
+          ELASTIC_APM_ENABLED: 'false'
+      registrar:
+        # FIXME should use :staging, testing until PR #185 is merged
+        image: signalwire/registrar:unstable
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          REGISTRAR_REDIS: registrar-redis:6379
+          REGISTRAR_WEB_HOST_PORT: 8080
+          REGISTRAR_WEB_HOST_LOGGING_LEVEL: Debug
+          REGISTRAR_DAEMON: true
+
+    env:
+      REGISTRAR_URI: http://registrar:8080/sip/
+      REGISTRAR_NODEID: kam-4592907615f5-20221129T115656938188775
+    steps:
+    - name: Simple
+      run: /simple-test.sh

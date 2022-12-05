@@ -21,10 +21,9 @@ RUN cargo build --release
 
 # Build Kamailio
 COPY kamailio /usr/local/src/kamailio
-COPY src/modules/bladec /usr/local/src/kamailio/src/modules/bladec
 WORKDIR /usr/local/src/kamailio
 RUN cp /usr/local/src/ruxc/include/ruxc.h /usr/local/src/ruxc/target/release/libruxc.a /usr/local/src/kamailio/src/modules/ruxc/ \
-&& make -j`nproc --all` include_modules="app_lua http_client tls outbound ipops db_redis ndb_redis bladec rtimer mqueue permissions xhttp websocket nathelper kemix ruxc" cfg \
+&& make -j`nproc --all` include_modules="app_lua tls outbound ipops db_redis ndb_redis rtimer mqueue permissions xhttp websocket nathelper kemix ruxc" cfg \
 && make -j`nproc --all` all && make install \
 && cd src/modules/tls && make install-tls-cert
 
@@ -62,9 +61,9 @@ COPY --from=intermediate /usr/local/etc /usr/local/etc
 COPY --from=intermediate /usr/local/sbin /usr/local/sbin
 
 COPY tls/ /usr/local/etc/kamailio/tls
-COPY ca/ /usr/local/etc/kamailio/blade/ca
 COPY etc/ /usr/local/etc/kamailio
 COPY confd/ /etc/confd
 COPY provisioning/docker-entrypoint.sh /docker-entrypoint.sh
+COPY test/simple.sh /simple-test.sh
 
 CMD ["/docker-entrypoint.sh"]
