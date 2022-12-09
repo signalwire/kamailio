@@ -44,6 +44,9 @@ AUTHURL=os.getenv('KAMAILIO_AUTHORIZATION_URL')
 -- typically `http://registrar:port/sip/`
 REGISTRAR_URI=os.getenv('REGISTRAR_URI')
 
+-- Base64-encoded Basic Authorization content
+REGISTRAR_AUTH=os.getenv('REGISTRAR_AUTH')
+
 function char_to_hex(c)
   return string.format("%%%02X", string.byte(c))
 end
@@ -56,6 +59,9 @@ function build_registrar_uri(projedId,resourceId)
 end
 
 application_json_header = "Content-Type: application/json\r\n"
+basic_authorization_header = "Authorization: Basic " .. REGISTRAR_AUTH .. "\r\n"
+registrar_http_headers = application_json_header .. basic_authorization_header
+
 var_hres = "$var(hres)";
 
 
@@ -920,7 +926,7 @@ function ksr_route_registrar()
         local uri = build_registrar_uri(g_crt_projectid, touser)
         KSR.info("ksr_route_registrar: Sending Registration HTTP query: POST " .. uri .. " " .. evdata .. "\n");
         local hrcode = 0;
-        hrcode = KSR.ruxc.http_post(uri, evdata, application_json_header, var_hres);
+        hrcode = KSR.ruxc.http_post(uri, evdata, registrar_http_headers, var_hres);
         local hres = KSR.pvx.var_get("hres");
         KSR.info("ksr_route_registrar: Registration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
 
@@ -942,7 +948,7 @@ function ksr_route_registrar()
             if string.len(inodeid) > 0 then
                 uri = uri .. "/" .. encode_uri_component(inodeid) .. "/null"
                 KSR.info("ksr_route_registrar: Sending Unregistration HTTP query: DELETE " .. uri .. "\n");
-                hrcode = KSR.ruxc.http_delete(uri, "", application_json_header, var_hres);
+                hrcode = KSR.ruxc.http_delete(uri, "", registrar_http_headers, var_hres);
                 local hres = KSR.pvx.var_get("hres");
                 KSR.info("ksr_route_registrar: Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
                 if hrcode > 299 then
@@ -1218,7 +1224,7 @@ function ksr_rtimer(evname)
         if method == "delete" and string.len(uri) > 0 then
             local hrcode = 0;
             KSR.info("ksr_rtimer: Sending Unregistration HTTP query: DELETE " .. uri .. "\n");
-            hrcode = KSR.ruxc.http_delete(uri, "", application_json_header, var_hres);
+            hrcode = KSR.ruxc.http_delete(uri, "", registrar_http_headers, var_hres);
             local hres = KSR.pvx.var_get("hres");
             KSR.info("Unregistration HTTP query returned: " .. hrcode .. " " .. hres .. "\n");
             if hrcode > 299 then

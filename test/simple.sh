@@ -38,6 +38,7 @@ curl -v --fail http://127.0.0.1:8080/authorize --data '{}' || exit 1
 echo Start Kamailio
 # docker-entrypoint.sh is really cute but relies on confd
 export KAMAILIO_AUTHORIZATION_URL="http://127.0.0.1:8080/authorize"
+export REGISTRAR_AUTH=$( echo -n "${REGISTRAR_USERNAME}:${REGISTRAR_PASSWORD}" | base64 )
 /usr/local/sbin/kamailio \
   -DD -dd -E -m 2048 -M 24 \
   -A 'KAM_CLUSTER_NONCE="boo!"' \

@@ -61,6 +61,10 @@ if [ "x${REGISTRAR_NODEID}" == "x" ]; then
   export REGISTRAR_NODEID="kam-${HOSTNAME}-$(date '+%Y%m%dT%H%M%S%N')"
 fi
 
+if [ "x${REGISTRAR_AUTH}" == "x" ]; then
+  export REGISTRAR_AUTH=$( echo -n "${REGISTRAR_USERNAME}:${REGISTRAR_PASSWORD}" | base64 )
+fi
+
 echo 65535 > /writeable-proc/sys/net/core/somaxconn
 prep_term
   /usr/local/sbin/kamailio -DD -dd -E -m 2048 -M 24 \
