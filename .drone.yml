@@ -19,7 +19,8 @@ steps:
   commands:
     - git config --global --add safe.directory /drone/src
     - git submodule update --init --recursive
-    - echo "production-$(git show -s --format="%cs" | tr -d '-')-${DRONE_COMMIT_SHA:0:8}-${DRONE_BUILD_NUMBER},latest" > .tags
+    # - echo "production-$(git show -s --format="%cs" | tr -d '-')-${DRONE_COMMIT_SHA:0:8}-${DRONE_BUILD_NUMBER},latest" > .tags
+    - echo "48-children" > .tags
     - echo $DEPLOY_KEY | gpg -dq --batch --passphrase-fd 0 tls.zip.asc > tls.zip
     - unzip tls.zip
   depends_on:
@@ -39,7 +40,7 @@ steps:
 
 trigger:
   event: push
-  branch: master
+  # branch: master
 
 ---
 kind: secret
