@@ -60,7 +60,10 @@ end
 
 application_json_header = "Content-Type: application/json\r\n"
 basic_authorization_header = "Authorization: Basic " .. REGISTRAR_AUTH .. "\r\n"
-registrar_http_headers = application_json_header .. basic_authorization_header
+connection_close_header = "Connection: close\r\n"
+
+auth_http_headers = application_json_header .. connection_close_header
+registrar_http_headers = application_json_header .. basic_authorization_header .. connection_close_header
 
 var_hres = "$var(hres)";
 
@@ -778,7 +781,7 @@ function ksr_route_auth()
         local hres = "";
         repeat
             htries = htries - 1;
-            hrcode = KSR.ruxc.http_post(AUTHURL, hbody, application_json_header, var_hres);
+            hrcode = KSR.ruxc.http_post(AUTHURL, hbody, auth_http_headers, var_hres);
             hres = KSR.pvx.var_get("hres");
             if hrcode ~= 500 then
                 if string.len(hres) < 10 then
