@@ -278,14 +278,18 @@ SKIP_ANTIFLOOD_DOMAINS = {
     "us%..+%.carriers",
     "eu%.carriers",
     "australia%.carriers",
-    "cust%.%w+%.auth%.bandwidth%.com$"
+    "cust%.%w+%.auth%.bandwidth%.com$",
+    "dt[-]"
 };
 
 -- List of IP ranges to skip for Pike Blocking 
 -- Prevents Kamailio for denying service from internal IPs
 SKIP_ANTIFLOOD_IPS = {
   "172.17.0.1/24",
-  "172.18.0.1/24"  
+  "172.18.0.1/24",
+  -- DT SIP IPs
+  "194.25.206.44/32",
+  "194.25.206.172/32"
 };
 
 -- List of domains to use Stable Routing
