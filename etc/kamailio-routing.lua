@@ -226,7 +226,9 @@ ALLOWADDR={
     "80.157.16.77/32",
     "80.157.16.78/32",
     "80.157.16.79/32",
-    "80.157.16.80/32"
+    "80.157.16.80/32",
+    -- DT Twilio Frankfurt
+    "35.156.191.128/30"
 };
 
 -- list of freeswitch addresses to allow traffic from without user auth
