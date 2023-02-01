@@ -289,7 +289,9 @@ SKIP_ANTIFLOOD_IPS = {
   "172.18.0.1/24",
   -- DT SIP IPs
   "194.25.206.44/32",
-  "194.25.206.172/32"
+  "194.25.206.172/32",
+  -- Twilio Frankfurt SIP IPs
+  "35.156.191.128/30"
 };
 
 -- List of domains to use Stable Routing
