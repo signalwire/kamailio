@@ -89,6 +89,9 @@ REJECT_600_IPS={
 -- list of addresses to allow traffic from without user auth
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
+    -- DT Signaling
+    "194.25.206.44/32",
+    "194.25.206.172/32",
     -- DT Leipzig
     "194.25.206.99/32",
     "194.25.206.100/32",
