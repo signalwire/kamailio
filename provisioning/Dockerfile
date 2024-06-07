@@ -1,10 +1,11 @@
-FROM signalwire/freeswitch-libs:debian-10 as intermediate
+FROM debian:buster as intermediate
 
 ENV \
   CONFD_VERSION=0.16.0 \
   CONFD_SHA256=255d2559f3824dd64df059bdc533fd6b697c070db603c76aaf8d1d5e6b0cc334
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
+  curl make bison libssl-dev build-essential \
   flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc dnsutils libgoogle-perftools-dev \
   liblua5.1-0-dev libunistring-dev libxml2-dev gdb \
   && rm -rf /var/lib/apt/lists/* \

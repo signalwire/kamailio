@@ -1,6 +1,7 @@
-FROM signalwire/freeswitch-libs:debian-10 as intermediate
+FROM debian:buster as intermediate
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes \
+  curl make bison libssl-dev build-essential \
   flex libgeoip-dev libhiredis-dev lua-cjson-dev libunistring-dev xsltproc \
   liblua5.1-0-dev libunistring-dev libxml2-dev \
   && rm -rf /var/lib/apt/lists/*
@@ -28,7 +29,7 @@ RUN cp /usr/local/src/ruxc/include/ruxc.h /usr/local/src/ruxc/target/release/lib
 && cd src/modules/tls && make install-tls-cert
 
 ### Production Image
-FROM signalwire/freeswitch-base:debian-10
+FROM debian:buster
 MAINTAINER Evan McGee <evan@signalwire.com>
 
 ENV \
@@ -43,18 +44,13 @@ RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
 
 RUN apt-get update && apt-get -y install --no-install-recommends --no-install-suggests \
-  dnsutils iproute2 curl locales apt-transport-https ca-certificates nano lua-cjson liblua5.1-0-dev \
+  dnsutils iproute2 curl locales apt-transport-https ca-certificates nano lua-cjson liblua5.1-0-dev google-perftools \
   && locale-gen en_US en_US.UTF-8 && rm -rf /var/lib/apt/lists/* \
   && curl -L https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64 -o /bin/confd \
   && sha256sum /bin/confd | grep ${CONFD_SHA256} \
   && chmod +x /tini \
-  && chmod 500 /bin/confd \ 
-  && git clone https://github.com/gperftools/gperftools.git\
-  && cd gperftools && ./autogen.sh && ./configure && make -j`nproc` && make install && cd .. && rm -rf gperftools*
+  && chmod 500 /bin/confd
   
-COPY --from=intermediate /usr/lib/libsignalwire_client.so.2 /usr/lib/libsignalwire_client.so.2
-COPY --from=intermediate /usr/lib/libks.so.2 /usr/lib/libks.so.2
-
 COPY --from=intermediate /usr/local/lib64/kamailio /usr/local/lib64/kamailio
 COPY --from=intermediate /usr/local/lib64/kamailio/modules /usr/local/lib64/kamailio/modules
 COPY --from=intermediate /usr/local/etc /usr/local/etc
