@@ -90,7 +90,9 @@ REJECT_600_IPS={
 -- must have subnet mask (CIDR notation - use /32 for single ip addr)
 ALLOWADDR={
     -- DT Signaling
+    "194.24.206.42/32",
     "194.25.206.44/32",
+    "194.24.206.170/32",
     "194.25.206.172/32",
     -- DT Leipzig
     "194.25.206.99/32",
@@ -291,7 +293,9 @@ SKIP_ANTIFLOOD_IPS = {
   "172.17.0.1/24",
   "172.18.0.1/24",
   -- DT SIP IPs
+  "194.25.206.42/32",
   "194.25.206.44/32",
+  "194.25.206.170/32",
   "194.25.206.172/32",
   -- Twilio Frankfurt SIP IPs
   "35.156.191.128/30"
