@@ -735,15 +735,17 @@ static int pv_auth_check(sip_msg_t *msg, str *srealm, str *spasswd, int vflags,
 	sip_uri_t *furi = NULL;
 	str suser;
 
-	if(msg->REQ_METHOD==METHOD_REGISTER)
+	if(msg->REQ_METHOD==METHOD_REGISTER) {
 		ret = pv_authenticate(msg, srealm, spasswd, vflags, HDR_AUTHORIZATION_T,
 				&msg->first_line.u.request.method);
-	else
+		hdr = msg->authorization;
+	} else {
 		ret = pv_authenticate(msg, srealm, spasswd, vflags, HDR_PROXYAUTH_T,
 				&msg->first_line.u.request.method);
+		hdr = msg->proxy_auth;
+	}
 
 	if(ret==AUTH_OK && (vchecks&AUTH_CHECK_ID_F)) {
-		hdr = (msg->proxy_auth==0)?msg->authorization:msg->proxy_auth;
 		if(hdr==NULL) {
 			if (msg->REQ_METHOD & (METHOD_ACK|METHOD_CANCEL|METHOD_PRACK)) {
 				return AUTH_OK;
