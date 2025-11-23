@@ -482,8 +482,8 @@ int w_has_credentials(sip_msg_t *msg, char* realm, char* s2)
 int pv_authenticate(struct sip_msg *msg, str *realm, str *passwd, int flags,
 		int hftype, hdr_field_t **hdr, str *method)
 {
-	struct hdr_field* h;
-	auth_body_t* cred;
+	struct hdr_field *h = NULL;
+	auth_body_t *cred;
 	auth_cfg_result_t ret;
 	auth_result_t rauth;
 	str hf = {0, 0};
