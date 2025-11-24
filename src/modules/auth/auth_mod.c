@@ -596,16 +596,6 @@ end:
 /**
  *
  */
-static int ki_pv_proxy_authenticate(
-		sip_msg_t *msg, str *realm, str *passwd, int flags)
-{
-	return pv_authenticate(msg, realm, passwd, flags, HDR_PROXYAUTH_T, NULL,
-			&msg->first_line.u.request.method);
-}
-
-/**
- *
- */
 static int pv_proxy_authenticate(
 		struct sip_msg *msg, char *realm, char *passwd, char *flags)
 {
@@ -642,26 +632,6 @@ static int pv_proxy_authenticate(
 
 error:
 	return AUTH_ERROR;
-}
-
-/**
- *
- */
-static int ki_pv_www_authenticate(
-		sip_msg_t *msg, str *realm, str *passwd, int flags)
-{
-	return pv_authenticate(msg, realm, passwd, flags, HDR_AUTHORIZATION_T, NULL,
-			&msg->first_line.u.request.method);
-}
-
-/**
- *
- */
-static int ki_pv_www_authenticate_method(
-		sip_msg_t *msg, str *realm, str *passwd, int flags, str *method)
-{
-	return pv_authenticate(
-			msg, realm, passwd, flags, HDR_AUTHORIZATION_T, NULL, method);
 }
 
 /**
