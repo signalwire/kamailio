@@ -479,11 +479,11 @@ int w_has_credentials(sip_msg_t *msg, char* realm, char* s2)
 /**
  * @brief do WWW-Digest authentication with password taken from cfg var
  */
-int pv_authenticate(struct sip_msg *msg, str *realm, str *passwd,
-		int flags, int hftype, str *method)
+int pv_authenticate(struct sip_msg *msg, str *realm, str *passwd, int flags,
+		int hftype, hdr_field_t **hdr, str *method)
 {
-	struct hdr_field* h;
-	auth_body_t* cred;
+	struct hdr_field *h = NULL;
+	auth_body_t *cred;
 	auth_cfg_result_t ret;
 	auth_result_t rauth;
 	str hf = {0, 0};
@@ -563,7 +563,10 @@ int pv_authenticate(struct sip_msg *msg, str *realm, str *passwd,
 	}
 
 end:
-	if (ret < 0) {
+	if(hdr != NULL) {
+		*hdr = h;
+	}
+	if(ret < 0) {
 		/* check if required to add challenge header as avp */
 		if(!(flags&14))
 			return ret;
@@ -593,8 +596,8 @@ end:
 /**
  *
  */
-static int pv_proxy_authenticate(struct sip_msg *msg, char* realm,
-		char *passwd, char *flags)
+static int pv_proxy_authenticate(
+		struct sip_msg *msg, char *realm, char *passwd, char *flags)
 {
 	int vflags = 0;
 	str srealm  = {0, 0};
@@ -625,7 +628,7 @@ static int pv_proxy_authenticate(struct sip_msg *msg, char* realm,
 		goto error;
 	}
 	return pv_authenticate(msg, &srealm, &spasswd, vflags, HDR_PROXYAUTH_T,
-			&msg->first_line.u.request.method);
+			NULL, &msg->first_line.u.request.method);
 
 error:
 	return AUTH_ERROR;
@@ -634,8 +637,8 @@ error:
 /**
  *
  */
-static int pv_www_authenticate(struct sip_msg *msg, char* realm,
-		char *passwd, char *flags)
+static int pv_www_authenticate(
+		struct sip_msg *msg, char *realm, char *passwd, char *flags)
 {
 	int vflags = 0;
 	str srealm  = {0, 0};
@@ -666,7 +669,7 @@ static int pv_www_authenticate(struct sip_msg *msg, char* realm,
 		goto error;
 	}
 	return pv_authenticate(msg, &srealm, &spasswd, vflags, HDR_AUTHORIZATION_T,
-			&msg->first_line.u.request.method);
+			NULL, &msg->first_line.u.request.method);
 
 error:
 	return AUTH_ERROR;
@@ -716,7 +719,7 @@ static int pv_www_authenticate2(struct sip_msg *msg, char* realm,
 	}
 
 	return pv_authenticate(msg, &srealm, &spasswd, vflags, HDR_AUTHORIZATION_T,
-			&smethod);
+			NULL, &smethod);
 
 error:
 	return AUTH_ERROR;
@@ -735,19 +738,16 @@ static int pv_auth_check(sip_msg_t *msg, str *srealm, str *spasswd, int vflags,
 	sip_uri_t *furi = NULL;
 	str suser;
 
-	if(msg->REQ_METHOD==METHOD_REGISTER) {
+	if(msg->REQ_METHOD == METHOD_REGISTER) {
 		ret = pv_authenticate(msg, srealm, spasswd, vflags, HDR_AUTHORIZATION_T,
-				&msg->first_line.u.request.method);
-		hdr = msg->authorization;
+				&hdr, &msg->first_line.u.request.method);
 	} else {
 		ret = pv_authenticate(msg, srealm, spasswd, vflags, HDR_PROXYAUTH_T,
-				&msg->first_line.u.request.method);
-		hdr = msg->proxy_auth;
+				&hdr, &msg->first_line.u.request.method);
 	}
-
-	if(ret==AUTH_OK && (vchecks&AUTH_CHECK_ID_F)) {
-		if(hdr==NULL) {
-			if (msg->REQ_METHOD & (METHOD_ACK|METHOD_CANCEL|METHOD_PRACK)) {
+	if(ret == AUTH_OK && (vchecks & AUTH_CHECK_ID_F)) {
+		if(hdr == NULL) {
+			if(msg->REQ_METHOD & (METHOD_ACK | METHOD_CANCEL | METHOD_PRACK)) {
 				return AUTH_OK;
 			} else {
 				return AUTH_ERROR;
